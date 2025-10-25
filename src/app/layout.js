@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "ボランティアマッチング",
   description: "Next.jsとSupabaseで作るボランティアマッチングアプリ",
+  icons: {
+    icon: "/public/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }) {
