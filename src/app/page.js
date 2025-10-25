@@ -1,7 +1,8 @@
-export default function Home() {
+export default function HomePage() {
   return (
     <div>
-      <h2>ボランティアマッチングを作成していきます</h2>
+      <h1>ホーム</h1>
+      <p>ここにホームの内容を書いていきます</p>
     </div>
   );
 }
