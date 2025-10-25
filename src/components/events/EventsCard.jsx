@@ -1,16 +1,20 @@
 "use client";
 
 import styled from "@emotion/styled";
+import Link from "next/link";
 
 // Emotion
 // カード全体
-const CardContainer = styled.div`
+const CardContainer = styled(Link)`
   border: 1px solid #eee;
   border-radius: 12px;
   overflow: hidden;
   background-color: #fff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease-in-out;
+  display: block;
+  text-decoration: none;
+  color: inherit;
 
   &:hover {
     transform: translateY(-5px);
@@ -116,6 +120,7 @@ const formatDateRange = (startStr, endStr) => {
  */
 export default function EventCard({ event }) {
   const {
+    id,
     name,
     tag,
     place,
@@ -127,7 +132,7 @@ export default function EventCard({ event }) {
   } = event;
 
   return (
-    <CardContainer>
+    <CardContainer href={`/events/${id}`}>
       <ImageWrapper>
         <EventImage
           src={
