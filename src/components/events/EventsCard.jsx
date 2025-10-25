@@ -2,6 +2,9 @@
 
 import styled from "@emotion/styled";
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 // Emotion
 // カード全体
@@ -37,7 +40,6 @@ const EventImage = styled.img`
   margin-right: 16px;
 `;
 
-// お気に入りボタン
 const FavoriteButton = styled.button`
   position: absolute;
   top: 12px;
@@ -54,6 +56,12 @@ const FavoriteButton = styled.button`
   justify-content: center;
   padding: 0;
   color: ${props => (props.isFavorite ? "red" : "#ccc")};
+
+  /* 連打防止用に、ローディング中はカーソルを変える */
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 `;
 
 // カードの中身
@@ -131,6 +139,38 @@ export default function EventCard({ event }) {
     favorite,
   } = event;
 
+  // お気に入りボタンのクリック処理
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false); // 連打防止用
+
+  // お気に入り状態をトグルする関数
+  const handleToggleFavorite = async e => {
+    // ボタンをクリックした時に、親のLink(CardContainer)が発動しないようにする
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isLoading) return; // ローディング中は処理しない
+    setIsLoading(true);
+
+    // 今の favorite の逆の状態 (trueならfalse、falseならtrue)
+    const newFavoriteStatus = !favorite;
+
+    // Supabaseの "events" テーブルをアップデート
+    const { error } = await supabase
+      .from("events")
+      .update({ favorite: newFavoriteStatus }) // 'favorite' カラムを更新
+      .eq("id", id); // この 'id' のイベントだけ
+
+    if (error) {
+      console.error("お気に入り更新エラー:", error.message);
+    } else {
+      // 成功したら、ページ全体をリフレッシュする
+      router.refresh();
+    }
+
+    setIsLoading(false);
+  };
+
   return (
     <CardContainer href={`/events/${id}`}>
       <ImageWrapper>
@@ -140,25 +180,25 @@ export default function EventCard({ event }) {
           }
           alt={name}
         />
-        <FavoriteButton isFavorite={favorite}>
+        <FavoriteButton
+          isFavorite={favorite}
+          onClick={handleToggleFavorite}
+          disabled={isLoading}
+        >
           {favorite ? "♥" : "♡"}
         </FavoriteButton>
       </ImageWrapper>
       <CardContent>
         {tag && <Tag>{tag}</Tag>}
-
         <EventName>{name}</EventName>
-
         <InfoRow>
           <span>📍</span>
           {place || "場所未定"}
         </InfoRow>
-
         <InfoRow>
           <span>💰</span>
           {!fee ? "無料" : `${fee.toLocaleString()}円`}
         </InfoRow>
-
         <InfoRow>
           <span>🗓️</span>
           {formatDateRange(start_datetime, end_datetime)}
