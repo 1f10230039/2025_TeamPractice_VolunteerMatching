@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import EmotionRegistry from "../lib/EmotionRegistry";
+import GlobalStyles from "@/styles/GlobalStyles";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,9 +19,10 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <EmotionRegistry>
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
+          <GlobalStyles />
           {children}
         </body>
       </EmotionRegistry>
