@@ -5,7 +5,6 @@ import styled from "@emotion/styled";
 import Navigation from "../Navigation/Navigation";
 
 // Emotion
-
 // フッタータブバー全体を包むコンテナ
 const FooterContainer = styled.footer`
   /* スマホ用のスタイリング */
@@ -40,12 +39,10 @@ const FooterContainer = styled.footer`
   }
 `;
 
-const FooterTabBar = () => {
+export default function FooterTabBar() {
   return (
     <FooterContainer>
       <Navigation />
     </FooterContainer>
   );
-};
-
-export default FooterTabBar;
+}

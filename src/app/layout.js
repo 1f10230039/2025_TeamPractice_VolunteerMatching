@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import EmotionRegistry from "../lib/EmotionRegistry";
 import GlobalStyles from "@/styles/GlobalStyles";
+import Header from "../components/common/Header/Header";
+import FooterTabBar from "../components/common/FooterTabBar/FooterTabBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +25,9 @@ export default function RootLayout({ children }) {
       <EmotionRegistry>
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
           <GlobalStyles />
-          {children}
+          <Header />
+          <main>{children}</main>
+          <FooterTabBar />
         </body>
       </EmotionRegistry>
     </html>
