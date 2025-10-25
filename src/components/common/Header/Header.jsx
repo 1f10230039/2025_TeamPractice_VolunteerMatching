@@ -10,8 +10,7 @@ import Link from "next/link";
 const HeaderContainer = styled.header`
   width: 100%;
   padding: 16px 24px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #eee;
+  background-color: #97cdf3;
   display: flex;
   justify-content: space-between;
   align-items: center;

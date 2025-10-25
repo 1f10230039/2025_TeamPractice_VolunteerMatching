@@ -12,9 +12,9 @@ const FooterContainer = styled.footer`
   bottom: 0;
   left: 0;
   width: 100%;
-  background-color: #ffffff;
+  background-color: #97cdf3;
   border-top: 1px solid #eee;
-  padding: 12px 0;
+  padding: 24px 0;
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
 
   /* 768px以上の画面（PC）では、このフッターを非表示にする */
