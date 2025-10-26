@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import styled from "@emotion/styled";
+import { usePathname } from "next/navigation";
 
 // Emotion
 // ナビゲーションバーのコンテナスタイル
@@ -14,22 +15,35 @@ const NavContainer = styled.nav`
 `;
 
 // ナビゲーションリンクのスタイル
-const StyledLink = styled(Link)`
+const StyledLink = styled(Link, {
+  shouldForwardProp: prop => prop !== "isActive",
+})`
   text-decoration: none;
-  color: #333;
+  color: ${props => (props.isActive ? "#007bff" : "#888")};
   font-weight: bold;
 
-  &:hover {
-    color: #007bff;
-  }
+  ${props =>
+    !props.isActive &&
+    `
+    &:hover {
+      color: #007bff;   
+    }
+  `}
 `;
 
 export default function Navigation() {
+  const pathname = usePathname();
   return (
     <NavContainer>
-      <StyledLink href="/">ホーム</StyledLink>
-      <StyledLink href="/mylist">マイリスト</StyledLink>
-      <StyledLink href="/mypage">マイページ</StyledLink>
+      <StyledLink href="/" isActive={pathname === "/"}>
+        ホーム
+      </StyledLink>
+      <StyledLink href="/mylist" isActive={pathname === "/mylist"}>
+        マイリスト
+      </StyledLink>
+      <StyledLink href="/mypage" isActive={pathname === "/mypage"}>
+        マイページ
+      </StyledLink>
     </NavContainer>
   );
 }

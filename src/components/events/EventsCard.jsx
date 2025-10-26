@@ -124,7 +124,7 @@ const formatDateRange = (startStr, endStr) => {
 
 /**
  * イベントカードを表示するコンポーネント
- * @param {{ event: object }} props - 親コンポーネントから渡されるイベントデータ
+ * @param {{ event: object }} props - イベントデータオブジェクト
  */
 export default function EventCard({ event }) {
   const {
