@@ -1,7 +1,7 @@
 // 検索結果ページ (サーバーコンポーネント)
 
 import { supabase } from "@/lib/supabaseClient";
-import SearchResultsPage from "@/components/pages/SearchResultsPage";
+import CommonSearchResultsPage from "@/components/pages/CommonSearchResultsPage";
 import { Suspense } from "react";
 
 // 検索キーワードをsearch_historyテーブルに保存する関数
@@ -23,7 +23,7 @@ async function saveSearchHistory(query) {
 async function fetchSearchResults(query) {
   if (!query) return []; // クエリが空なら空を返す
 
-  // 'name' (イベント名) または 'long_description' (詳細文) にキーワードが部分一致するものを探す
+  // name(イベント名)またはlong_description(詳細文) にキーワードが部分一致するものを探す
   const { data, error } = await supabase
     .from("events")
     .select("*")
@@ -38,7 +38,7 @@ async function fetchSearchResults(query) {
 
 // ページ本体 (サーバーコンポーネント)
 export default async function Page({ searchParams }) {
-  // URLの "?q=..." の部分 (searchParams) からキーワードを取り出す
+  // URLの「?q=...」の部分 (searchParams) からキーワードを取り出す
   const awaitedParams = await searchParams;
   const query = awaitedParams.q || "";
 
@@ -52,10 +52,19 @@ export default async function Page({ searchParams }) {
     fetchEventsPromise,
   ]);
 
-  // 検索キーワードと検索結果のイベントをクライアントに渡す
+  // タイトル用の文字列を作成
+  let titleText = "";
+  if (query) {
+    titleText =
+      events.length > 0
+        ? `「${query}」の検索結果 (${events.length}件)`
+        : `「${query}」に一致するイベントは見つかりませんでした。`;
+  }
+
+  // クライアントコンポーネントにデータを渡す
   return (
     <Suspense fallback={<div>結果を読み込み中...</div>}>
-      <SearchResultsPage query={query} initialEvents={events} />
+      <CommonSearchResultsPage titleText={titleText} events={events} />
     </Suspense>
   );
 }

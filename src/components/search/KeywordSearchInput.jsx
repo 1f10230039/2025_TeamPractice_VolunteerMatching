@@ -56,7 +56,7 @@ export default function KeywordSearchInput() {
     }
 
     // 3. 検索結果ページに、クエリパラメータを付けて飛ばす
-    router.push(`/search/results?q=${encodeURIComponent(query)}`);
+    router.push(`/search/keyword-results?q=${encodeURIComponent(query)}`);
   };
 
   return (
