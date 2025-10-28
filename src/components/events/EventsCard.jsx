@@ -6,6 +6,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
+import { FaMapMarkerAlt, FaYenSign, FaCalendarAlt } from "react-icons/fa";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
+
 // Emotion
 // カード全体
 const CardContainer = styled(Link)`
@@ -40,6 +43,7 @@ const EventImage = styled.img`
   margin-right: 16px;
 `;
 
+// お気に入りボタン
 const FavoriteButton = styled.button`
   position: absolute;
   top: 12px;
@@ -50,17 +54,22 @@ const FavoriteButton = styled.button`
   width: 40px;
   height: 40px;
   cursor: pointer;
-  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  color: ${props => (props.isFavorite ? "red" : "#ccc")};
 
   /* 連打防止用に、ローディング中はカーソルを変える */
   &:disabled {
     cursor: not-allowed;
     opacity: 0.7;
+  }
+
+  & > svg {
+    width: 22px;
+    height: 22px;
+    color: ${props => (props.isFavorite ? "#e74c3c" : "#ccc")};
+    transition: color 0.1s ease;
   }
 `;
 
@@ -95,10 +104,11 @@ const InfoRow = styled.div`
   color: #555;
   margin-bottom: 6px;
 
-  /* アイコン用の絵文字（仮） */
-  & > span:first-of-type {
+  & > svg {
     margin-right: 8px;
-    font-size: 1.1rem;
+    width: 0.9rem;
+    height: 0.9rem;
+    color: #888;
   }
 `;
 
@@ -185,22 +195,22 @@ export default function EventCard({ event }) {
           onClick={handleToggleFavorite}
           disabled={isLoading}
         >
-          {favorite ? "♥" : "♡"}
+          {favorite ? <FaHeart /> : <FaRegHeart />}
         </FavoriteButton>
       </ImageWrapper>
       <CardContent>
         {tag && <Tag>{tag}</Tag>}
         <EventName>{name}</EventName>
         <InfoRow>
-          <span>📍</span>
+          <FaMapMarkerAlt />
           {place || "場所未定"}
         </InfoRow>
         <InfoRow>
-          <span>💰</span>
+          <FaYenSign />
           {!fee ? "無料" : `${fee.toLocaleString()}円`}
         </InfoRow>
         <InfoRow>
-          <span>🗓️</span>
+          <FaCalendarAlt />
           {formatDateRange(start_datetime, end_datetime)}
         </InfoRow>
       </CardContent>
