@@ -4,6 +4,7 @@
 
 import styled from "@emotion/styled";
 import Link from "next/link";
+import { FaSearch, FaMapMarkerAlt, FaRobot } from "react-icons/fa";
 
 // Emotion
 // 検索オプション全体を包むコンテナ
@@ -46,10 +47,12 @@ const SearchLink = styled(Link)`
     background-color: #f5f5f5;
   }
 
-  & > span {
-    font-size: 1.8rem;
+  & > svg {
+    width: 1.5rem;
+    height: 1.5rem;
     margin-right: 12px;
     line-height: 1;
+    color: #555;
   }
 
   @media (max-width: 767px) {
@@ -57,10 +60,11 @@ const SearchLink = styled(Link)`
     padding: 12px 8px;
     font-size: 0.85rem;
 
-    & > span {
+    & > svg {
       margin-right: 0;
       margin-bottom: 8px;
-      font-size: 1.6rem;
+      width: 1.4rem;
+      height: 1.4rem;
     }
   }
 `;
@@ -70,13 +74,16 @@ export default function SearchOptionsMini() {
     <SearchBoxContainer>
       <OptionsContainer>
         <SearchLink href="/search/keyword">
-          <span>🔍</span>キーワードから探す
+          <FaSearch />
+          キーワードから探す
         </SearchLink>
         <SearchLink href="/search/location">
-          <span>📍</span>場所から探す
+          <FaMapMarkerAlt />
+          場所から探す
         </SearchLink>
         <SearchLink href="/search/ai">
-          <span>🤖</span>AIと相談して探す
+          <FaRobot />
+          AIと相談して探す
         </SearchLink>
       </OptionsContainer>
     </SearchBoxContainer>
