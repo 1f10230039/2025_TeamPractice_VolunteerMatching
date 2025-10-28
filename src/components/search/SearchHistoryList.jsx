@@ -118,7 +118,7 @@ export default function SearchHistoryList({ history }) {
       {historyItems.map(item => (
         <HistoryItemContainer key={item.id}>
           <HistoryLink
-            href={`/search/results?q=${encodeURIComponent(item.query)}`}
+            href={`/search/keyword-results?q=${encodeURIComponent(item.query)}`}
           >
             {item.query}
           </HistoryLink>

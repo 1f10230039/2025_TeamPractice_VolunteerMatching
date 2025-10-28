@@ -52,7 +52,7 @@ export default function MyListPage({
   // どっちのタブがアクティブか、"favorites" を初期値にする
   const [activeTab, setActiveTab] = useState("favorites");
 
-  // サーバーから受け取ったデータをクライアントコンポーネントの "状態" として持つ
+  // サーバーから受け取ったデータをクライアントコンポーネントの状態として持つ
   // こうすることで、クライアント側で `router.refresh` した時も再描画される
   const favoriteEvents = initialFavoriteEvents;
   const appliedEvents = initialAppliedEvents;
