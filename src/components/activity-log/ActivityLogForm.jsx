@@ -56,6 +56,13 @@ const Textarea = styled.textarea`
   font-family: inherit;
 `;
 
+// ボタン配置用コンテナ
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
 // 保存ボタン
 const SubmitButton = styled.button`
   padding: 12px 24px;
@@ -78,10 +85,36 @@ const SubmitButton = styled.button`
   }
 `;
 
+// 削除ボタン
+const DeleteButton = styled.button`
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ff4d4d;
+  background-color: transparent;
+  border: 2px solid #ff4d4d;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #ff4d4d;
+    color: white;
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+  }
+`;
+
 // propsでlogToEditを受け取る（新規作成の時はundefinedになる）
 export default function ActivityLogForm({ logToEdit }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // 保存中の状態管理
+  const [isDeleting, setIsDeleting] = useState(false); // 削除中の状態管理
 
   // フォームのモードを判別。logToEdit があれば「編集モード」、なければ「新規モード」
   const isEditMode = Boolean(logToEdit);
@@ -106,7 +139,7 @@ export default function ActivityLogForm({ logToEdit }) {
     }));
   };
 
-  // フォームが送信された時の処理
+  // フォームの送信処理(保存ボタンが押されたとき)
   const handleSubmit = async e => {
     e.preventDefault(); // ページの再読み込みを防ぐ
     setIsLoading(true);
@@ -169,6 +202,45 @@ export default function ActivityLogForm({ logToEdit }) {
         // 成功しても失敗しても、ローディングを解除する
         setIsLoading(false);
       }
+    }
+  };
+
+  // 削除ボタンが押されたときの処理
+  const handleDelete = async () => {
+    // 編集モードじゃなければ何もしない
+    if (!isEditMode) return;
+
+    // 本当に削除するか、ユーザーに確認する
+    const confirmed = window.confirm(
+      "本当にこの活動記録を削除しますか？\nこの操作は元に戻せません。"
+    );
+
+    if (!confirmed) {
+      return; // ユーザーが「キャンセル」を押した
+    }
+
+    setIsDeleting(true);
+
+    try {
+      // Supabaseからデータを削除
+      const { error } = await supabase
+        .from("activity_log")
+        .delete()
+        .eq("id", logToEdit.id);
+
+      if (error) {
+        throw error; // catch ブロックに投げる
+      }
+
+      // 成功したらアラートを出して、一覧ページに飛ばす
+      alert("活動記録を削除しました。");
+      router.push("/activity-log");
+      router.refresh(); // 一覧ページのデータを最新にする
+    } catch (error) {
+      console.error("活動記録の削除に失敗:", error.message);
+      alert("エラーが発生しました。");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -260,10 +332,27 @@ export default function ActivityLogForm({ logToEdit }) {
         />
       </FormGroup>
 
-      {/* 保存ボタン */}
-      <SubmitButton type="submit" disabled={isLoading}>
-        {isLoading ? "保存中..." : isEditMode ? "更新する" : "作成する"}
-      </SubmitButton>
+      {/* 保存ボタンと削除ボタン */}
+      <ButtonContainer>
+        {/* 保存ボタン */}
+        <SubmitButton
+          type="submit"
+          disabled={isLoading || isDeleting} // 削除中も保存ボタンは押せないように
+        >
+          {isLoading ? "保存中..." : isEditMode ? "更新する" : "作成する"}
+        </SubmitButton>
+
+        {/* 編集モードの時だけ、削除ボタンを表示 */}
+        {isEditMode && (
+          <DeleteButton
+            type="button" // フォームを送信(submit)しないようにbuttonを指定
+            onClick={handleDelete}
+            disabled={isLoading || isDeleting} // 保存中・削除中どちらも無効化
+          >
+            {isDeleting ? "削除中..." : "削除する"}
+          </DeleteButton>
+        )}
+      </ButtonContainer>
     </FormContainer>
   );
 }
