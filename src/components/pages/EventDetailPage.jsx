@@ -49,9 +49,10 @@ const ActionMenu = styled.div`
   /* 既存のFooterTabBarとかぶらないよう、PCでは非表示 */
   @media (min-width: 768px) {
     /* PCではページ内上部に配置 */
-    position: sticky;
-    top: 65px; /* Headerの高さ分 */
-    bottom: auto;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   }
 `;
