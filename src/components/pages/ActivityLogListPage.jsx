@@ -6,10 +6,11 @@ import Link from "next/link";
 import styled from "@emotion/styled";
 import ActivityLogCard from "../activity-log/ActivityLogCard";
 import { FaPlus } from "react-icons/fa";
+import Breadcrumbs from "../common/Breadcrumbs";
 
 // ページ全体のコンテナ
 const PageContainer = styled.div`
-  padding: 24px;
+  padding: 0;
 `;
 
 // ページ上部のヘッダー（タイトルとボタン）
@@ -18,6 +19,7 @@ const PageHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  padding: 24px 24px 0 24px;
 `;
 
 const PageTitle = styled.h1`
@@ -56,7 +58,7 @@ const LogListContainer = styled.div`
   gap: 20px;
   /* 1列で表示（スマホ） */
   grid-template-columns: 1fr;
-
+  padding: 0 24px 24px 24px;
   /* pcサイズ */
   @media (min-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
@@ -67,8 +69,13 @@ const LogListContainer = styled.div`
 export default function ActivityLogListPage({ initialLogs }) {
   const logs = initialLogs || [];
 
+  // パンくずリスト用データ
+  const crumbs = [{ label: "活動の記録", href: "/activity-log" }];
+  const baseCrumb = { label: "マイページ", href: "/mypage" };
+
   return (
     <PageContainer>
+      <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
       <PageHeader>
         <PageTitle>活動の記録</PageTitle>
         {/* 新規作成ボタン (入力ページへ飛ぶ) */}

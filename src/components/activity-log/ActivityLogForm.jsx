@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import styled from "@emotion/styled";
+import Breadcrumbs from "../common/Breadcrumbs";
 
 // Emotionでスタイル定義
 
@@ -244,115 +245,125 @@ export default function ActivityLogForm({ logToEdit }) {
     }
   };
 
+  // パンくずリスト用のデータ
+  const crumbs = [
+    { label: "活動の記録", href: "/activity-log" },
+    { label: isEditMode ? "活動記録を編集" : "活動記録を新規作成", href: "#" },
+  ];
+  const baseCrumb = { label: "マイページ", href: "/mypage" };
+
   return (
-    <FormContainer onSubmit={handleSubmit}>
-      <PageTitle>
-        {isEditMode ? "活動記録を編集" : "活動記録を新規作成"}
-      </PageTitle>
+    <>
+      <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
+      <FormContainer onSubmit={handleSubmit}>
+        <PageTitle>
+          {isEditMode ? "活動記録を編集" : "活動記録を新規作成"}
+        </PageTitle>
 
-      {/* 活動名 */}
-      <FormGroup>
-        <Label htmlFor="name">活動名 (必須)</Label>
-        <Input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-      </FormGroup>
+        {/* 活動名 */}
+        <FormGroup>
+          <Label htmlFor="name">活動名 (必須)</Label>
+          <Input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        </FormGroup>
 
-      {/* 活動日 */}
-      <FormGroup>
-        <Label htmlFor="datetime">活動日 (必須)</Label>
-        <Input
-          type="date" // HTML5の日付ピッカーを使う
-          id="datetime"
-          name="datetime"
-          value={formData.datetime}
-          onChange={handleChange}
-          required
-        />
-      </FormGroup>
+        {/* 活動日 */}
+        <FormGroup>
+          <Label htmlFor="datetime">活動日 (必須)</Label>
+          <Input
+            type="date" // HTML5の日付ピッカーを使う
+            id="datetime"
+            name="datetime"
+            value={formData.datetime}
+            onChange={handleChange}
+            required
+          />
+        </FormGroup>
 
-      {/* 参加した理由・目的 */}
-      <FormGroup>
-        <Label htmlFor="reason">参加した理由・目的</Label>
-        <Textarea
-          id="reason"
-          name="reason"
-          value={formData.reason}
-          onChange={handleChange}
-        />
-      </FormGroup>
+        {/* 参加した理由・目的 */}
+        <FormGroup>
+          <Label htmlFor="reason">参加した理由・目的</Label>
+          <Textarea
+            id="reason"
+            name="reason"
+            value={formData.reason}
+            onChange={handleChange}
+          />
+        </FormGroup>
 
-      {/* 活動内容 */}
-      <FormGroup>
-        <Label htmlFor="content">活動内容</Label>
-        <Textarea
-          id="content"
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
-        />
-      </FormGroup>
+        {/* 活動内容 */}
+        <FormGroup>
+          <Label htmlFor="content">活動内容</Label>
+          <Textarea
+            id="content"
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+          />
+        </FormGroup>
 
-      {/* 規模・参加数 */}
-      <FormGroup>
-        <Label htmlFor="scale_size">活動の規模・参加数</Label>
-        <Input
-          type="text"
-          id="scale_size"
-          name="scale_size"
-          value={formData.scale_size}
-          onChange={handleChange}
-        />
-      </FormGroup>
+        {/* 規模・参加数 */}
+        <FormGroup>
+          <Label htmlFor="scale_size">活動の規模・参加数</Label>
+          <Input
+            type="text"
+            id="scale_size"
+            name="scale_size"
+            value={formData.scale_size}
+            onChange={handleChange}
+          />
+        </FormGroup>
 
-      {/* 活動による学び */}
-      <FormGroup>
-        <Label htmlFor="learning">活動による学び</Label>
-        <Textarea
-          id="learning"
-          name="learning"
-          value={formData.learning}
-          onChange={handleChange}
-        />
-      </FormGroup>
+        {/* 活動による学び */}
+        <FormGroup>
+          <Label htmlFor="learning">活動による学び</Label>
+          <Textarea
+            id="learning"
+            name="learning"
+            value={formData.learning}
+            onChange={handleChange}
+          />
+        </FormGroup>
 
-      {/* 活動の感想・反省 */}
-      <FormGroup>
-        <Label htmlFor="reflection">活動の感想・反省</Label>
-        <Textarea
-          id="reflection"
-          name="reflection"
-          value={formData.reflection}
-          onChange={handleChange}
-        />
-      </FormGroup>
+        {/* 活動の感想・反省 */}
+        <FormGroup>
+          <Label htmlFor="reflection">活動の感想・反省</Label>
+          <Textarea
+            id="reflection"
+            name="reflection"
+            value={formData.reflection}
+            onChange={handleChange}
+          />
+        </FormGroup>
 
-      {/* 保存ボタンと削除ボタン */}
-      <ButtonContainer>
-        {/* 保存ボタン */}
-        <SubmitButton
-          type="submit"
-          disabled={isLoading || isDeleting} // 削除中も保存ボタンは押せないように
-        >
-          {isLoading ? "保存中..." : isEditMode ? "更新する" : "作成する"}
-        </SubmitButton>
-
-        {/* 編集モードの時だけ、削除ボタンを表示 */}
-        {isEditMode && (
-          <DeleteButton
-            type="button" // フォームを送信(submit)しないようにbuttonを指定
-            onClick={handleDelete}
-            disabled={isLoading || isDeleting} // 保存中・削除中どちらも無効化
+        {/* 保存ボタンと削除ボタン */}
+        <ButtonContainer>
+          {/* 保存ボタン */}
+          <SubmitButton
+            type="submit"
+            disabled={isLoading || isDeleting} // 削除中も保存ボタンは押せないように
           >
-            {isDeleting ? "削除中..." : "削除する"}
-          </DeleteButton>
-        )}
-      </ButtonContainer>
-    </FormContainer>
+            {isLoading ? "保存中..." : isEditMode ? "更新する" : "作成する"}
+          </SubmitButton>
+
+          {/* 編集モードの時だけ、削除ボタンを表示 */}
+          {isEditMode && (
+            <DeleteButton
+              type="button" // フォームを送信(submit)しないようにbuttonを指定
+              onClick={handleDelete}
+              disabled={isLoading || isDeleting} // 保存中・削除中どちらも無効化
+            >
+              {isDeleting ? "削除中..." : "削除する"}
+            </DeleteButton>
+          )}
+        </ButtonContainer>
+      </FormContainer>
+    </>
   );
 }

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import styled from "@emotion/styled";
+import Breadcrumbs from "../common/Breadcrumbs";
 
 // Emotion
 // ページ全体のコンテナ
@@ -179,8 +180,12 @@ export default function LocationSearchPage({ initialPrefectures }) {
   // チェックされた市の数を計算（ボタンを無効化するため）
   const selectedCityCount = Object.values(checkedCities).filter(Boolean).length;
 
+  // パンくずリスト用データ
+  const crumbs = [{ label: "場所から探す", href: "/location-search" }];
+
   return (
     <>
+      <Breadcrumbs crumbs={crumbs} />
       <PageContainer>
         <SectionTitle>1. 都道府県を選択</SectionTitle>
         <PrefListContainer>

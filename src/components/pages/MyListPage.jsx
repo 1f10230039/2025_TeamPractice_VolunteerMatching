@@ -75,9 +75,13 @@ export default function MyListPage({
       </TabContainer>
 
       <EventListContainer>
-        {activeTab === "favorites" && <EventList events={favoriteEvents} />}
+        {activeTab === "favorites" && (
+          <EventList events={favoriteEvents} source="mylist" />
+        )}
 
-        {activeTab === "applied" && <EventList events={appliedEvents} />}
+        {activeTab === "applied" && (
+          <EventList events={appliedEvents} source="mylist" />
+        )}
       </EventListContainer>
     </PageContainer>
   );

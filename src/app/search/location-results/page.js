@@ -67,11 +67,25 @@ export default async function Page({ searchParams }) {
     events.length > 0
       ? `場所の検索結果 (${events.length}件)`
       : `条件に一致するイベントは見つかりませんでした。`;
+  // パンくずリスト用データを作成
+  const crumbs = [
+    { label: "場所から探す", href: "/search/location" },
+    {
+      label: "検索結果",
+      href: `/search/location-results?codes=${codesString}`,
+    }, // 最後のページ
+  ];
 
   // クライアントコンポーネントにデータを渡す
   return (
     <Suspense fallback={<div>結果を読み込み中...</div>}>
-      <CommonSearchResultsPage titleText={titleText} events={events} />
+      <CommonSearchResultsPage
+        titleText={titleText}
+        events={events}
+        crumbs={crumbs}
+        source="location"
+        codes={codesString}
+      />
     </Suspense>
   );
 }

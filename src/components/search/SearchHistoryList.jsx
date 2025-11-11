@@ -5,6 +5,7 @@ import Link from "next/link";
 import styled from "@emotion/styled";
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { FaHistory, FaTimes } from "react-icons/fa";
 
 // 履歴リスト全体
 const HistoryListContainer = styled.ul`
@@ -38,33 +39,39 @@ const HistoryLink = styled(Link)`
   color: #333;
   flex-grow: 1;
   transition: background-color 0.2s ease;
+  gap: 12px;
 
   &:hover {
     background-color: #f9f9f9;
   }
 
-  /* 絵文字アイコン */
-  &::before {
-    content: "🕒";
-    margin-right: 12px;
-    font-size: 1.1rem;
+  & > svg {
+    width: 1rem;
+    height: 1rem;
+    color: #888;
   }
 `;
 
-// 削除ボタン
+// 履歴の「削除ボタン」部分
 const DeleteButton = styled.button`
   background: transparent;
   border: none;
   color: #aaa;
-  font-size: 1.5rem;
-  font-weight: bold;
   cursor: pointer;
   padding: 0 16px;
   align-self: stretch;
   transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     color: #ff4d4d;
+  }
+
+  & > svg {
+    width: 1rem;
+    height: 1rem;
   }
 `;
 
@@ -120,6 +127,7 @@ export default function SearchHistoryList({ history }) {
           <HistoryLink
             href={`/search/keyword-results?q=${encodeURIComponent(item.query)}`}
           >
+            <FaHistory />
             {item.query}
           </HistoryLink>
           <DeleteButton
@@ -127,7 +135,7 @@ export default function SearchHistoryList({ history }) {
             disabled={isDeleting}
             aria-label="履歴を削除"
           >
-            &times;
+            <FaTimes />
           </DeleteButton>
         </HistoryItemContainer>
       ))}

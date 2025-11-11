@@ -136,7 +136,7 @@ const formatDateRange = (startStr, endStr) => {
  * イベントカードを表示するコンポーネント
  * @param {{ event: object }} props - イベントデータオブジェクト
  */
-export default function EventCard({ event }) {
+export default function EventCard({ event, source, query, codes }) {
   const {
     id,
     name,
@@ -181,8 +181,29 @@ export default function EventCard({ event }) {
     setIsLoading(false);
   };
 
+  // イベント詳細ページへのリンクURLを作成
+  const detailUrl = (() => {
+    const base = `/events/${id}`;
+    const params = new URLSearchParams();
+    // 検索元ページの情報を付与
+    if (source) {
+      params.append("source", source);
+    }
+
+    // 検索キーワードや場所コードの情報を付与
+    if (source === "keyword" && query) {
+      params.append("q", query);
+    } else if (source === "location" && codes) {
+      params.append("codes", codes);
+    }
+    // クエリ文字列を組み立てる(source === 'mylist' の時は、'source=mylist' だけが付く)
+    const queryString = params.toString();
+    // クエリが何かあれば `?` を付けて、なければベースURLだけを返す
+    return queryString ? `${base}?${queryString}` : base;
+  })(); // () で関数を即時実行
+
   return (
-    <CardContainer href={`/events/${id}`}>
+    <CardContainer href={detailUrl}>
       <ImageWrapper>
         <EventImage
           src={

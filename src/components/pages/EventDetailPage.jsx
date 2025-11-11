@@ -23,6 +23,7 @@ import {
   FaHeart,
   FaRegHeart,
 } from "react-icons/fa";
+import Breadcrumbs from "../common/Breadcrumbs";
 
 // --- スタイル定義 ---
 
@@ -244,7 +245,7 @@ const formatDateTime = isoString => {
 /**
  * サーバーコンポーネントから "event" データを受け取る
  */
-export default function EventDetailPage({ event }) {
+export default function EventDetailPage({ event, source, q, codes }) {
   const router = useRouter();
 
   // 応募/お気に入りのローディング状態
@@ -276,6 +277,59 @@ export default function EventDetailPage({ event }) {
     favorite, // お気に入り状態
     applied, // 応募状態
   } = event;
+
+  // --- パンくずリストの生成 ---
+  const { baseCrumb, crumbs } = (() => {
+    // デフォルトは「ホーム」
+    let base = { label: "ホーム", href: "/" };
+    // 最後のパンくず（このページ自体）は共通
+    const thisPageCrumb = {
+      label: name || "イベント詳細",
+      href: `/events/${id}`,
+    };
+
+    let crumbList = []; // 途中のパンくず
+
+    switch (source) {
+      // マイリストから来た場合
+      case "mylist":
+        base = { label: "マイリスト", href: "/mylist" };
+        crumbList = [thisPageCrumb]; // マイリスト / イベント名
+        break;
+
+      // キーワード検索から来た場合
+      case "keyword":
+        // base は「ホーム」のまま
+        crumbList = [
+          { label: "キーワードから探す", href: "/search/keyword" },
+          { label: "検索結果", href: `/search/keyword-results?q=${q || ""}` },
+          thisPageCrumb, // ホーム / キーワード / 結果 / イベント名
+        ];
+        break;
+
+      // 場所検索から来た場合
+      case "location":
+        // base は「ホーム」のまま
+        crumbList = [
+          { label: "場所から探す", href: "/search/location" },
+          {
+            label: "検索結果",
+            href: `/search/location-results?codes=${codes || ""}`,
+          },
+          thisPageCrumb, // ホーム / 場所 / 結果 / イベント名
+        ];
+        break;
+
+      // デフォルト (ホームから来た場合など)
+      default:
+        // base は「トップページ」のまま
+        crumbList = [thisPageCrumb]; // トップ / イベント名
+        break;
+    }
+
+    // 最終的なパンくずデータを返す
+    return { baseCrumb: base, crumbs: crumbList };
+  })(); // () で関数を即時実行
 
   const placeholderImage =
     "https://placehold.co/800x400/e0e0e0/777?text=No+Image";
@@ -359,6 +413,8 @@ export default function EventDetailPage({ event }) {
           )}
         </ApplyButton>
       </ActionMenu>
+
+      <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
 
       {/* --- メインコンテンツ --- */}
       <MainContent>
