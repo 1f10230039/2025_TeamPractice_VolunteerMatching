@@ -4,6 +4,7 @@
 import styled from "@emotion/styled";
 import EventList from "../events/EventList";
 import SearchOptionsMini from "../search/SearchOptionsMini";
+import Breadcrumbs from "../common/Breadcrumbs";
 
 // Emotion
 
@@ -42,9 +43,22 @@ const ListWrapper = styled.div`
  * @param {{
  * titleText: string,  // サーバー側で作られた「タイトル文字列」
  * events: Array      // サーバー側で取得された「イベントの配列」
+ * crumbs: Array,  // パンくずリスト用データ
+ * baseCrumb: object // ベースのパンくずリスト用データ
+ * source: string, // 検索元のページを示す文字列
+ * query: string,  // キーワード検索クエリ
+ * codes: string   // 市町村コードの文字列
  * }} props
  */
-export default function CommonSearchResultsPage({ titleText, events }) {
+export default function CommonSearchResultsPage({
+  titleText,
+  events,
+  crumbs,
+  baseCrumb,
+  source,
+  query,
+  codes,
+}) {
   const safeEvents = events || [];
 
   return (
@@ -53,12 +67,19 @@ export default function CommonSearchResultsPage({ titleText, events }) {
         <SearchOptionsMini />
       </SearchInputContainer>
 
+      <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
+
       <PageResultsContainer>
         <ResultTitle>{titleText}</ResultTitle>
 
         {safeEvents.length > 0 && (
           <ListWrapper>
-            <EventList events={safeEvents} />
+            <EventList
+              events={safeEvents}
+              source={source}
+              query={query}
+              codes={codes}
+            />
           </ListWrapper>
         )}
       </PageResultsContainer>

@@ -13,6 +13,7 @@ import {
   FaLightbulb,
   FaCommentDots,
 } from "react-icons/fa";
+import Breadcrumbs from "../common/Breadcrumbs";
 
 // ページ全体のコンテナ
 const PageContainer = styled.div`
@@ -135,69 +136,79 @@ export default function ActivityLogDetailPage({ log }) {
     reflection,
   } = log;
 
+  // パンくずリスト用データ
+  const crumbs = [
+    { label: "活動の記録", href: "/activity-log" },
+    { label: name || "活動詳細", href: `/activity-log/${id}` },
+  ];
+  const baseCrumb = { label: "マイページ", href: "/mypage" };
+
   return (
-    <PageContainer>
-      <PageHeader>
-        <LogTitle>{name || "無題の活動"}</LogTitle>
-        <EditButton href={`/activity-log/${id}/edit`}>
-          <FaPen />
-          編集する
-        </EditButton>
-      </PageHeader>
+    <>
+      <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
+      <PageContainer>
+        <PageHeader>
+          <LogTitle>{name || "無題の活動"}</LogTitle>
+          <EditButton href={`/activity-log/${id}/edit`}>
+            <FaPen />
+            編集する
+          </EditButton>
+        </PageHeader>
 
-      {/* 活動日 */}
-      <DetailSection>
-        <SectionTitle>
-          <FaCalendarAlt />
-          活動日
-        </SectionTitle>
-        <SimpleInfo>{formatDate(datetime)}</SimpleInfo>
-      </DetailSection>
+        {/* 活動日 */}
+        <DetailSection>
+          <SectionTitle>
+            <FaCalendarAlt />
+            活動日
+          </SectionTitle>
+          <SimpleInfo>{formatDate(datetime)}</SimpleInfo>
+        </DetailSection>
 
-      {/* 参加した理由・目的 */}
-      <DetailSection>
-        <SectionTitle>
-          <FaBullseye />
-          参加した理由・目的
-        </SectionTitle>
-        <SectionContent>{reason || "記載なし"}</SectionContent>
-      </DetailSection>
+        {/* 参加した理由・目的 */}
+        <DetailSection>
+          <SectionTitle>
+            <FaBullseye />
+            参加した理由・目的
+          </SectionTitle>
+          <SectionContent>{reason || "記載なし"}</SectionContent>
+        </DetailSection>
 
-      {/* 活動内容 */}
-      <DetailSection>
-        <SectionTitle>
-          <FaPencilAlt />
-          活動内容
-        </SectionTitle>
-        <SectionContent>{content || "記載なし"}</SectionContent>
-      </DetailSection>
+        {/* 活動内容 */}
+        <DetailSection>
+          <SectionTitle>
+            <FaPencilAlt />
+            活動内容
+          </SectionTitle>
+          <SectionContent>{content || "記載なし"}</SectionContent>
+        </DetailSection>
 
-      {/* 規模・参加数 */}
-      <DetailSection>
-        <SectionTitle>
-          <FaUsers />
-          活動の規模・参加数
-        </SectionTitle>
-        <SectionContent>{scale_size || "記載なし"}</SectionContent>
-      </DetailSection>
+        {/* 規模・参加数 */}
+        <DetailSection>
+          <SectionTitle>
+            <FaUsers />
+            活動の規模・参加数
+          </SectionTitle>
+          <SectionContent>{scale_size || "記載なし"}</SectionContent>
+        </DetailSection>
 
-      {/* 活動による学び */}
-      <DetailSection>
-        <SectionTitle>
-          <FaLightbulb />
-          活動による学び
-        </SectionTitle>
-        <SectionContent>{learning || "記載なし"}</SectionContent>
-      </DetailSection>
+        {/* 活動による学び */}
+        <DetailSection>
+          <SectionTitle>
+            <FaLightbulb />
+            活動による学び
+          </SectionTitle>
+          <SectionContent>{learning || "記載なし"}</SectionContent>
+        </DetailSection>
 
-      {/* 活動の感想・反省 */}
-      <DetailSection>
-        <SectionTitle>
-          <FaCommentDots />
-          活動の感想・反省
-        </SectionTitle>
-        <SectionContent>{reflection || "記載なし"}</SectionContent>
-      </DetailSection>
-    </PageContainer>
+        {/* 活動の感想・反省 */}
+        <DetailSection>
+          <SectionTitle>
+            <FaCommentDots />
+            活動の感想・反省
+          </SectionTitle>
+          <SectionContent>{reflection || "記載なし"}</SectionContent>
+        </DetailSection>
+      </PageContainer>
+    </>
   );
 }

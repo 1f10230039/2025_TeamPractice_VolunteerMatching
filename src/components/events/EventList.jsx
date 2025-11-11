@@ -16,7 +16,7 @@ const ListContainer = styled.div`
  * イベントカードをリスト表示するコンポーネント
  * @param {{ events: object[] }} props - 親コンポーネントから渡されるイベントデータ配列
  */
-export default function EventList({ events }) {
+export default function EventList({ events, source, query, codes }) {
   // もしイベントが1件もなかったら
   if (!events || events.length === 0) {
     return <p>表示できるイベントがありません。</p>;
@@ -26,7 +26,13 @@ export default function EventList({ events }) {
   return (
     <ListContainer>
       {events.map(event => (
-        <EventCard key={event.id} event={event} />
+        <EventCard
+          key={event.id}
+          event={event}
+          source={source}
+          query={query}
+          codes={codes}
+        />
       ))}
     </ListContainer>
   );

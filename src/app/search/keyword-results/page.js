@@ -61,10 +61,22 @@ export default async function Page({ searchParams }) {
         : `「${query}」に一致するイベントは見つかりませんでした。`;
   }
 
+  // パンくずリスト用データを作成
+  const crumbs = [
+    { label: "キーワードから探す", href: "/search/keyword" },
+    { label: "検索結果", href: `/search/results?q=${query}` }, // 最後のページ
+  ];
+
   // クライアントコンポーネントにデータを渡す
   return (
     <Suspense fallback={<div>結果を読み込み中...</div>}>
-      <CommonSearchResultsPage titleText={titleText} events={events} />
+      <CommonSearchResultsPage
+        titleText={titleText}
+        events={events}
+        crumbs={crumbs}
+        source="keyword"
+        query={query}
+      />
     </Suspense>
   );
 }
