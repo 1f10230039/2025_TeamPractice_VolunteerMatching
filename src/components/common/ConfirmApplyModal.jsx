@@ -101,27 +101,32 @@ const ConfirmButton = styled(ModalButton)`
 `;
 
 /**
+ * 汎用確認モーダル コンポーネント
  * @param {{
- * isOpen: boolean,         // モーダルを開くかどうか
- * onClose: () => void,     // モーダルを閉じる関数
- * onConfirm: (e) => void, // 「応募する」が押された時の関数
- * eventName: string,       // 表示するイベント名
- * isLoading: boolean       // 応募処理中のローディング状態
+ * isOpen: boolean,
+ * onClose: () => void,
+ * onConfirm: () => void,
+ * isLoading: boolean,
+ * title: string,       // ★ propsとして title を受け取る
+ * body: React.ReactNode, // ★ propsとして body を受け取る
+ * confirmText: string,
+ * isDestructive?: boolean
  * }} props
  */
 export default function ConfirmApplyModal({
   isOpen,
   onClose,
   onConfirm,
-  eventName,
   isLoading,
+  title, // ★ 受け取る
+  body, // ★ 受け取る
+  confirmText,
+  isDestructive = false,
 }) {
-  // isOpenがfalseなら、何もレンダリングしない
   if (!isOpen) {
     return null;
   }
 
-  // 背景クリックで閉じる（ただしローディング中は閉じない）
   const handleBackdropClick = () => {
     if (!isLoading) {
       onClose();
@@ -130,19 +135,20 @@ export default function ConfirmApplyModal({
 
   return (
     <ModalBackdrop onClick={handleBackdropClick}>
-      {/* モーダルの中身をクリックしても閉じないようにする */}
       <ModalContent onClick={e => e.stopPropagation()}>
-        <ModalTitle>応募の確認</ModalTitle>
-        <ModalBody>
-          <strong>{eventName || "このイベント"}</strong>
-          に応募します。よろしいですか？
-        </ModalBody>
+        <ModalTitle>{title || "確認"}</ModalTitle>
+        <ModalBody>{body || "よろしいですか？"}</ModalBody>
+
         <ModalButtonContainer>
           <CancelButton onClick={onClose} disabled={isLoading}>
-            キャンセル
+            閉じる
           </CancelButton>
-          <ConfirmButton onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? "処理中..." : "応募する"}
+          <ConfirmButton
+            onClick={onConfirm}
+            disabled={isLoading}
+            isDestructive={isDestructive}
+          >
+            {isLoading ? "処理中..." : confirmText || "OK"}
           </ConfirmButton>
         </ModalButtonContainer>
       </ModalContent>
