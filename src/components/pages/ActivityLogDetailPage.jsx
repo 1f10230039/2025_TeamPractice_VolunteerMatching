@@ -9,6 +9,7 @@ import {
   FaCalendarAlt,
   FaBullseye,
   FaPencilAlt,
+  FaBuilding,
   FaUsers,
   FaLightbulb,
   FaCommentDots,
@@ -130,7 +131,8 @@ export default function ActivityLogDetailPage({ log }) {
     name,
     datetime,
     reason,
-    scale_size,
+    activity_scale,
+    numbers,
     content,
     learning,
     reflection,
@@ -182,14 +184,23 @@ export default function ActivityLogDetailPage({ log }) {
           <SectionContent>{content || "記載なし"}</SectionContent>
         </DetailSection>
 
-        {/* 規模・参加数 */}
-        <DetailSection>
-          <SectionTitle>
-            <FaUsers />
-            活動の規模・参加数
-          </SectionTitle>
-          <SectionContent>{scale_size || "記載なし"}</SectionContent>
-        </DetailSection>
+      {/* 活動の規模 */}
+      <DetailSection>
+        <SectionTitle>
+          <FaBuilding />
+          活動の規模
+        </SectionTitle>
+        <SectionContent>{activity_scale || "記載なし"}</SectionContent>
+      </DetailSection>
+
+      {/* 参加人数 */}
+      <DetailSection>
+        <SectionTitle>
+          <FaUsers />
+          参加人数
+        </SectionTitle>
+        <SectionContent>{numbers || "記載なし"}</SectionContent>
+      </DetailSection>
 
         {/* 活動による学び */}
         <DetailSection>
