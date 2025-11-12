@@ -1,4 +1,4 @@
-// イベント詳細ページコンポーネント
+// src/components/pages/EventDetailPage.jsx
 "use client";
 
 import { useState } from "react";
@@ -24,6 +24,8 @@ import {
   FaRegHeart,
 } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
+// ★1. モーダルコンポーネントをインポート
+import ConfirmApplyModal from "../common/ConfirmApplyModal";
 
 // --- スタイル定義 ---
 
@@ -47,15 +49,7 @@ const ActionMenu = styled.div`
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
   z-index: 50;
 
-  /* 既存のFooterTabBarとかぶらないよう、PCでは非表示 */
-  @media (min-width: 768px) {
-    /* PCではページ内上部に配置 */
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  }
+  /* ★ 修正: PC用の@mediaブロックを削除し、常に下部固定に */
 `;
 
 // お気に入りボタン (EventsCard.jsxから流用)
@@ -165,7 +159,8 @@ const SectionTitle = styled.h2`
   font-size: 1.3rem;
   font-weight: bold;
   color: #333;
-  border-bottom: 2px solid #007bff;
+  /* ★ 修正: 応募ボタンと区別するため、ボーダー色をグレーに変更 */
+  border-bottom: 2px solid #eee;
   padding-bottom: 8px;
   margin: 0 0 20px 0;
 `;
@@ -252,6 +247,15 @@ export default function EventDetailPage({ event, source, q, codes }) {
   const [isApplyLoading, setIsApplyLoading] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
+  // ★2. モーダル用の state を追加
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState({
+    title: "",
+    body: "",
+    confirmText: "",
+    isDestructive: false,
+  });
+
   if (!event) {
     return <div>イベント情報を読み込み中...</div>;
   }
@@ -336,7 +340,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
 
   // --- イベントハンドラ ---
 
-  // お気に入りボタンの処理 (EventsCard.jsx を参考)
+  // お気に入りボタンの処理 (変更なし)
   const handleToggleFavorite = async e => {
     e.preventDefault();
     if (isFavoriteLoading) return;
@@ -358,29 +362,62 @@ export default function EventDetailPage({ event, source, q, codes }) {
     setIsFavoriteLoading(false);
   };
 
-  // 応募ボタンの処理 (ご要望通り EventsCard.jsx のロジックを流用)
-  const handleToggleApply = async e => {
-    e.preventDefault();
+  // ★3. 応募/キャンセル処理の本体 (モーダルから呼ばれる)
+  // (引数 'e' を削除)
+  const handleToggleApply = async () => {
+    // e.preventDefault(); // ← 削除
     if (isApplyLoading) return;
     setIsApplyLoading(true);
 
     // 現在の `applied` の状態を反転
     const newApplyStatus = !applied;
 
-    // Supabaseの "events" テーブルをアップデート
-    const { error } = await supabase
-      .from("events")
-      .update({ applied: newApplyStatus }) // 'applied' カラムを更新
-      .eq("id", id); // この 'id' のイベントだけ
+    try {
+      // Supabaseの "events" テーブルをアップデート
+      const { error } = await supabase
+        .from("events")
+        .update({ applied: newApplyStatus }) // 'applied' カラムを更新
+        .eq("id", id); // この 'id' のイベントだけ
 
-    if (error) {
+      if (error) {
+        throw error;
+      } else {
+        // 成功したら、ページ全体をリフレッシュして最新の状態を反映
+        router.refresh();
+      }
+    } catch (error) {
       console.error("応募状態の更新エラー:", error.message);
       alert("応募状態の更新に失敗しました。");
-    } else {
-      // 成功したら、ページ全体をリフレッシュして最新の状態を反映
-      router.refresh();
+    } finally {
+      // ★ 成功しても失敗しても、ローディングを解除しモーダルを閉じる
+      setIsApplyLoading(false);
+      setIsModalOpen(false);
     }
-    setIsApplyLoading(false);
+  };
+
+  // ★4. 応募ボタンが押された時の処理 (モーダルを開く)
+  const handleApplyButtonPress = e => {
+    e.preventDefault();
+    if (isApplyLoading || isFavoriteLoading) return;
+
+    if (applied) {
+      // 【応募済み】の場合 → 即時にキャンセル処理を実行
+      handleToggleApply();
+    } else {
+      // 【まだ応募していない】場合 → 応募確認モーダルを開く
+      setModalContent({
+        title: "応募の確認",
+        body: (
+          <>
+            「<strong>{name || "このイベント"}</strong>
+            」に応募します。よろしいですか？
+          </>
+        ),
+        confirmText: "応募する",
+        isDestructive: false,
+      });
+      setIsModalOpen(true);
+    }
   };
 
   return (
@@ -397,8 +434,11 @@ export default function EventDetailPage({ event, source, q, codes }) {
 
         <ApplyButton
           isApplied={applied}
-          onClick={handleToggleApply}
-          disabled={isApplyLoading || isFavoriteLoading}
+          // ★5. onClick を「モーダルを開く関数」に変更
+          onClick={handleApplyButtonPress}
+          // ★6. disabled から isApplyLoading を削除
+          // (ボタン自体はいつでも押せるようにし、モーダル側で制御)
+          disabled={isFavoriteLoading}
         >
           {applied ? (
             <>
@@ -414,6 +454,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
         </ApplyButton>
       </ActionMenu>
 
+      {/* Breadcrumbsコンポーネントの呼び出しを復活させます */}
       <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
 
       {/* --- メインコンテンツ --- */}
@@ -554,6 +595,19 @@ export default function EventDetailPage({ event, source, q, codes }) {
           </DetailSection>
         )}
       </MainContent>
+
+      {/* ★7. モーダルコンポーネントをここに追加 */}
+      <ConfirmApplyModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleToggleApply} // 実際の Supabase 更新処理
+        isLoading={isApplyLoading}
+        // state からモーダルの内容を動的に渡す
+        title={modalContent.title}
+        body={modalContent.body}
+        confirmText={modalContent.confirmText}
+        isDestructive={modalContent.isDestructive}
+      />
     </PageWrapper>
   );
 }
