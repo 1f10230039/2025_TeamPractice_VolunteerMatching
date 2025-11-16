@@ -4,6 +4,7 @@
 import Link from "next/link";
 import styled from "@emotion/styled";
 import { usePathname } from "next/navigation";
+import { FaHome, FaList, FaUser } from "react-icons/fa";
 
 // Emotion
 // ナビゲーションバーのコンテナスタイル
@@ -18,6 +19,10 @@ const NavContainer = styled.nav`
 const StyledLink = styled(Link, {
   shouldForwardProp: prop => prop !== "isActive",
 })`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
   text-decoration: none;
   color: ${props => (props.isActive ? "#007bff" : "#888")};
   font-weight: bold;
@@ -26,9 +31,14 @@ const StyledLink = styled(Link, {
     !props.isActive &&
     `
     &:hover {
-      color: #007bff;   
+      color: #007bff;
     }
   `}
+
+  & > svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
 `;
 
 export default function Navigation() {
@@ -36,12 +46,15 @@ export default function Navigation() {
   return (
     <NavContainer>
       <StyledLink href="/" isActive={pathname === "/"}>
+        <FaHome />
         ホーム
       </StyledLink>
       <StyledLink href="/mylist" isActive={pathname === "/mylist"}>
+        <FaList />
         マイリスト
       </StyledLink>
       <StyledLink href="/mypage" isActive={pathname === "/mypage"}>
+        <FaUser />
         マイページ
       </StyledLink>
     </NavContainer>
