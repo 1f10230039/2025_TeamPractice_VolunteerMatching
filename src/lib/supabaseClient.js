@@ -1,19 +1,17 @@
 // src/lib/supabaseClient.js
 
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 
 /**
  * クライアントコンポーネント専用のSupabaseクライアントを作成する関数
  *
  * "use client" が指定されたファイル (LoginPage.jsx, SignupPage.jsx など) で使用します。
- * 認証トークンは localStorage ではなく cookies に保存されます。
  *
  * @returns {object} ブラウザ(クライアント)で動作するSupabaseクライアントインスタンス
  */
 function createSupabaseClient() {
-  // @supabase/supabase-js の 'createClient' ではなく、
-  // @supabase/ssr の 'createBrowserClient' を使用します
-  return createBrowserClient(
+  // @supabase/supabase-js の 'createClient' を使用します
+  return createClient(
     // .env.local から環境変数を読み込む
     // (NEXT_PUBLIC_ のプレフィックスによりクライアント側で読み取り可能)
     process.env.NEXT_PUBLIC_SUPABASE_URL,
