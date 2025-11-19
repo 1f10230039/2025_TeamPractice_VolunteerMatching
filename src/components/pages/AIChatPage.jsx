@@ -4,7 +4,7 @@
 import { css } from "@emotion/react";
 import React, { useState, useRef, useEffect } from "react";
 import ChatMessage from "../chat/ChatMessage";
-import { getInitialMessages, processChatMessage } from "@/app/search/ai/actions";
+import { getInitialMessages, processChatMessage } from "@/app/search/ai/page";
 
 const container = css`
   max-width: 768px;
