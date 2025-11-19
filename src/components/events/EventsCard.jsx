@@ -6,6 +6,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
+import { FaMapMarkerAlt, FaYenSign, FaCalendarAlt } from "react-icons/fa";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
+
 // Emotion
 // カード全体
 const CardContainer = styled(Link)`
@@ -40,6 +43,7 @@ const EventImage = styled.img`
   margin-right: 16px;
 `;
 
+// お気に入りボタン
 const FavoriteButton = styled.button`
   position: absolute;
   top: 12px;
@@ -50,17 +54,22 @@ const FavoriteButton = styled.button`
   width: 40px;
   height: 40px;
   cursor: pointer;
-  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  color: ${props => (props.isFavorite ? "red" : "#ccc")};
 
   /* 連打防止用に、ローディング中はカーソルを変える */
   &:disabled {
     cursor: not-allowed;
     opacity: 0.7;
+  }
+
+  & > svg {
+    width: 22px;
+    height: 22px;
+    color: ${props => (props.isFavorite ? "#e74c3c" : "#ccc")};
+    transition: color 0.1s ease;
   }
 `;
 
@@ -73,6 +82,14 @@ const EventName = styled.h3`
   font-size: 1.1rem;
   font-weight: bold;
   margin: 0 0 8px 0;
+`;
+
+// タグを囲むコンテナ
+const TagContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
 `;
 
 // タグ用のスタイル
@@ -95,10 +112,11 @@ const InfoRow = styled.div`
   color: #555;
   margin-bottom: 6px;
 
-  /* アイコン用の絵文字（仮） */
-  & > span:first-of-type {
+  & > svg {
     margin-right: 8px;
-    font-size: 1.1rem;
+    width: 0.9rem;
+    height: 0.9rem;
+    color: #888;
   }
 `;
 
@@ -126,11 +144,12 @@ const formatDateRange = (startStr, endStr) => {
  * イベントカードを表示するコンポーネント
  * @param {{ event: object }} props - イベントデータオブジェクト
  */
-export default function EventCard({ event }) {
+export default function EventCard({ event, source, query, codes }) {
   const {
     id,
     name,
     tag,
+    tags,
     place,
     fee,
     start_datetime,
@@ -138,6 +157,9 @@ export default function EventCard({ event }) {
     image_url,
     favorite,
   } = event;
+
+  // タグの表示用配列を作成 (tags 配列があればそれを使い、なければ tag 文字列を使う)
+  const displayTags = event.tags || (tag ? [{ name: tag }] : []);
 
   // お気に入りボタンのクリック処理
   const router = useRouter();
@@ -171,8 +193,30 @@ export default function EventCard({ event }) {
     setIsLoading(false);
   };
 
+  // イベント詳細ページへのリンクURLを作成
+  const detailUrl = (() => {
+    const base = `/events/${id}`;
+    // クエリパラメータを組み立てる
+    const params = new URLSearchParams();
+    // 検索元ページの情報を付与
+    if (source) {
+      params.append("source", source);
+    }
+
+    // 検索キーワードや場所コードの情報を付与
+    if (source === "keyword" && query) {
+      params.append("q", query);
+    } else if (source === "location" && codes) {
+      params.append("codes", codes);
+    }
+    // クエリ文字列を組み立てる(source === 'mylist' の時は、'source=mylist' だけが付く)
+    const queryString = params.toString();
+    // クエリが何かあれば `?` を付けて、なければベースURLだけを返す
+    return queryString ? `${base}?${queryString}` : base;
+  })(); // () で関数を即時実行
+
   return (
-    <CardContainer href={`/events/${id}`}>
+    <CardContainer href={detailUrl}>
       <ImageWrapper>
         <EventImage
           src={
@@ -185,22 +229,28 @@ export default function EventCard({ event }) {
           onClick={handleToggleFavorite}
           disabled={isLoading}
         >
-          {favorite ? "♥" : "♡"}
+          {favorite ? <FaHeart /> : <FaRegHeart />}
         </FavoriteButton>
       </ImageWrapper>
       <CardContent>
-        {tag && <Tag>{tag}</Tag>}
+        {displayTags.length > 0 && (
+          <TagContainer>
+            {displayTags.map((t, index) => (
+              <Tag key={index}>{t.name || t}</Tag>
+            ))}
+          </TagContainer>
+        )}
         <EventName>{name}</EventName>
         <InfoRow>
-          <span>📍</span>
+          <FaMapMarkerAlt />
           {place || "場所未定"}
         </InfoRow>
         <InfoRow>
-          <span>💰</span>
+          <FaYenSign />
           {!fee ? "無料" : `${fee.toLocaleString()}円`}
         </InfoRow>
         <InfoRow>
-          <span>🗓️</span>
+          <FaCalendarAlt />
           {formatDateRange(start_datetime, end_datetime)}
         </InfoRow>
       </CardContent>

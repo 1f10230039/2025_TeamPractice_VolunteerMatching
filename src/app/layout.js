@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Geist, Geist_Mono } from "next/font/google";
 import EmotionRegistry from "../lib/EmotionRegistry";
 import GlobalStyles from "@/styles/GlobalStyles";

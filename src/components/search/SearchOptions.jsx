@@ -4,6 +4,7 @@
 
 import styled from "@emotion/styled";
 import Link from "next/link";
+import { FaSearch, FaMapMarkerAlt, FaRobot } from "react-icons/fa";
 
 // Emotion
 // 検索オプション全体を包むコンテナ
@@ -41,13 +42,15 @@ const SearchLinkTop = styled(Link)`
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
-  /* 絵文字用のスペース */
-  & > span {
-    font-size: 1.8rem;
+  & > svg {
+    width: 1.5rem;
+    height: 1.5rem;
     margin-right: 12px;
     line-height: 1;
+    color: #555;
   }
 `;
+
 // 真ん中のボタン風のリンク
 const SearchLinkMiddle = styled(Link)`
   display: flex;
@@ -70,13 +73,15 @@ const SearchLinkMiddle = styled(Link)`
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
-  /* 絵文字用のスペース */
-  & > span {
-    font-size: 1.8rem;
+  & > svg {
+    width: 1.5rem;
+    height: 1.5rem;
     margin-right: 12px;
     line-height: 1;
+    color: #555;
   }
 `;
+
 // 下のボタン風のリンク
 const SearchLinkBottom = styled(Link)`
   display: flex;
@@ -98,11 +103,12 @@ const SearchLinkBottom = styled(Link)`
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
-  /* 絵文字用のスペース */
-  & > span {
-    font-size: 1.8rem;
+  & > svg {
+    width: 1.5rem;
+    height: 1.5rem;
     margin-right: 12px;
     line-height: 1;
+    color: #555;
   }
 `;
 
@@ -111,13 +117,16 @@ export default function SearchOptions() {
     <SearchBoxContainer>
       <OptionsContainer>
         <SearchLinkTop href="/search/keyword">
-          <span>🔍</span>キーワードから探す
+          <FaSearch />
+          キーワードから探す
         </SearchLinkTop>
         <SearchLinkMiddle href="/search/location">
-          <span>📍</span>場所から探す
+          <FaMapMarkerAlt />
+          場所から探す
         </SearchLinkMiddle>
         <SearchLinkBottom href="/search/ai">
-          <span>🤖</span>AIと相談して探す
+          <FaRobot />
+          AIと相談して探す
         </SearchLinkBottom>
       </OptionsContainer>
     </SearchBoxContainer>
