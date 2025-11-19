@@ -1,6 +1,7 @@
 // キーワード検索結果ページと市町村コード検索結果ページの両方で使う共通コンポーネント
 "use client";
 
+import { useState, useMemo } from "react";
 import styled from "@emotion/styled";
 import EventList from "../events/EventList";
 import SearchOptionsMini from "../search/SearchOptionsMini";
@@ -38,6 +39,30 @@ const ListWrapper = styled.div`
   padding: 0 24px;
 `;
 
+// フィルターコンテナ
+const FilterContainer = styled.div`
+  padding: 0 24px 24px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+// フィルタタグボタン
+const FilterTagButton = styled.button`
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid ${props => (props.isSelected ? "#007bff" : "#ddd")};
+  background-color: ${props => (props.isSelected ? "#007bff" : "#fff")};
+  color: ${props => (props.isSelected ? "#fff" : "#555")};
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${props => (props.isSelected ? "#0056b3" : "#f0f0f0")};
+  }
+`;
+
 /**
  * 検索結果を表示するための "共通" クライアントコンポーネント
  * @param {{
@@ -50,6 +75,7 @@ const ListWrapper = styled.div`
  * codes: string   // 市町村コードの文字列
  * }} props
  */
+
 export default function CommonSearchResultsPage({
   titleText,
   events,
@@ -61,6 +87,54 @@ export default function CommonSearchResultsPage({
 }) {
   const safeEvents = events || [];
 
+  // タグフィルター用の状態管理
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
+
+  // 利用可能なタグ一覧をイベントデータから抽出して一意にする
+  const availableTags = useMemo(() => {
+    const tagsMap = new Map();
+    safeEvents.forEach(event => {
+      if (event.tags && Array.isArray(event.tags)) {
+        event.tags.forEach(tag => {
+          if (!tagsMap.has(tag.id)) {
+            tagsMap.set(tag.id, tag);
+          }
+        });
+      }
+    });
+    // ID順に並べて返す
+    return Array.from(tagsMap.values()).sort((a, b) => a.id - b.id);
+  }, [safeEvents]);
+
+  // タグフィルターのクリック処理
+  const handleTagClick = tagId => {
+    setSelectedTagIds(prev => {
+      if (prev.includes(tagId)) {
+        // すでに選択されてたら外す
+        return prev.filter(id => id !== tagId);
+      } else {
+        // 選択されてなかったら追加する
+        return [...prev, tagId];
+      }
+    });
+  };
+
+  // 選択されたタグに基づいてイベントをフィルタリングする
+  const filteredEvents = useMemo(() => {
+    // タグが何も選択されてなければ、そのまま全部表示
+    if (selectedTagIds.length === 0) {
+      return safeEvents;
+    }
+
+    // 選択されたタグをすべて持っているイベントだけを残す (AND検索)
+    return safeEvents.filter(event => {
+      if (!event.tags) return false;
+      const eventTagIds = event.tags.map(t => t.id);
+      // selectedTagIds のすべての ID が、eventTagIds に含まれているかチェック
+      return selectedTagIds.every(selId => eventTagIds.includes(selId));
+    });
+  }, [safeEvents, selectedTagIds]);
+
   return (
     <section>
       <SearchInputContainer>
@@ -71,15 +145,59 @@ export default function CommonSearchResultsPage({
 
       <PageResultsContainer>
         <ResultTitle>{titleText}</ResultTitle>
-
-        {safeEvents.length > 0 && (
+        {availableTags.length > 0 && (
+          <FilterContainer>
+            <span
+              style={{
+                fontSize: "0.9rem",
+                color: "#555",
+                alignSelf: "center",
+                marginRight: "8px",
+              }}
+            >
+              絞り込み:
+            </span>
+            {availableTags.map(tag => (
+              <FilterTagButton
+                key={tag.id}
+                isSelected={selectedTagIds.includes(tag.id)}
+                onClick={() => handleTagClick(tag.id)}
+              >
+                {tag.name}
+              </FilterTagButton>
+            ))}
+            {selectedTagIds.length > 0 && (
+              <button
+                onClick={() => setSelectedTagIds([])}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#888",
+                  fontSize: "0.8rem",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  marginLeft: "8px",
+                }}
+              >
+                クリア
+              </button>
+            )}
+          </FilterContainer>
+        )}
+        {filteredEvents.length > 0 ? (
           <ListWrapper>
             <EventList
-              events={safeEvents}
+              events={filteredEvents}
               source={source}
               query={query}
               codes={codes}
             />
+          </ListWrapper>
+        ) : (
+          <ListWrapper>
+            <p style={{ color: "#666" }}>
+              条件に一致するイベントはありません。
+            </p>
           </ListWrapper>
         )}
       </PageResultsContainer>

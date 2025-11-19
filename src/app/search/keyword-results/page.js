@@ -19,21 +19,41 @@ async function saveSearchHistory(query) {
   }
 }
 
-// キーワードに一致するeventsを検索する関数
+// キーワードでイベントを検索する関数
 async function fetchSearchResults(query) {
-  if (!query) return []; // クエリが空なら空を返す
+  if (!query) return [];
 
-  // name(イベント名)またはlong_description(詳細文) にキーワードが部分一致するものを探す
+  // event_tags と tags も一緒に取得する (.select を変更)
   const { data, error } = await supabase
     .from("events")
-    .select("*")
-    .or(`name.ilike.%${query}%,long_description.ilike.%${query}%`); // or条件で検索
+    .select(
+      `
+      *,
+      event_tags (
+        tags (
+          *
+        )
+      )
+    `
+    )
+    .or(`name.ilike.%${query}%,long_description.ilike.%${query}%`);
 
   if (error) {
     console.error("イベント検索に失敗:", error.message);
-    return []; // エラーなら空を返す
+    return [];
   }
-  return data || [];
+
+  if (!data) return [];
+
+  // データを整形して tags 配列を作る (app/page.js と同じロジック)
+  const formattedEvents = data.map(event => {
+    const tags = event.event_tags
+      ? event.event_tags.map(item => item.tags).filter(tag => tag !== null)
+      : [];
+    return { ...event, tags };
+  });
+
+  return formattedEvents;
 }
 
 // ページ本体 (サーバーコンポーネント)
