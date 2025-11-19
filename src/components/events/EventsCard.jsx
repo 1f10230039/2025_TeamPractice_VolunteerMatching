@@ -84,6 +84,14 @@ const EventName = styled.h3`
   margin: 0 0 8px 0;
 `;
 
+// タグを囲むコンテナ
+const TagContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+`;
+
 // タグ用のスタイル
 const Tag = styled.span`
   display: inline-block;
@@ -141,6 +149,7 @@ export default function EventCard({ event, source, query, codes }) {
     id,
     name,
     tag,
+    tags,
     place,
     fee,
     start_datetime,
@@ -148,6 +157,9 @@ export default function EventCard({ event, source, query, codes }) {
     image_url,
     favorite,
   } = event;
+
+  // タグの表示用配列を作成 (tags 配列があればそれを使い、なければ tag 文字列を使う)
+  const displayTags = event.tags || (tag ? [{ name: tag }] : []);
 
   // お気に入りボタンのクリック処理
   const router = useRouter();
@@ -184,6 +196,7 @@ export default function EventCard({ event, source, query, codes }) {
   // イベント詳細ページへのリンクURLを作成
   const detailUrl = (() => {
     const base = `/events/${id}`;
+    // クエリパラメータを組み立てる
     const params = new URLSearchParams();
     // 検索元ページの情報を付与
     if (source) {
@@ -220,7 +233,13 @@ export default function EventCard({ event, source, query, codes }) {
         </FavoriteButton>
       </ImageWrapper>
       <CardContent>
-        {tag && <Tag>{tag}</Tag>}
+        {displayTags.length > 0 && (
+          <TagContainer>
+            {displayTags.map((t, index) => (
+              <Tag key={index}>{t.name || t}</Tag>
+            ))}
+          </TagContainer>
+        )}
         <EventName>{name}</EventName>
         <InfoRow>
           <FaMapMarkerAlt />

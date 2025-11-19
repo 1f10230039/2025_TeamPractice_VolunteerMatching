@@ -9,31 +9,64 @@ async function saveSearchHistory(query) {
   // キーワードが空っぽ、または短すぎる場合は保存しない
   if (!query || query.trim().length < 2) return;
 
+  const trimmedQuery = query.trim();
+
+  // 同じキーワードの古い履歴があれば削除する
+  const { error: deleteError } = await supabase
+    .from("search_history")
+    .delete()
+    .eq("query", trimmedQuery);
+
+  if (deleteError) {
+    console.error("重複履歴の削除に失敗:", deleteError.message);
+    // 削除に失敗しても、とりあえず新しい履歴の追加は試みる
+  }
+
+  // その後、新しく履歴を追加する
   const { error } = await supabase
     .from("search_history")
-    .insert({ query: query.trim() }); // queryカラムにキーワードを保存
+    .insert({ query: trimmedQuery }); // query カラムにキーワードを保存
 
   if (error) {
-    // 履歴保存のエラーは、検索機能自体には影響ないので、コンソールにだけ出す
     console.error("検索履歴の保存に失敗:", error.message);
   }
 }
 
-// キーワードに一致するeventsを検索する関数
+// キーワードに一致する events を検索する関数
 async function fetchSearchResults(query) {
-  if (!query) return []; // クエリが空なら空を返す
+  if (!query) return [];
 
-  // name(イベント名)またはlong_description(詳細文) にキーワードが部分一致するものを探す
+  // event_tags と tags も一緒に取得する
   const { data, error } = await supabase
     .from("events")
-    .select("*")
-    .or(`name.ilike.%${query}%,long_description.ilike.%${query}%`); // or条件で検索
+    .select(
+      `
+      *,
+      event_tags (
+        tags (
+          *
+        )
+      )
+    `
+    )
+    .or(`name.ilike.%${query}%,long_description.ilike.%${query}%`);
 
   if (error) {
     console.error("イベント検索に失敗:", error.message);
-    return []; // エラーなら空を返す
+    return [];
   }
-  return data || [];
+
+  if (!data) return [];
+
+  // データを整形して tags 配列を作る
+  const formattedEvents = data.map(event => {
+    const tags = event.event_tags
+      ? event.event_tags.map(item => item.tags).filter(tag => tag !== null)
+      : [];
+    return { ...event, tags };
+  });
+
+  return formattedEvents;
 }
 
 // ページ本体 (サーバーコンポーネント)

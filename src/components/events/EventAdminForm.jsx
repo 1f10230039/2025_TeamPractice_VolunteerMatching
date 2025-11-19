@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import styled from "@emotion/styled";
@@ -122,6 +122,39 @@ const DropzoneContainer = styled.div`
     background-color 0.2s ease;
 `;
 
+// タグ選択コンテナ
+const TagSelectionContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px;
+  background-color: #fcfcfc;
+  border: 1px solid #eee;
+  border-radius: 6px;
+`;
+
+// タグラベル
+const TagLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background-color: ${props => (props.isChecked ? "#e0eafc" : "#fff")};
+  border: 1px solid ${props => (props.isChecked ? "#007bff" : "#ddd")};
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${props => (props.isChecked ? "#d0defa" : "#f0f0f0")};
+  }
+`;
+
+// タグ用チェックボックス（非表示）
+const TagCheckbox = styled.input`
+  display: none; /* チェックボックス自体は隠す */
+`;
+
 /**
  * SupabaseのISO文字列 (UTC) を <input type="datetime-local"> 用の
  * "YYYY-MM-DDTHH:MM" 形式 (JST) に変換する
@@ -157,6 +190,9 @@ export default function EventAdminForm({ eventToEdit }) {
   // フォームのモードを判別
   const isEditMode = Boolean(eventToEdit);
 
+  const [availableTags, setAvailableTags] = useState([]); // DBにある全タグ
+  const [selectedTagIds, setSelectedTagIds] = useState([]); // 選択中のタグID
+
   // 画像アップロード用の状態管理
   const [uploadFile, setUploadFile] = useState(null);
 
@@ -184,7 +220,42 @@ export default function EventAdminForm({ eventToEdit }) {
     applied: eventToEdit?.applied || false,
     city: eventToEdit?.city || "",
     prefecture: eventToEdit?.prefectures || "",
+    appeal: eventToEdit?.appeal || "",
+    experience: eventToEdit?.experience || "",
+    review: eventToEdit?.review || "",
   });
+
+  // コンポーネント初回レンダリング時に実行する処理
+  useEffect(() => {
+    // DBから全タグを取得
+    const fetchTags = async () => {
+      const { data, error } = await supabase
+        .from("tags")
+        .select("*")
+        .order("id");
+      if (!error && data) {
+        setAvailableTags(data);
+      }
+    };
+    fetchTags();
+
+    // 編集モードなら、既存のタグIDをセット
+    if (isEditMode && eventToEdit.tags) {
+      const existingIds = eventToEdit.tags.map(t => t.id);
+      setSelectedTagIds(existingIds);
+    }
+  }, [isEditMode, eventToEdit]);
+
+  // タグの選択・解除を切り替えるハンドラ
+  const handleTagToggle = tagId => {
+    setSelectedTagIds(prev => {
+      if (prev.includes(tagId)) {
+        return prev.filter(id => id !== tagId); // 選択解除
+      } else {
+        return [...prev, tagId]; // 選択追加
+      }
+    });
+  };
 
   // Dropzoneの設定
   const onDrop = useCallback(acceptedFiles => {
@@ -244,20 +315,18 @@ export default function EventAdminForm({ eventToEdit }) {
       return;
     }
 
-    // Supabaseに送るデータ（日付をISO形式に直す）
+    // フォームデータを整形
     let submissionData = {
       ...formData,
-      // datetime-localの値をDateオブジェクトにしてからISO文字列(UTC)に変換
       start_datetime: new Date(formData.start_datetime).toISOString(),
       end_datetime: new Date(formData.end_datetime).toISOString(),
-      // 文字列で来ちゃうfeeとcapacityを数値に変換
       fee: parseInt(formData.fee, 10) || 0,
       capacity: parseInt(formData.capacity, 10) || 0,
-      // 緯度経度を浮動小数点数に変換 (空なら null)
       latitude: parseFloat(formData.latitude) || null,
       longitude: parseFloat(formData.longitude) || null,
-      prefectures: formData.prefecture, // カラム名に合わせる
+      prefectures: formData.prefecture,
     };
+    delete submissionData.prefecture;
 
     // prefectureキーを削除（prefecturesを使ったため）
     delete submissionData.prefecture;
@@ -302,19 +371,19 @@ export default function EventAdminForm({ eventToEdit }) {
         end_datetime: new Date(formData.end_datetime).toISOString(),
       };
 
+      let targetEventId = null;
+
       if (isEditMode) {
-        // --- 「編集モード」の処理 ---
+        // --- 更新 (UPDATE) ---
         const { error } = await supabase
           .from("events")
           .update(submissionData)
           .eq("id", eventToEdit.id);
 
         if (error) throw error;
-        alert("イベントを更新しました！");
-        // 成功したら、一般公開用の「詳細ページ」に飛ぶ
-        router.push(`/events/${eventToEdit.id}`);
+        targetEventId = eventToEdit.id;
       } else {
-        // --- 「新規作成モード」の処理 ---
+        // --- 新規作成 (INSERT) ---
         const { data, error } = await supabase
           .from("events")
           .insert([submissionData])
@@ -322,16 +391,38 @@ export default function EventAdminForm({ eventToEdit }) {
           .single();
 
         if (error) throw error;
-        alert("イベントを作成しました！");
-        // 成功したら、今作ったイベントの「詳細ページ」に飛ぶ
-        if (data && data.id) {
-          router.push(`/events/${data.id}`);
-        } else {
-          router.push("/admin/events");
+        targetEventId = data.id;
+      }
+
+      // タグの紐付け処理
+      if (targetEventId) {
+        // イベントに紐付く既存のタグを全削除 (リセット)
+        const { error: deleteTagsError } = await supabase
+          .from("event_tags")
+          .delete()
+          .eq("event_id", targetEventId);
+
+        if (deleteTagsError) console.error("タグ削除エラー:", deleteTagsError);
+
+        // 選択されているタグがあれば、新しく紐付け (INSERT)
+        if (selectedTagIds.length > 0) {
+          const tagInsertData = selectedTagIds.map(tagId => ({
+            event_id: targetEventId,
+            tag_id: tagId,
+          }));
+
+          const { error: insertTagsError } = await supabase
+            .from("event_tags")
+            .insert(tagInsertData);
+
+          if (insertTagsError) throw insertTagsError;
         }
       }
 
-      // サーバーコンポーネントのキャッシュを更新させる
+      alert(
+        isEditMode ? "イベントを更新しました！" : "イベントを作成しました！"
+      );
+      router.push(`/events/${targetEventId}`);
       router.refresh();
     } catch (error) {
       console.error("イベントの保存に失敗:", error.message);
@@ -494,6 +585,33 @@ export default function EventAdminForm({ eventToEdit }) {
         />
       </FormGroup>
       <FormGroup>
+        <Label htmlFor="appeal">ボランティアの魅力</Label>
+        <Textarea
+          id="appeal"
+          name="appeal"
+          value={formData.appeal}
+          onChange={handleChange}
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label htmlFor="experience">得られる経験</Label>
+        <Textarea
+          id="experience"
+          name="experience"
+          value={formData.experience}
+          onChange={handleChange}
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label htmlFor="review">口コミ・体験談</Label>
+        <Textarea
+          id="review"
+          name="review"
+          value={formData.review}
+          onChange={handleChange}
+        />
+      </FormGroup>
+      <FormGroup>
         <Label htmlFor="image_upload">アイキャッチ画像</Label>
 
         {/* Dropzoneエリア */}
@@ -622,6 +740,33 @@ export default function EventAdminForm({ eventToEdit }) {
           </CheckboxWrapper>
         </FormGroup>
       </GridWrapper>
+
+      {/* --- タグ選択 --- */}
+      <FormGroup>
+        <Label>タグ (複数選択)</Label>
+        <TagSelectionContainer>
+          {availableTags.length > 0 ? (
+            availableTags.map(tag => (
+              <TagLabel
+                key={tag.id}
+                isChecked={selectedTagIds.includes(tag.id)}
+              >
+                <TagCheckbox
+                  type="checkbox"
+                  checked={selectedTagIds.includes(tag.id)}
+                  onChange={() => handleTagToggle(tag.id)}
+                />
+                {selectedTagIds.includes(tag.id) && <span>✓</span>}
+                {tag.name}
+              </TagLabel>
+            ))
+          ) : (
+            <p style={{ color: "#888", fontSize: "0.9rem" }}>
+              タグが見つかりません。Supabaseのtagsテーブルにデータを追加してください。
+            </p>
+          )}
+        </TagSelectionContainer>
+      </FormGroup>
 
       {/* --- タグ --- */}
       <FormGroup>

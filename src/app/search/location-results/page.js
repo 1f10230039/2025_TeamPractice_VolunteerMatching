@@ -33,10 +33,19 @@ async function fetchEventsByCityCodes(codesArray) {
     return [];
   }
 
-  // 取得した「市町村名」でeventsテーブルを検索する
+  // 取得した市町村名に基づいて、eventsテーブルからイベントを取得する
   const { data: eventsData, error: eventsError } = await supabase
     .from("events")
-    .select("*")
+    .select(
+      `
+      *,
+      event_tags (
+        tags (
+          *
+        )
+      )
+    `
+    )
     .in("city", cityNames);
 
   if (eventsError) {
@@ -44,7 +53,17 @@ async function fetchEventsByCityCodes(codesArray) {
     return [];
   }
 
-  return eventsData || [];
+  if (!eventsData) return [];
+
+  // データを整形して tags 配列を作る (app/page.js と同じロジック)
+  const formattedEvents = eventsData.map(event => {
+    const tags = event.event_tags
+      ? event.event_tags.map(item => item.tags).filter(tag => tag !== null)
+      : [];
+    return { ...event, tags };
+  });
+
+  return formattedEvents;
 }
 
 // ページ本体 (サーバーコンポーネント)

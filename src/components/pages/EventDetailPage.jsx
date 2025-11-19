@@ -22,6 +22,9 @@ import {
   FaRegCheckCircle,
   FaHeart,
   FaRegHeart,
+  FaLightbulb,
+  FaThumbsUp,   
+  FaComments,
 } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
 
@@ -168,6 +171,15 @@ const SectionTitle = styled.h2`
   border-bottom: 2px solid #007bff;
   padding-bottom: 8px;
   margin: 0 0 20px 0;
+  
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  & svg {
+    color: #007bff;
+    font-size: 1.1rem;
+  }
 `;
 
 // 募集要項のテーブル風レイアウト
@@ -274,8 +286,11 @@ export default function EventDetailPage({ event, source, q, codes }) {
     belongings,
     clothing,
     selection_flow,
-    favorite, // お気に入り状態
-    applied, // 応募状態
+    favorite,
+    applied,
+    experience, 
+    appeal,     
+    review,     
   } = event;
 
   // --- パンくずリストの生成 ---
@@ -434,6 +449,34 @@ export default function EventDetailPage({ event, source, q, codes }) {
           priority
         />
 
+        {/* --- ボランティア詳細 --- */}
+        {long_description && (
+          <DetailSection>
+            <SectionTitle><FaInfoCircle /> ボランティア詳細</SectionTitle>
+            <SectionContent>{long_description}</SectionContent>
+          </DetailSection>
+        )}
+
+        {/* --- ボランティアの魅力 --- */}
+        {appeal && (
+          <DetailSection>
+            <SectionTitle>
+              <FaThumbsUp /> ボランティアの魅力
+            </SectionTitle>
+            <SectionContent>{appeal}</SectionContent>
+          </DetailSection>
+        )}
+
+        {/* --- 得られる経験 --- */}
+        {experience && (
+          <DetailSection>
+            <SectionTitle>
+              <FaLightbulb /> 得られる経験
+            </SectionTitle>
+            <SectionContent>{experience}</SectionContent>
+          </DetailSection>
+        )}
+
         {/* --- 募集要項 --- */}
         <DetailSection>
           <SectionTitle>募集要項</SectionTitle>
@@ -519,6 +562,16 @@ export default function EventDetailPage({ event, source, q, codes }) {
                 </>
               )}
             </InfoGrid>
+          </DetailSection>
+        )}
+
+        {/* --- 口コミ・体験談 --- */}
+        {review && (
+          <DetailSection>
+            <SectionTitle>
+              <FaComments /> 口コミ・体験談
+            </SectionTitle>
+            <SectionContent>{review}</SectionContent>
           </DetailSection>
         )}
 
