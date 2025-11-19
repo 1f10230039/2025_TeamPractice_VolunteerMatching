@@ -126,7 +126,20 @@ export default function LoginPage() {
       }, 100); // 100ミリ秒待つ
     } catch (error) {
       console.error("ログインエラー(LoginPage.jsx):", error);
-      setError(error.message || "ログイン中にエラーが発生しました。");
+
+      // ★★★ ここを修正 ★★★
+      // エラーメッセージの内容を判定して、ユーザーに分かりやすい言葉にする
+      let message = "ログイン中にエラーが発生しました。";
+
+      if (error.message.includes("Invalid login credentials")) {
+        message = "メールアドレスかパスワードが間違っています。";
+      }
+
+      // 1. 画面に赤文字で出す（既存）
+      setError(message);
+
+      // 2. ポップアップ（アラート）でも出す（新規追加）
+      alert(message);
     }
   };
 
