@@ -9,21 +9,34 @@ async function saveSearchHistory(query) {
   // キーワードが空っぽ、または短すぎる場合は保存しない
   if (!query || query.trim().length < 2) return;
 
+  const trimmedQuery = query.trim();
+
+  // 同じキーワードの古い履歴があれば削除する
+  const { error: deleteError } = await supabase
+    .from("search_history")
+    .delete()
+    .eq("query", trimmedQuery);
+
+  if (deleteError) {
+    console.error("重複履歴の削除に失敗:", deleteError.message);
+    // 削除に失敗しても、とりあえず新しい履歴の追加は試みる
+  }
+
+  // その後、新しく履歴を追加する
   const { error } = await supabase
     .from("search_history")
-    .insert({ query: query.trim() }); // queryカラムにキーワードを保存
+    .insert({ query: trimmedQuery }); // query カラムにキーワードを保存
 
   if (error) {
-    // 履歴保存のエラーは、検索機能自体には影響ないので、コンソールにだけ出す
     console.error("検索履歴の保存に失敗:", error.message);
   }
 }
 
-// キーワードでイベントを検索する関数
+// キーワードに一致する events を検索する関数
 async function fetchSearchResults(query) {
   if (!query) return [];
 
-  // event_tags と tags も一緒に取得する (.select を変更)
+  // event_tags と tags も一緒に取得する
   const { data, error } = await supabase
     .from("events")
     .select(
@@ -45,7 +58,7 @@ async function fetchSearchResults(query) {
 
   if (!data) return [];
 
-  // データを整形して tags 配列を作る (app/page.js と同じロジック)
+  // データを整形して tags 配列を作る
   const formattedEvents = data.map(event => {
     const tags = event.event_tags
       ? event.event_tags.map(item => item.tags).filter(tag => tag !== null)
