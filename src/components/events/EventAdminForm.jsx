@@ -220,6 +220,9 @@ export default function EventAdminForm({ eventToEdit }) {
     applied: eventToEdit?.applied || false,
     city: eventToEdit?.city || "",
     prefecture: eventToEdit?.prefectures || "",
+    appeal: eventToEdit?.appeal || "",
+    experience: eventToEdit?.experience || "",
+    review: eventToEdit?.review || "",
   });
 
   // コンポーネント初回レンダリング時に実行する処理
@@ -578,6 +581,33 @@ export default function EventAdminForm({ eventToEdit }) {
           id="long_description"
           name="long_description"
           value={formData.long_description}
+          onChange={handleChange}
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label htmlFor="appeal">ボランティアの魅力</Label>
+        <Textarea
+          id="appeal"
+          name="appeal"
+          value={formData.appeal}
+          onChange={handleChange}
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label htmlFor="experience">得られる経験</Label>
+        <Textarea
+          id="experience"
+          name="experience"
+          value={formData.experience}
+          onChange={handleChange}
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label htmlFor="review">口コミ・体験談</Label>
+        <Textarea
+          id="review"
+          name="review"
+          value={formData.review}
           onChange={handleChange}
         />
       </FormGroup>
