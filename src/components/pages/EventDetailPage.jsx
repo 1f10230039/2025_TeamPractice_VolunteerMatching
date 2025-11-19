@@ -25,7 +25,7 @@ import {
 } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
 // ★1. モーダルコンポーネントをインポート
-import ConfirmApplyModal from "../common/ConfirmApplyModal";
+import ConfirmApplyModal from "../events/ConfirmApplyModal";
 
 // --- スタイル定義 ---
 
