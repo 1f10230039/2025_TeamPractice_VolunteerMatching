@@ -4,14 +4,16 @@ import { useState, useEffect } from "react";
 import styled from "@emotion/styled";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-// ★ 追加: 未ログイン時の案内コンポーネントをインポート
+import Link from "next/link";
 import AuthPrompt from "@/components/auth/AuthPrompt";
 
-// --- Emotion スタイル定義 ---
+// Emotion Style Definitions
+// マイページ全体のラッパー
 const MyPageWrapper = styled.div`
   padding: 24px;
 `;
 
+// ページタイトル
 const Title = styled.h1`
   font-size: 28px;
   font-weight: 600;
@@ -21,6 +23,7 @@ const Title = styled.h1`
   margin-bottom: 24px;
 `;
 
+// プロフィール情報を表示する白いカード部分
 const ProfileSection = styled.div`
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
@@ -29,6 +32,7 @@ const ProfileSection = styled.div`
   margin-bottom: 24px;
 `;
 
+// プロフィールの各項目（名前、大学、学部）
 const ProfileItem = styled.div`
   font-size: 16px;
   margin-bottom: 12px;
@@ -40,8 +44,29 @@ const ProfileItem = styled.div`
   }
 `;
 
+// プロフィール編集ページへのリンクボタン
+const EditButton = styled(Link)`
+  display: inline-block;
+  background-color: #28a745; /* 緑色 */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  margin-right: 16px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #218838;
+  }
+`;
+
+// ログアウトボタン
 const LogoutButton = styled.button`
-  background-color: #007bff;
+  background-color: #007bff; /* 青色 */
   color: white;
   border: none;
   padding: 10px 20px;
@@ -50,37 +75,43 @@ const LogoutButton = styled.button`
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
+
   &:hover {
     background-color: #0056b3;
   }
 `;
 
-// --- コンポーネント本体 ---
-
+/**
+ * マイページ表示コンポーネント
+ *
+ * クライアントサイドで認証チェックとデータ取得を行います。
+ * サーバーサイドでの取得によるクッキー読み込み漏れを防ぐため、
+ * useEffectを使ってブラウザから直接データを取得する方式を採用しています。
+ */
 export default function MyPage() {
   const router = useRouter();
 
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  // ★ 追加: ログインしているかどうかのフラグ
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // 状態管理 (State)
+  const [profile, setProfile] = useState(null); // プロフィールデータ
+  const [loading, setLoading] = useState(true); // 読み込み中かどうか
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // ログインしているか
 
+  /**
+   * 初回レンダリング時に実行される処理
+   * 1. ログインチェック
+   * 2. プロフィールデータの取得
+   */
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // ★★★ 追加: Supabaseがユーザーをどう認識しているか確認 ★★★
+        // 1. 現在のユーザーを取得 (Supabaseに問い合わせ)
         const {
           data: { user },
           error: userError,
         } = await supabase.auth.getUser();
 
-        console.log("🕵️‍♂️ MyPage Client Check:");
-        console.log("   - User:", user);
-        console.log("   - Error:", userError);
-
+        // ユーザーがいない、またはエラーの場合は未ログインとみなす
         if (userError || !user) {
-          // ★ 変更点: ここで router.push("/login") をしない！
-          // 単に「ログインしていない」として処理を終える
           setIsLoggedIn(false);
           setLoading(false);
           return;
@@ -90,6 +121,7 @@ export default function MyPage() {
         setIsLoggedIn(true);
 
         // 2. プロフィールデータを取得
+        // 関連する大学名(universities)と学部名(faculties)も結合して取得
         const { data, error } = await supabase
           .from("profiles")
           .select(
@@ -101,10 +133,11 @@ export default function MyPage() {
           `
           )
           .eq("id", user.id)
-          .single();
+          .single(); // 1件だけ取得
 
         if (error) throw error;
 
+        // 取得したデータを使いやすい形にセット
         setProfile({
           id: data.id,
           name: data.name,
@@ -114,6 +147,7 @@ export default function MyPage() {
       } catch (error) {
         console.error("データ取得エラー:", error);
       } finally {
+        // 成功・失敗に関わらずローディング終了
         setLoading(false);
       }
     };
@@ -121,7 +155,7 @@ export default function MyPage() {
     fetchProfile();
   }, [router]);
 
-  // ローディング中
+  // ローディング中の表示
   if (loading) {
     return (
       <MyPageWrapper>
@@ -130,15 +164,18 @@ export default function MyPage() {
     );
   }
 
-  // ★ 追加: ログインしていない場合、AuthPromptを表示する
+  // ログインしていない場合は認証案内を表示
   if (!isLoggedIn) {
     return <AuthPrompt message="マイページを見るにはログインが必要です。" />;
   }
 
-  // ログアウト処理
+  /**
+   * ログアウトボタンクリック時の処理
+   * Supabaseからサインアウトし、ホームページへリダイレクトする
+   */
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.href = "/mypage";
+    window.location.href = "/"; // 確実にクッキーを消すためフルリロードで移動
   };
 
   return (
@@ -160,7 +197,11 @@ export default function MyPage() {
         </ProfileItem>
       </ProfileSection>
 
-      <LogoutButton onClick={handleLogout}>ログアウト</LogoutButton>
+      <div style={{ marginTop: "24px" }}>
+        {/* プロフィール編集ページへのリンク */}
+        <EditButton href="/mypage/edit">プロフィールを編集</EditButton>
+        <LogoutButton onClick={handleLogout}>ログアウト</LogoutButton>
+      </div>
     </MyPageWrapper>
   );
 }
