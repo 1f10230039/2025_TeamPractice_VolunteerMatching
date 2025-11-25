@@ -1,25 +1,21 @@
-// src/components/pages/LoginPage.jsx
-
-"use client"; // クライアントコンポーネント宣言
+"use client";
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
 import styled from "@emotion/styled";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
-// Emotion
-// フォーム全体のラッパー
+// --- Emotion スタイル定義 ---
+
 const LoginWrapper = styled.div`
   padding: 24px;
-  max-width: 500px; /* フォームの最大幅 */
-  margin: 40px auto; /* 中央寄せ */
+  max-width: 500px;
+  margin: 40px auto;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   background-color: #ffffff;
 `;
 
-// H1見出し
 const Title = styled.h1`
   font-size: 24px;
   font-weight: 600;
@@ -28,16 +24,15 @@ const Title = styled.h1`
   margin-bottom: 24px;
 `;
 
-// フォーム
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 16px; /* 各入力欄の間隔 */
+  gap: 16px;
 `;
 
 const PasswordInputWrapper = styled.div`
-  position: relative; /* アイコンを絶対配置するための基準 */
-  width: 100%; /* フォームに対して100%幅 */
+  position: relative;
+  width: 100%;
 `;
 
 const Input = styled.input`
@@ -49,27 +44,23 @@ const Input = styled.input`
   padding-right: 40px;
 `;
 
-// 目のアイコンを配置するボタン
 const EyeIconButton = styled.button`
-  position: absolute; /* 親(PasswordInputWrapper)を基準に絶対配置 */
-  right: 10px; /* 入力欄の右端から10px */
-  top: 50%; /* 上下中央に配置 (1/2) */
-  transform: translateY(-50%); /* 上下中央に配置 (2/2) */
-
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
   cursor: pointer;
-
-  font-size: 20px; /* アイコンの大きさを指定 */
-  color: #555; /* アイコンの色 */
+  font-size: 20px;
+  color: #555;
   padding: 0;
-  display: flex; /* アイコンを中央に配置するため */
+  display: flex;
   align-items: center;
 `;
 
-// 送信ボタン
 const SubmitButton = styled.button`
-  background-color: #007bff; /* キーカラー */
+  background-color: #007bff;
   color: white;
   border: none;
   padding: 12px;
@@ -82,73 +73,66 @@ const SubmitButton = styled.button`
   &:hover {
     background-color: #0056b3;
   }
+
+  /* ローディング中(disabled)のスタイル */
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 `;
 
-// エラーメッセージ表示用
 const ErrorMessage = styled.p`
   color: red;
   font-size: 14px;
   margin-top: 8px;
 `;
 
-/**
- * ログインページ全体のレイアウトと状態を管理するコンポーネント
- */
-export default function LoginPage() {
-  const router = useRouter(); // ページ遷移用
+// --- コンポーネント本体 ---
 
-  // フォームの入力値をReactのstateで管理
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null); // エラーメッセージ用
+  const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  /**
-   * ログイン（フォーム送信）時の処理
-   */
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
   const handleSubmit = async e => {
-    e.preventDefault(); // フォームのデフォルト送信をキャンセル
-    setError(null); // エラーをリセット
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
     try {
-      // Supabaseのクライアントライブラリでログイン処理を実行
+      // クライアント側で直接ログインを実行
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
+        email,
+        password,
       });
 
       if (signInError) {
-        throw signInError; // ログインエラー
+        throw signInError;
       }
 
+      // ログイン成功後、クッキーの保存を確実にするため少し待機してから移動
       setTimeout(() => {
         window.location.href = "/mypage";
-      }, 100); // 100ミリ秒待つ
+      }, 500);
     } catch (error) {
-      console.error("ログインエラー(LoginPage.jsx):", error);
+      console.error("ログインエラー:", error);
 
-      // ★★★ ここを修正 ★★★
-      // エラーメッセージの内容を判定して、ユーザーに分かりやすい言葉にする
       let message = "ログイン中にエラーが発生しました。";
-
       if (error.message.includes("Invalid login credentials")) {
         message = "メールアドレスかパスワードが間違っています。";
       }
 
-      // 1. 画面に赤文字で出す（既存）
       setError(message);
-
-      // 2. ポップアップ（アラート）でも出す（新規追加）
       alert(message);
+      setIsLoading(false);
     }
-  };
-
-  /**
-   * パスワードの表示/非表示を切り替える関数
-   */
-  const toggleShowPassword = () => {
-    // 現在の showPassword の値 (true/false) を反転させる
-    setShowPassword(!showPassword);
   };
 
   return (
@@ -161,30 +145,32 @@ export default function LoginPage() {
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
+          disabled={isLoading}
         />
 
         <PasswordInputWrapper>
           <Input
-            // stateに応じて type を切り替える
             type={showPassword ? "text" : "password"}
             placeholder="パスワード"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
+            disabled={isLoading}
           />
-          {/*
-           * 目のアイコンボタン
-           * フォームが送信されないよう type="button" を指定
-           */}
-          <EyeIconButton type="button" onClick={toggleShowPassword}>
-            {/* showPassword が true なら「隠す」アイコン、false なら「見せる」アイコン */}
+          <EyeIconButton
+            type="button"
+            onClick={toggleShowPassword}
+            disabled={isLoading}
+          >
             {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
           </EyeIconButton>
         </PasswordInputWrapper>
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
 
-        <SubmitButton type="submit">ログイン</SubmitButton>
+        <SubmitButton type="submit" disabled={isLoading}>
+          {isLoading ? "ログイン中..." : "ログイン"}
+        </SubmitButton>
       </Form>
     </LoginWrapper>
   );

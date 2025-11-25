@@ -1,50 +1,47 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import styled from "@emotion/styled";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+// ★ 追加: 未ログイン時の案内コンポーネントをインポート
+import AuthPrompt from "@/components/auth/AuthPrompt";
 
-// マイページ全体のラッパー
+// --- Emotion スタイル定義 ---
 const MyPageWrapper = styled.div`
   padding: 24px;
 `;
 
-// H1見出し
 const Title = styled.h1`
   font-size: 28px;
   font-weight: 600;
   color: #333;
-  /* MyListPageのアクティブタブのアクセントカラーと合わせる */
   border-bottom: 3px solid #007bff;
   padding-bottom: 12px;
   margin-bottom: 24px;
 `;
 
-// プロフィール情報セクション
 const ProfileSection = styled.div`
   background-color: #ffffff;
-  border: 1px solid #e0e0e0; /* 少し薄いボーダー */
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 24px;
-  margin-bottom: 24px; /* ボタンとの間隔 */
+  margin-bottom: 24px;
 `;
 
-// プロフィールの各項目（「名前: 〇〇」など）
 const ProfileItem = styled.div`
   font-size: 16px;
   margin-bottom: 12px;
-
   strong {
     display: inline-block;
-    width: 100px; /* ラベルの幅を固定して見やすくする */
+    width: 100px;
     font-weight: 500;
     color: #555;
   }
 `;
 
-// ログアウトボタン
 const LogoutButton = styled.button`
-  background-color: #007bff; /* キーカラーに変更 */
+  background-color: #007bff;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -53,46 +50,104 @@ const LogoutButton = styled.button`
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
-
   &:hover {
-    background-color: #0056b3; /* ホバー色も調整 */
+    background-color: #0056b3;
   }
 `;
 
-/**
- * マイページ表示コンポーネント
- * @param {{ profile: object | null }} props
- */
-export default function MyPage({ profile }) {
+// --- コンポーネント本体 ---
+
+export default function MyPage() {
   const router = useRouter();
 
-  /**
-   * ログアウトボタンクリック時の処理
-   */
-  const handleLogout = async () => {
-    // supabase クライアントの signOut() 関数を呼び出す
-    const { error } = await supabase.auth.signOut();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  // ★ 追加: ログインしているかどうかのフラグ
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    if (error) {
-      // もしログアウト処理でエラーが起きたら
-      console.error("ログアウトエラー:", error);
-      alert("ログアウトに失敗しました。");
-    } else {
-      // エラーがなければ、クッキーを確実にクリアするために
-      //    フルリロードでホームページに遷移する
-      window.location.href = "/login";
-    }
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        // ★★★ 追加: Supabaseがユーザーをどう認識しているか確認 ★★★
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        console.log("🕵️‍♂️ MyPage Client Check:");
+        console.log("   - User:", user);
+        console.log("   - Error:", userError);
+
+        if (userError || !user) {
+          // ★ 変更点: ここで router.push("/login") をしない！
+          // 単に「ログインしていない」として処理を終える
+          setIsLoggedIn(false);
+          setLoading(false);
+          return;
+        }
+
+        // ユーザーがいればログイン済み
+        setIsLoggedIn(true);
+
+        // 2. プロフィールデータを取得
+        const { data, error } = await supabase
+          .from("profiles")
+          .select(
+            `
+            id,
+            name,
+            universities ( name ), 
+            faculties ( name )
+          `
+          )
+          .eq("id", user.id)
+          .single();
+
+        if (error) throw error;
+
+        setProfile({
+          id: data.id,
+          name: data.name,
+          university: data.universities?.name || "（未設定）",
+          faculty: data.faculties?.name || "（未設定）",
+        });
+      } catch (error) {
+        console.error("データ取得エラー:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [router]);
+
+  // ローディング中
+  if (loading) {
+    return (
+      <MyPageWrapper>
+        <p>読み込み中...</p>
+      </MyPageWrapper>
+    );
+  }
+
+  // ★ 追加: ログインしていない場合、AuthPromptを表示する
+  if (!isLoggedIn) {
+    return <AuthPrompt message="マイページを見るにはログインが必要です。" />;
+  }
+
+  // ログアウト処理
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/mypage";
   };
 
   return (
     <MyPageWrapper>
       <Title>マイページ</Title>
 
-      {/* プロフィール情報をカードで囲む */}
       <ProfileSection>
         <ProfileItem>
           <strong>名前:</strong>
-          {/* profileがnull（データ取得失敗など）の場合も考慮 */}
           <span>{profile ? profile.name : "（未設定）"}</span>
         </ProfileItem>
         <ProfileItem>
