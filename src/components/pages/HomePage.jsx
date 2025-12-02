@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react"; // ★ useEffect 追加
 import styled from "@emotion/styled";
+import { supabase } from "@/lib/supabaseClient"; // ★追加
 import EventList from "../events/EventList";
 import SearchOptions from "../search/SearchOptions";
 import {
@@ -10,36 +11,28 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 
-// Emotion
-// ページ全体のコンテナスタイル
-// --- Emotion Styles ---
+// --- Emotion Styles (変更なし・省略) ---
+// PageContainer, SearchSection, EventSection, SectionTitle, ControlBar, ResultCount, SortWrapper, SortLabel, SortSelect, PaginationContainer, PageButton, PageInfo はそのまま残してください
 
-// ページ全体のレイアウト
 const PageContainer = styled.div`
   background-color: #f9f9f9;
   min-height: 100vh;
 `;
-
-// 検索オプションセクション
+// ... (他のスタイル定義は省略しますが、必ず残してください) ...
 const SearchSection = styled.section`
   margin-bottom: 24px;
   background-color: #97cdf3;
   padding: 40px 24px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 `;
-
-// イベントリストセクション
 const EventSection = styled.section`
   padding: 0 24px 60px 24px;
   max-width: 1200px;
   margin: 0 auto 90px auto;
-
   @media (min-width: 768px) {
     margin: 0 auto;
   }
 `;
-
-// セクションタイトルスタイル
 const SectionTitle = styled.h2`
   font-size: 1.5rem;
   font-weight: bold;
@@ -48,7 +41,6 @@ const SectionTitle = styled.h2`
   display: flex;
   align-items: center;
   gap: 8px;
-
   &::before {
     content: "";
     display: block;
@@ -58,8 +50,6 @@ const SectionTitle = styled.h2`
     border-radius: 3px;
   }
 `;
-
-// コントロールバー（件数表示とソートボタン）
 const ControlBar = styled.div`
   display: flex;
   justify-content: space-between;
@@ -73,28 +63,21 @@ const ControlBar = styled.div`
   border: 1px solid #eee;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 `;
-
-// 結果件数表示
 const ResultCount = styled.p`
   font-size: 0.95rem;
   color: #666;
   font-weight: 500;
-
   strong {
     color: #333;
     font-size: 1.1rem;
     margin: 0 4px;
   }
 `;
-
-// ソート選択エリア
 const SortWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
 `;
-
-// ソートラベル
 const SortLabel = styled.label`
   font-size: 0.9rem;
   color: #666;
@@ -102,8 +85,6 @@ const SortLabel = styled.label`
   align-items: center;
   gap: 4px;
 `;
-
-// ソートセレクトボックス
 const SortSelect = styled.select`
   padding: 8px 12px;
   font-size: 0.9rem;
@@ -114,13 +95,10 @@ const SortSelect = styled.select`
   cursor: pointer;
   outline: none;
   transition: border-color 0.2s;
-
   &:focus {
     border-color: #007bff;
   }
 `;
-
-// ページネーションエリア
 const PaginationContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -128,8 +106,6 @@ const PaginationContainer = styled.div`
   gap: 16px;
   margin-top: 40px;
 `;
-
-// ページネーションボタン
 const PageButton = styled.button`
   display: flex;
   align-items: center;
@@ -144,12 +120,10 @@ const PageButton = styled.button`
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-
   &:hover:not(:disabled) {
     background-color: #007bff;
     color: #fff;
   }
-
   &:disabled {
     color: #ccc;
     border-color: #ccc;
@@ -157,8 +131,6 @@ const PageButton = styled.button`
     background-color: #f9f9f9;
   }
 `;
-
-// ページ情報表示
 const PageInfo = styled.span`
   font-size: 1rem;
   color: #555;
@@ -174,6 +146,33 @@ export default function HomePage({ events }) {
   const [sortOption, setSortOption] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // 1ページあたりの表示件数
+
+  // ★追加: ユーザーのお気に入りIDリストを保持するState
+  const [userFavoriteIds, setUserFavoriteIds] = useState([]);
+
+  // ★追加: 初回ロード時 + データ更新時に、ユーザーのお気に入りリストを取得する
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      // 1. ログインユーザーを取得
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return; // 未ログインなら何もしない
+
+      // 2. favoritesテーブルから、自分の event_id 一覧を取得
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("event_id")
+        .eq("user_id", user.id);
+
+      if (!error && data) {
+        // ★ Number() で数値型に変換して保存
+        setUserFavoriteIds(data.map(item => Number(item.event_id)));
+      }
+    };
+
+    fetchFavorites();
+  }, [events]); // eventsが変わるたびに再取得
 
   // データのソート処理 (useMemoで重い計算を防ぐ)
   const sortedEvents = useMemo(() => {
@@ -199,12 +198,10 @@ export default function HomePage({ events }) {
         break;
       case "popular":
         // 人気順 (現段階では新しい順と同じ)
-        // 将来的にはお気に入り数とか閲覧数でソートしたい
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case "nearest":
         // 現在地から近い順 (現段階では新しい順と同じ)
-        // 将来的には Geolocation API で現在地を取って計算したい
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       default:
@@ -278,8 +275,8 @@ export default function HomePage({ events }) {
           </SortWrapper>
         </ControlBar>
 
-        {/* イベント一覧 (切り出した10件だけを渡す) */}
-        <EventList events={currentEvents} />
+        {/* ★変更: EventListに userFavoriteIds を渡す */}
+        <EventList events={currentEvents} userFavoriteIds={userFavoriteIds} />
 
         {/* ページネーション (イベントがある時だけ表示) */}
         {totalItems > 0 && (

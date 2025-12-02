@@ -1,15 +1,23 @@
-// src/components/pages/MyListContainer.jsx
-
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient"; // クライアント用
-import MyListPage from "./MyListPage"; // あなたが作った表示用コンポーネント
-import AuthPrompt from "@/components/auth/AuthPrompt"; // 未ログイン時の案内
+import { supabase } from "@/lib/supabaseClient";
+import MyListPage from "./MyListPage";
+import AuthPrompt from "@/components/auth/AuthPrompt";
 
+/**
+ * マイリストページのコンテナ (Container)
+ *
+ * 役割:
+ * 1. ログイン状態のチェック
+ * 2. Supabaseから「お気に入り」「応募済み」データを取得 (JOINを利用)
+ * 3. 取得したデータを整形し、表示用コンポーネントに渡す
+ */
 export default function MyListContainer() {
   const [favoriteEvents, setFavoriteEvents] = useState([]);
   const [appliedEvents, setAppliedEvents] = useState([]);
+  const [userFavoriteIds, setUserFavoriteIds] = useState([]); // ハート判定用IDリスト
+
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -30,16 +38,33 @@ export default function MyListContainer() {
 
         setIsLoggedIn(true);
 
-        // 2. データ取得（お気に入りと応募済みを並行して取得）
-        const favoritePromise = supabase
-          .from("events")
-          .select("*")
-          .eq("favorite", true);
+        // 2. データ取得 (お気に入りと応募済みを並行取得)
 
+        // favorites テーブルから events と tags を結合して取得
+        const favoritePromise = supabase
+          .from("favorites")
+          .select(
+            `
+            events (
+              *,
+              tags ( * )
+            )
+          `
+          )
+          .eq("user_id", user.id);
+
+        // applications テーブルから取得
         const appliedPromise = supabase
-          .from("events")
-          .select("*")
-          .eq("applied", true);
+          .from("applications")
+          .select(
+            `
+            events (
+              *,
+              tags ( * )
+            )
+          `
+          )
+          .eq("user_id", user.id);
 
         const [favoriteRes, appliedRes] = await Promise.all([
           favoritePromise,
@@ -49,8 +74,23 @@ export default function MyListContainer() {
         if (favoriteRes.error) throw favoriteRes.error;
         if (appliedRes.error) throw appliedRes.error;
 
-        setFavoriteEvents(favoriteRes.data || []);
-        setAppliedEvents(appliedRes.data || []);
+        // 3. データ整形
+        // ネスト構造 [ { events: {...} } ] から、純粋なイベントリスト [ {...} ] に変換
+        const formattedFavorites = (favoriteRes.data || [])
+          .map(item => item.events)
+          .filter(Boolean); // nullデータを除外
+
+        const formattedApplied = (appliedRes.data || [])
+          .map(item => item.events)
+          .filter(Boolean);
+
+        setFavoriteEvents(formattedFavorites);
+        setAppliedEvents(formattedApplied);
+
+        // ハートを赤く表示するためのIDリストを作成
+        // 型不一致を防ぐため、Number() で確実に数値に変換
+        const ids = formattedFavorites.map(event => Number(event.id));
+        setUserFavoriteIds(ids);
       } catch (error) {
         console.error("マイリスト取得エラー:", error);
       } finally {
@@ -61,22 +101,19 @@ export default function MyListContainer() {
     fetchData();
   }, []);
 
-  // ローディング中
   if (loading) {
     return <div style={{ padding: "24px" }}>読み込み中...</div>;
   }
 
-  // 未ログイン時
   if (!isLoggedIn) {
     return <AuthPrompt message="マイリストを見るにはログインが必要です。" />;
   }
 
-  // ログイン済み＆データ取得完了時
-  // ここで、元々あった MyListPage にデータを渡して表示させる
   return (
     <MyListPage
       initialFavoriteEvents={favoriteEvents}
       initialAppliedEvents={appliedEvents}
+      userFavoriteIds={userFavoriteIds}
     />
   );
 }
