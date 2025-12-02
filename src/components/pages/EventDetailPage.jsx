@@ -29,12 +29,16 @@ import {
 import Breadcrumbs from "../common/Breadcrumbs";
 import ConfirmApplyModal from "../events/ConfirmApplyModal";
 
-// --- Emotion Styles ---
+// ==========================================
+// Emotion Styles (スタイル定義)
+// ==========================================
 
+// ページ全体のラッパー（下部固定バーの分だけ余白を確保）
 const PageWrapper = styled.div`
-  padding-bottom: 80px; /* 下部固定バーの分だけ余白を確保 */
+  padding-bottom: 80px;
 `;
 
+// 画面下部に固定される「お気に入り・応募ボタン」のバー
 const ActionMenu = styled.div`
   position: fixed;
   bottom: 0;
@@ -49,6 +53,7 @@ const ActionMenu = styled.div`
   z-index: 50;
 `;
 
+// お気に入りボタン（ハートマーク）
 const FavoriteButton = styled.button`
   background: #f0f0f0;
   border: none;
@@ -74,6 +79,7 @@ const FavoriteButton = styled.button`
   }
 `;
 
+// 応募ボタン（「応募する」または「応募済み」）
 const ApplyButton = styled.button`
   flex-grow: 1;
   padding: 12px;
@@ -88,6 +94,7 @@ const ApplyButton = styled.button`
   gap: 10px;
   transition: all 0.2s ease;
 
+  /* isApplied(応募済み)かどうかで色を変える */
   background-color: ${props => (props.isApplied ? "#5cb85c" : "#007bff")};
   color: white;
 
@@ -101,12 +108,14 @@ const ApplyButton = styled.button`
   }
 `;
 
+// コンテンツのメインエリア（幅制限と中央寄せ）
 const MainContent = styled.div`
   max-width: 800px;
   margin: 0 auto;
   padding: 24px;
 `;
 
+// カテゴリタグ（例: "教育", "環境"）
 const Tag = styled.span`
   display: inline-block;
   background-color: #e0eafc;
@@ -118,12 +127,14 @@ const Tag = styled.span`
   margin-bottom: 12px;
 `;
 
+// イベントタイトル
 const EventTitle = styled.h1`
   font-size: 2rem;
   font-weight: bold;
   margin-bottom: 16px;
 `;
 
+// 主催者名
 const Organizer = styled.p`
   font-size: 1rem;
   font-weight: 500;
@@ -134,9 +145,10 @@ const Organizer = styled.p`
   gap: 8px;
 `;
 
+// メインビジュアル画像
 const MainImage = styled(Image)`
   width: 100%;
-  height: auto; /* アスペクト比を維持するために必須 */
+  height: auto;
   max-height: 400px;
   border-radius: 12px;
   object-fit: cover;
@@ -144,10 +156,12 @@ const MainImage = styled(Image)`
   margin-bottom: 24px;
 `;
 
+// 各詳細情報のセクション（ブロック）
 const DetailSection = styled.section`
   margin-bottom: 32px;
 `;
 
+// セクションの見出し（募集要項、詳細など）
 const SectionTitle = styled.h2`
   font-size: 1.3rem;
   font-weight: bold;
@@ -165,6 +179,7 @@ const SectionTitle = styled.h2`
   }
 `;
 
+// 情報グリッド（ラベルと値のペアを表示するレイアウト）
 const InfoGrid = styled.div`
   display: grid;
   grid-template-columns: auto 1fr;
@@ -175,6 +190,7 @@ const InfoGrid = styled.div`
   background-color: #fcfcfc;
 `;
 
+// 情報のラベル（左側）
 const InfoLabel = styled.dt`
   font-weight: bold;
   color: #555;
@@ -190,6 +206,7 @@ const InfoLabel = styled.dt`
   }
 `;
 
+// 情報の値（右側）
 const InfoValue = styled.dd`
   font-size: 1rem;
   color: #333;
@@ -197,6 +214,7 @@ const InfoValue = styled.dd`
   margin: 0;
 `;
 
+// 文章コンテンツ（改行を反映）
 const SectionContent = styled.div`
   font-size: 1rem;
   color: #555;
@@ -204,7 +222,7 @@ const SectionContent = styled.div`
   white-space: pre-wrap;
 `;
 
-// ポップなカード（魅力紹介用）
+// ポップなカード（「ボランティアの魅力」用）
 const PopCard = styled.div`
   background-color: ${props => props.bgColor || "#f9f9f9"};
   border: 2px solid ${props => props.borderColor || "transparent"};
@@ -221,6 +239,7 @@ const PopCard = styled.div`
   }
 `;
 
+// アイコン用の丸い背景
 const IconCircle = styled.div`
   background-color: #fff;
   width: 60px;
@@ -256,13 +275,14 @@ const PopCardText = styled.div`
   white-space: pre-wrap;
 `;
 
-// 吹き出しスタイル（経験・スキル用）
+// 吹き出しレイアウト（「得られる経験」用）
 const BubbleWrapper = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 20px;
 `;
 
+// 吹き出しの本体（三角形のしっぽ付き）
 const BubbleContent = styled.div`
   position: relative;
   background-color: #e3f2fd;
@@ -285,6 +305,7 @@ const BubbleContent = styled.div`
   }
 `;
 
+// 話している人のアイコン
 const SpeakerIcon = styled.div`
   width: 50px;
   height: 50px;
@@ -313,6 +334,7 @@ const BubbleTitle = styled.h4`
   gap: 6px;
 `;
 
+// 外部リンク
 const WebsiteLink = styled(Link)`
   color: #007bff;
   text-decoration: underline;
@@ -323,6 +345,10 @@ const WebsiteLink = styled(Link)`
     color: #0056b3;
   }
 `;
+
+// ==========================================
+// ユーティリティ関数
+// ==========================================
 
 const formatDateTime = isoString => {
   if (!isoString) return "未定";
@@ -340,7 +366,9 @@ const formatDateTime = isoString => {
   }
 };
 
-// --- コンポーネント本体 ---
+// ==========================================
+// コンポーネント本体
+// ==========================================
 
 export default function EventDetailPage({ event, source, q, codes }) {
   const router = useRouter();
@@ -349,7 +377,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
   const [isApplyLoading, setIsApplyLoading] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
-  // ユーザーごとのステータス管理
+  // ユーザーごとのステータス管理 (お気に入り済みか？応募済みか？)
   const [isFavorite, setIsFavorite] = useState(false);
   const [isApplied, setIsApplied] = useState(false);
   const [user, setUser] = useState(null);
@@ -364,7 +392,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
   });
 
   /**
-   * 画面表示時に実行:
+   * 初期ロード時に実行される処理
    * ログインユーザー情報を取得し、「お気に入り済み」「応募済み」かどうかを
    * それぞれのテーブル (favorites, applications) に問い合わせて確認する。
    */
@@ -386,7 +414,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
         .match({ user_id: currentUser.id, event_id: event.id })
         .maybeSingle(); // 0件か1件かを確認
 
-      setIsFavorite(!!favData); // データがあれば true
+      setIsFavorite(!!favData); // データがあれば true (お気に入り済み)
 
       // 3. 応募状態の確認 (applicationsテーブル)
       const { data: appData } = await supabase
@@ -395,7 +423,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
         .match({ user_id: currentUser.id, event_id: event.id })
         .maybeSingle();
 
-      setIsApplied(!!appData);
+      setIsApplied(!!appData); // データがあれば true (応募済み)
     };
 
     checkStatus();
@@ -429,6 +457,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
   } = event;
 
   // パンくずリストの生成ロジック
+  // どの画面から遷移してきたか(source)によって親ページを変える
   const { baseCrumb, crumbs } = (() => {
     let base = { label: "ホーム", href: "/" };
     const thisPageCrumb = {
@@ -476,8 +505,15 @@ export default function EventDetailPage({ event, source, q, codes }) {
     e.preventDefault();
     if (isFavoriteLoading) return;
 
+    // 未ログイン時の誘導
     if (!user) {
-      alert("お気に入り機能を使うにはログインが必要です。");
+      if (
+        confirm(
+          "お気に入り機能を使うにはログインが必要です。\nログインページに移動しますか？"
+        )
+      ) {
+        router.push("/login");
+      }
       return;
     }
 
@@ -509,7 +545,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
   };
 
   /**
-   * 応募処理の実行
+   * 応募処理の実行 (モーダルでOKされた後に呼ばれる)
    * applications テーブルに対して INSERT (応募) または DELETE (キャンセル) を行う
    */
   const handleToggleApply = async () => {
@@ -525,7 +561,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
 
     try {
       if (isApplied) {
-        // 応募キャンセル
+        // 応募キャンセル (DELETE)
         const { error } = await supabase
           .from("applications")
           .delete()
@@ -534,7 +570,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
         setIsApplied(false);
         alert("応募をキャンセルしました。");
       } else {
-        // 応募登録
+        // 応募登録 (INSERT)
         const { error } = await supabase
           .from("applications")
           .insert({ user_id: user.id, event_id: id });
@@ -559,11 +595,19 @@ export default function EventDetailPage({ event, source, q, codes }) {
     e.preventDefault();
     if (isApplyLoading || isFavoriteLoading) return;
 
+    // 未ログイン時の誘導
     if (!user) {
-      alert("応募するにはログインが必要です。");
+      if (
+        confirm(
+          "応募するにはログインが必要です。\nログインページに移動しますか？"
+        )
+      ) {
+        router.push("/login");
+      }
       return;
     }
 
+    // 応募済みならキャンセル、未応募なら確認モーダル
     if (isApplied) {
       setModalContent({
         title: "応募のキャンセル",
@@ -591,6 +635,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
   return (
     <PageWrapper>
       <ActionMenu>
+        {/* お気に入りボタン */}
         <FavoriteButton
           isFavorite={isFavorite}
           onClick={handleToggleFavorite}
@@ -598,6 +643,8 @@ export default function EventDetailPage({ event, source, q, codes }) {
         >
           {isFavorite ? <FaHeart /> : <FaRegHeart />}
         </FavoriteButton>
+
+        {/* 応募ボタン */}
         <ApplyButton
           isApplied={isApplied}
           onClick={handleApplyButtonPress}
@@ -620,7 +667,6 @@ export default function EventDetailPage({ event, source, q, codes }) {
       <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
 
       <MainContent>
-        {/* ... (表示内容はそのまま) ... */}
         {tag && <Tag>{tag}</Tag>}
         <EventTitle>{name || "無題のイベント"}</EventTitle>
         {organaizer && (
@@ -637,6 +683,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
           priority
         />
 
+        {/* 各詳細セクション (省略なし) */}
         {long_description && (
           <DetailSection>
             <SectionTitle>
