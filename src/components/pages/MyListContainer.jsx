@@ -1,33 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient"; // クライアント用Supabase
-import MyListPage from "./MyListPage"; // 表示用コンポーネント(UI)
-import AuthPrompt from "@/components/auth/AuthPrompt"; // 未ログイン時の案内
+import { supabase } from "@/lib/supabaseClient";
+import MyListPage from "./MyListPage";
+import AuthPrompt from "@/components/auth/AuthPrompt";
 
 /**
  * マイリストページのコンテナ (Container)
  *
  * 役割:
  * 1. ログイン状態のチェック
- * 2. Supabaseから「お気に入り」「応募済み」データを取得
- * 3. ★追加: ハートを赤くするための「お気に入りIDリスト」を作成
- * 4. データを表示用コンポーネントに渡す
+ * 2. Supabaseから「お気に入り」「応募済み」データを取得 (JOINを利用)
+ * 3. 取得したデータを整形し、表示用コンポーネントに渡す
  */
 export default function MyListContainer() {
-  // --- 状態管理 (State) ---
-  const [favoriteEvents, setFavoriteEvents] = useState([]); // お気に入りイベント詳細データ
-  const [appliedEvents, setAppliedEvents] = useState([]); // 応募済みイベント詳細データ
-
-  // ★追加: ユーザーがお気に入り登録しているイベントIDのリスト (ハートの色判定用)
+  const [favoriteEvents, setFavoriteEvents] = useState([]);
+  const [appliedEvents, setAppliedEvents] = useState([]);
+  // ハート判定用IDリスト
   const [userFavoriteIds, setUserFavoriteIds] = useState([]);
 
-  const [loading, setLoading] = useState(true); // 読み込み中フラグ
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // ログイン済みフラグ
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  /**
-   * 画面表示時に実行されるデータ取得処理
-   */
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -45,9 +39,9 @@ export default function MyListContainer() {
 
         setIsLoggedIn(true);
 
-        // 2. データ取得（お気に入りと応募済みを並行してリクエスト）
+        // 2. データ取得（お気に入りと応募済みを並行取得）
 
-        // A. お気に入りテーブルから取得 (イベント情報とタグ情報も結合)
+        // favorites テーブルから events と tags を結合して取得
         const favoritePromise = supabase
           .from("favorites")
           .select(
@@ -60,7 +54,7 @@ export default function MyListContainer() {
           )
           .eq("user_id", user.id);
 
-        // B. 応募済みテーブルから取得
+        // applications テーブルから取得
         const appliedPromise = supabase
           .from("applications")
           .select(
@@ -73,7 +67,6 @@ export default function MyListContainer() {
           )
           .eq("user_id", user.id);
 
-        // 両方の完了を待つ
         const [favoriteRes, appliedRes] = await Promise.all([
           favoritePromise,
           appliedPromise,
@@ -82,7 +75,8 @@ export default function MyListContainer() {
         if (favoriteRes.error) throw favoriteRes.error;
         if (appliedRes.error) throw appliedRes.error;
 
-        // 3. データの整形 (ネストされた構造から events だけを取り出す)
+        // 3. データ整形
+        // ネスト構造 [ { events: {...} } ] から、純粋なイベントリスト [ {...} ] に変換
         const formattedFavorites = (favoriteRes.data || [])
           .map(item => item.events)
           .filter(Boolean);
@@ -91,14 +85,12 @@ export default function MyListContainer() {
           .map(item => item.events)
           .filter(Boolean);
 
-        // Stateに保存
         setFavoriteEvents(formattedFavorites);
         setAppliedEvents(formattedApplied);
 
-        // ★追加: お気に入りイベントの「IDだけ」を集めた配列を作る
-        // (例: [1, 5, 8] )
-        // これを EventList に渡すことで、該当するイベントのハートが赤くなる
-        const ids = formattedFavorites.map(event => event.id);
+        // ★ ハートを赤く表示するためのIDリストを作成
+        // 型不一致を防ぐため、Number() で確実に数値に変換する
+        const ids = formattedFavorites.map(event => Number(event.id));
         setUserFavoriteIds(ids);
       } catch (error) {
         console.error("マイリスト取得エラー:", error);
@@ -110,8 +102,6 @@ export default function MyListContainer() {
     fetchData();
   }, []);
 
-  // --- 表示の切り替え ---
-
   if (loading) {
     return <div style={{ padding: "24px" }}>読み込み中...</div>;
   }
@@ -120,12 +110,11 @@ export default function MyListContainer() {
     return <AuthPrompt message="マイリストを見るにはログインが必要です。" />;
   }
 
-  // データを表示用コンポーネントに渡す
   return (
     <MyListPage
       initialFavoriteEvents={favoriteEvents}
       initialAppliedEvents={appliedEvents}
-      userFavoriteIds={userFavoriteIds} // ★ここが重要！IDリストを渡す
+      userFavoriteIds={userFavoriteIds}
     />
   );
 }

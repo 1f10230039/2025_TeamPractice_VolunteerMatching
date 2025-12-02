@@ -39,23 +39,19 @@ const EventListContainer = styled.div`
 
 /**
  * マイリストページの表示コンポーネント (UI担当)
+ * Containerからデータを受け取り、タブ切り替えとリスト表示を行う
  *
  * @param {object} props
- * @param {object[]} props.initialFavoriteEvents - お気に入りイベントのリスト
- * @param {object[]} props.initialAppliedEvents - 応募済みイベントのリスト
- * @param {number[]} props.userFavoriteIds - ★追加: お気に入り済みイベントIDのリスト
+ * @param {object[]} props.initialFavoriteEvents - お気に入りイベント一覧
+ * @param {object[]} props.initialAppliedEvents - 応募済みイベント一覧
+ * @param {number[]} props.userFavoriteIds - ハート判定用のIDリスト
  */
 export default function MyListPage({
   initialFavoriteEvents,
   initialAppliedEvents,
-  userFavoriteIds, // ★ Containerから受け取る
+  userFavoriteIds = [],
 }) {
-  // タブの切り替え状態 ("favorites" or "applied")
   const [activeTab, setActiveTab] = useState("favorites");
-
-  // propsで受け取ったデータをそのまま使用
-  const favoriteEvents = initialFavoriteEvents;
-  const appliedEvents = initialAppliedEvents;
 
   return (
     <PageContainer>
@@ -78,18 +74,18 @@ export default function MyListPage({
         {/* お気に入りタブの内容 */}
         {activeTab === "favorites" && (
           <EventList
-            events={favoriteEvents}
+            events={initialFavoriteEvents}
             source="mylist"
-            userFavoriteIds={userFavoriteIds} // ★ EventListに渡す (これでハートが赤くなる)
+            userFavoriteIds={userFavoriteIds} // EventListへバケツリレー
           />
         )}
 
         {/* 応募済みタブの内容 */}
         {activeTab === "applied" && (
           <EventList
-            events={appliedEvents}
+            events={initialAppliedEvents}
             source="mylist"
-            userFavoriteIds={userFavoriteIds} // ★ 応募済みリストの中でも、お気に入り済みのものは赤くする
+            userFavoriteIds={userFavoriteIds} // 応募済みタブでもハートの状態を反映
           />
         )}
       </EventListContainer>
