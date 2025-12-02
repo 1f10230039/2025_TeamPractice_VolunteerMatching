@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import styled from "@emotion/styled";
+import { supabase } from "@/lib/supabaseClient";
 import EventList from "../events/EventList";
 import SearchOptions from "../search/SearchOptions";
 import {
@@ -175,6 +176,30 @@ export default function HomePage({ events }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // 1ページあたりの表示件数
 
+  // ユーザーのお気に入りIDリストを保持するState
+  const [userFavoriteIds, setUserFavoriteIds] = useState([]);
+
+  // 初回ロード時に、ユーザーのお気に入りリストを取得する
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("event_id")
+        .eq("user_id", user.id);
+
+      if (!error && data) {
+        setUserFavoriteIds(data.map(item => item.event_id));
+      }
+    };
+
+    fetchFavorites();
+  }, [events]); // ★★★ 修正点: [] (空) ではなく [events] を入れる ★★★
+
   // データのソート処理 (useMemoで重い計算を防ぐ)
   const sortedEvents = useMemo(() => {
     // 元の配列を破壊しないようにコピーする
@@ -278,8 +303,10 @@ export default function HomePage({ events }) {
           </SortWrapper>
         </ControlBar>
 
-        {/* イベント一覧 (切り出した10件だけを渡す) */}
-        <EventList events={currentEvents} />
+        {/*userFavoriteIds を渡す
+          これにより、EventList -> EventCard と渡っていき、ハートが赤くなる
+        */}
+        <EventList events={currentEvents} userFavoriteIds={userFavoriteIds} />
 
         {/* ページネーション (イベントがある時だけ表示) */}
         {totalItems > 0 && (
