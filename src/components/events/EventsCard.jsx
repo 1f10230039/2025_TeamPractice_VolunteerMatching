@@ -144,7 +144,7 @@ const formatDateRange = (startStr, endStr) => {
  * イベントカードを表示するコンポーネント
  * @param {{ event: object }} props - イベントデータオブジェクト
  */
-export default function EventCard({ event, source, query, codes }) {
+export default function EventCard({ event, source, query, codes, isFavorite }) {
   const {
     id,
     name,
@@ -155,11 +155,11 @@ export default function EventCard({ event, source, query, codes }) {
     start_datetime,
     end_datetime,
     image_url,
-    favorite,
+    // favorite, ← eventテーブルのfavoriteカラムはもう使わない
   } = event;
 
-  // タグの表示用配列を作成 (tags 配列があればそれを使い、なければ tag 文字列を使う)
-  const displayTags = event.tags || (tag ? [{ name: tag }] : []);
+  // タグの表示用配列を作成
+  const displayTags = tags || (tag ? [{ name: tag }] : []);
 
   // お気に入りボタンのクリック処理
   const router = useRouter();
@@ -174,23 +174,50 @@ export default function EventCard({ event, source, query, codes }) {
     if (isLoading) return; // ローディング中は処理しない
     setIsLoading(true);
 
-    // 今の favorite の逆の状態 (trueならfalse、falseならtrue)
-    const newFavoriteStatus = !favorite;
+    try {
+      // 現在のユーザーIDを取得 (ログインしていなければ処理しない)
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    // Supabaseの "events" テーブルをアップデート
-    const { error } = await supabase
-      .from("events")
-      .update({ favorite: newFavoriteStatus }) // 'favorite' カラムを更新
-      .eq("id", id); // この 'id' のイベントだけ
+      if (!user) {
+        alert("お気に入り機能を使うにはログインが必要です。");
+        // ログインページへ飛ばす
+        router.push("/login");
+        return;
+      }
 
-    if (error) {
-      console.error("お気に入り更新エラー:", error.message);
-    } else {
-      // 成功したら、ページ全体をリフレッシュする
+      if (isFavorite) {
+        // ■ お気に入り解除 (favorites テーブルから削除)
+        const { error } = await supabase
+          .from("favorites")
+          .delete()
+          .match({ user_id: user.id, event_id: id }); // 自分のID かつ このイベントID
+
+        if (error) throw error;
+      } else {
+        // ■ お気に入り登録 (favorites テーブルに追加)
+        const { error } = await supabase
+          .from("favorites")
+          .insert({ user_id: user.id, event_id: id });
+
+        if (error) throw error;
+      }
+
+      // 成功したら画面を更新
       router.refresh();
-    }
+    } catch (error) {
+      console.error("お気に入り更新エラー:", error.message);
 
-    setIsLoading(false);
+      //「すでに登録済み」エラーなら、成功したことにしてリフレッシュする
+      if (error.message.includes("duplicate key value")) {
+        router.refresh(); // 強制的に画面を更新して、正しい状態(赤ハート)に戻す
+      } else {
+        alert("処理に失敗しました。");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // イベント詳細ページへのリンクURLを作成
@@ -225,11 +252,11 @@ export default function EventCard({ event, source, query, codes }) {
           alt={name}
         />
         <FavoriteButton
-          isFavorite={favorite}
+          isFavorite={isFavorite} // propsから受け取った状態を使う
           onClick={handleToggleFavorite}
           disabled={isLoading}
         >
-          {favorite ? <FaHeart /> : <FaRegHeart />}
+          {isFavorite ? <FaHeart /> : <FaRegHeart />}
         </FavoriteButton>
       </ImageWrapper>
       <CardContent>

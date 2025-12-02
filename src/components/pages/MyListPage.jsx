@@ -4,13 +4,11 @@ import { useState } from "react";
 import styled from "@emotion/styled";
 import EventList from "../events/EventList";
 
-// Emotion
-// ページ全体のコンテナ
+// --- Emotion Styles ---
 const PageContainer = styled.div`
   padding-bottom: 24px;
 `;
 
-// タブを囲むコンテナ
 const TabContainer = styled.div`
   display: flex;
   background-color: #97cdf3;
@@ -18,7 +16,6 @@ const TabContainer = styled.div`
   margin-bottom: 24px;
 `;
 
-// タブのボタン
 const TabButton = styled.button`
   padding: 12px 24px;
   font-size: 1.1rem;
@@ -36,24 +33,27 @@ const TabButton = styled.button`
   }
 `;
 
-// イベントリスト全体のコンテナ
 const EventListContainer = styled.div`
   padding: 0 24px;
 `;
 
 /**
- * マイリストページコンポーネント
- * @param  {{ initialFavoriteEvents: object[], initialAppliedEvents: object[] }} props - page.jsから渡される初期データ
+ * マイリストページの表示コンポーネント (UI担当)
+ *
+ * @param {object} props
+ * @param {object[]} props.initialFavoriteEvents - お気に入りイベントのリスト
+ * @param {object[]} props.initialAppliedEvents - 応募済みイベントのリスト
+ * @param {number[]} props.userFavoriteIds - ★追加: お気に入り済みイベントIDのリスト
  */
 export default function MyListPage({
   initialFavoriteEvents,
   initialAppliedEvents,
+  userFavoriteIds, // ★ Containerから受け取る
 }) {
-  // どっちのタブがアクティブか、"favorites" を初期値にする
+  // タブの切り替え状態 ("favorites" or "applied")
   const [activeTab, setActiveTab] = useState("favorites");
 
-  // サーバーから受け取ったデータをクライアントコンポーネントの状態として持つ
-  // こうすることで、クライアント側で `router.refresh` した時も再描画される
+  // propsで受け取ったデータをそのまま使用
   const favoriteEvents = initialFavoriteEvents;
   const appliedEvents = initialAppliedEvents;
 
@@ -75,12 +75,22 @@ export default function MyListPage({
       </TabContainer>
 
       <EventListContainer>
+        {/* お気に入りタブの内容 */}
         {activeTab === "favorites" && (
-          <EventList events={favoriteEvents} source="mylist" />
+          <EventList
+            events={favoriteEvents}
+            source="mylist"
+            userFavoriteIds={userFavoriteIds} // ★ EventListに渡す (これでハートが赤くなる)
+          />
         )}
 
+        {/* 応募済みタブの内容 */}
         {activeTab === "applied" && (
-          <EventList events={appliedEvents} source="mylist" />
+          <EventList
+            events={appliedEvents}
+            source="mylist"
+            userFavoriteIds={userFavoriteIds} // ★ 応募済みリストの中でも、お気に入り済みのものは赤くする
+          />
         )}
       </EventListContainer>
     </PageContainer>

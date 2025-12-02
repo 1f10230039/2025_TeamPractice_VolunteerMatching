@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import styled from "@emotion/styled";
+import { supabase } from "@/lib/supabaseClient"; // ★追加
 import EventList from "../events/EventList";
 import SearchOptions from "../search/SearchOptions";
 import {
@@ -10,8 +11,6 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 
-// Emotion
-// ページ全体のコンテナスタイル
 // --- Emotion Styles ---
 
 // ページ全体のレイアウト
@@ -175,6 +174,32 @@ export default function HomePage({ events }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // 1ページあたりの表示件数
 
+  // ★追加: ユーザーのお気に入りIDリストを保持するState
+  const [userFavoriteIds, setUserFavoriteIds] = useState([]);
+
+  // ★追加: 初回ロード時 + データ更新時に、ユーザーのお気に入りリストを取得する
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      // 1. ログインユーザーを取得
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return; // 未ログインなら何もしない
+
+      // 2. favoritesテーブルから、自分の event_id 一覧を取得
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("event_id")
+        .eq("user_id", user.id);
+
+      if (!error && data) {
+        setUserFavoriteIds(data.map(item => item.event_id));
+      }
+    };
+
+    fetchFavorites();
+  }, [events]); // ★ eventsが変わるたびに再取得
+
   // データのソート処理 (useMemoで重い計算を防ぐ)
   const sortedEvents = useMemo(() => {
     // 元の配列を破壊しないようにコピーする
@@ -182,29 +207,22 @@ export default function HomePage({ events }) {
 
     switch (sortOption) {
       case "newest":
-        // 新しい順 (作成日時順)
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case "date_asc":
-        // 開催日が近い順 (昇順: 日付が小さい順)
         sorted.sort(
           (a, b) => new Date(a.start_datetime) - new Date(b.start_datetime)
         );
         break;
       case "date_desc":
-        // 開催日が遠い順 (降順: 日付が大きい順)
         sorted.sort(
           (a, b) => new Date(b.start_datetime) - new Date(a.start_datetime)
         );
         break;
       case "popular":
-        // 人気順 (現段階では新しい順と同じ)
-        // 将来的にはお気に入り数とか閲覧数でソートしたい
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case "nearest":
-        // 現在地から近い順 (現段階では新しい順と同じ)
-        // 将来的には Geolocation API で現在地を取って計算したい
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       default:
@@ -217,13 +235,11 @@ export default function HomePage({ events }) {
   const totalItems = sortedEvents.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // 現在のページに表示するイベントだけを切り出す
   const currentEvents = sortedEvents.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // 件数表示用の開始・終了インデックス計算
   const startCount =
     totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endCount = Math.min(currentPage * itemsPerPage, totalItems);
@@ -242,7 +258,6 @@ export default function HomePage({ events }) {
     if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
   };
 
-  // --- JSX ---
   return (
     <PageContainer>
       <SearchSection>
@@ -252,7 +267,6 @@ export default function HomePage({ events }) {
       <EventSection>
         <SectionTitle>おすすめイベント</SectionTitle>
 
-        {/* コントロールバー (件数 & ソート) */}
         <ControlBar>
           <ResultCount>
             <strong>{startCount}</strong> - <strong>{endCount}</strong> 件を表示
@@ -278,10 +292,9 @@ export default function HomePage({ events }) {
           </SortWrapper>
         </ControlBar>
 
-        {/* イベント一覧 (切り出した10件だけを渡す) */}
-        <EventList events={currentEvents} />
+        {/* ★変更: EventListに userFavoriteIds を渡す */}
+        <EventList events={currentEvents} userFavoriteIds={userFavoriteIds} />
 
-        {/* ページネーション (イベントがある時だけ表示) */}
         {totalItems > 0 && (
           <PaginationContainer>
             <PageButton onClick={handlePrevPage} disabled={currentPage === 1}>
