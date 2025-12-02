@@ -152,8 +152,16 @@ export default function EventCard({ event, source, query, codes, isFavorite }) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       if (!user) {
-        alert("お気に入り機能を使うにはログインが必要です。");
+        // アラートを出して、OKならログインページへ移動
+        if (
+          confirm(
+            "お気に入り機能を使うにはログインが必要です。\nログインページに移動しますか？"
+          )
+        ) {
+          router.push("/login");
+        }
         setIsLoading(false);
         return;
       }
