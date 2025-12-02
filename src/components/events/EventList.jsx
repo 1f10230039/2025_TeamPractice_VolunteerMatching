@@ -12,7 +12,7 @@ const ListContainer = styled.div`
 
 /**
  * イベントカードをリスト表示するコンポーネント
- * * @param {object[]} events - 表示するイベントの配列
+ * @param {object[]} events - 表示するイベントの配列
  * @param {number[]} userFavoriteIds - ログインユーザーがお気に入り済みのイベントID配列
  */
 export default function EventList({

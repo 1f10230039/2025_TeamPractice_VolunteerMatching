@@ -16,7 +16,8 @@ import AuthPrompt from "@/components/auth/AuthPrompt";
 export default function MyListContainer() {
   const [favoriteEvents, setFavoriteEvents] = useState([]);
   const [appliedEvents, setAppliedEvents] = useState([]);
-  const [userFavoriteIds, setUserFavoriteIds] = useState([]); // ハート判定用IDリスト
+  // ハート判定用IDリスト
+  const [userFavoriteIds, setUserFavoriteIds] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -24,7 +25,7 @@ export default function MyListContainer() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. ログインチェック
+        // 1. ログインユーザーの確認
         const {
           data: { user },
           error: userError,
@@ -38,7 +39,7 @@ export default function MyListContainer() {
 
         setIsLoggedIn(true);
 
-        // 2. データ取得 (お気に入りと応募済みを並行取得)
+        // 2. データ取得（お気に入りと応募済みを並行取得）
 
         // favorites テーブルから events と tags を結合して取得
         const favoritePromise = supabase
@@ -78,7 +79,7 @@ export default function MyListContainer() {
         // ネスト構造 [ { events: {...} } ] から、純粋なイベントリスト [ {...} ] に変換
         const formattedFavorites = (favoriteRes.data || [])
           .map(item => item.events)
-          .filter(Boolean); // nullデータを除外
+          .filter(Boolean);
 
         const formattedApplied = (appliedRes.data || [])
           .map(item => item.events)
@@ -87,8 +88,8 @@ export default function MyListContainer() {
         setFavoriteEvents(formattedFavorites);
         setAppliedEvents(formattedApplied);
 
-        // ハートを赤く表示するためのIDリストを作成
-        // 型不一致を防ぐため、Number() で確実に数値に変換
+        // ★ ハートを赤く表示するためのIDリストを作成
+        // 型不一致を防ぐため、Number() で確実に数値に変換する
         const ids = formattedFavorites.map(event => Number(event.id));
         setUserFavoriteIds(ids);
       } catch (error) {

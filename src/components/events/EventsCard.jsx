@@ -115,6 +115,10 @@ const formatDateRange = (startStr, endStr) => {
   }
 };
 
+/**
+ * イベントカードを表示するコンポーネント
+ * @param {{ event: object }} props - イベントデータオブジェクト
+ */
 export default function EventCard({ event, source, query, codes, isFavorite }) {
   const {
     id,
@@ -130,6 +134,8 @@ export default function EventCard({ event, source, query, codes, isFavorite }) {
   } = event;
 
   const displayTags = tags || (tag ? [{ name: tag }] : []);
+
+  // お気に入りボタンのクリック処理
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 

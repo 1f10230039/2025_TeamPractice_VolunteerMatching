@@ -71,6 +71,7 @@ export default function MyListPage({
       </TabContainer>
 
       <EventListContainer>
+        {/* お気に入りタブの内容 */}
         {activeTab === "favorites" && (
           <EventList
             events={initialFavoriteEvents}
@@ -79,6 +80,7 @@ export default function MyListPage({
           />
         )}
 
+        {/* 応募済みタブの内容 */}
         {activeTab === "applied" && (
           <EventList
             events={initialAppliedEvents}
