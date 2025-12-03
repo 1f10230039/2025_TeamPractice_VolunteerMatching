@@ -4,10 +4,11 @@
 import { css } from "@emotion/react";
 import React, { useState, useRef, useEffect } from "react";
 import ChatMessage from "../chat/ChatMessage";
+import LoadingSpinner from "../chat/LoadingSpinner";
 import { getInitialMessages, processChatMessage } from "@/app/search/ai/page";
 
 const container = css`
-  max-width: 768px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 1rem;
   height: calc(100vh - 200px);
@@ -80,7 +81,7 @@ const AIChatPage = () => {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleSendMessage = async (messageContent = null) => {
     const content = messageContent || inputMessage;
@@ -138,6 +139,7 @@ const AIChatPage = () => {
             onOptionClick={handleOptionClick}
           />
         ))}
+        {isLoading && <LoadingSpinner />}
       </div>
       <div css={inputContainer}>
         <input
