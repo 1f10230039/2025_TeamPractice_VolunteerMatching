@@ -6,11 +6,11 @@ const OpenAI = require('openai');
 
 // 環境変数からキーを読み込む
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const openaiApiKey = process.env.OPENAI_API_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
-  console.error('必要な環境変数（SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY）が.env.localに設定されていません。');
+  console.error('必要な環境変数（NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, OPENAI_API_KEY）が.env.localに設定されていません。');
   process.exit(1);
 }
 

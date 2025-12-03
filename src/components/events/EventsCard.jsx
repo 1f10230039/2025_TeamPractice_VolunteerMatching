@@ -5,12 +5,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import {
+  FaMapMarkerAlt,
+  FaYenSign,
+  FaCalendarAlt,
+  FaHeart,
+  FaRegHeart,
+} from "react-icons/fa";
 
-import { FaMapMarkerAlt, FaYenSign, FaCalendarAlt } from "react-icons/fa";
-import { FaHeart, FaRegHeart } from "react-icons/fa";
-
-// Emotion
-// カード全体
+// --- Emotion Styles (そのまま) ---
 const CardContainer = styled(Link)`
   border: 1px solid #eee;
   border-radius: 12px;
@@ -21,20 +24,15 @@ const CardContainer = styled(Link)`
   display: block;
   text-decoration: none;
   color: inherit;
-
   &:hover {
     transform: translateY(-5px);
   }
 `;
-
-// 画像部分
 const ImageWrapper = styled.div`
   position: relative;
   width: 100%;
   height: 180px;
 `;
-
-// イベント画像
 const EventImage = styled.img`
   width: 100%;
   height: 180px;
@@ -42,8 +40,6 @@ const EventImage = styled.img`
   object-fit: cover;
   margin-right: 16px;
 `;
-
-// お気に入りボタン
 const FavoriteButton = styled.button`
   position: absolute;
   top: 12px;
@@ -58,13 +54,10 @@ const FavoriteButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0;
-
-  /* 連打防止用に、ローディング中はカーソルを変える */
   &:disabled {
     cursor: not-allowed;
     opacity: 0.7;
   }
-
   & > svg {
     width: 22px;
     height: 22px;
@@ -72,27 +65,20 @@ const FavoriteButton = styled.button`
     transition: color 0.1s ease;
   }
 `;
-
-// カードの中身
 const CardContent = styled.div`
   padding: 16px;
 `;
-
 const EventName = styled.h3`
   font-size: 1.1rem;
   font-weight: bold;
   margin: 0 0 8px 0;
 `;
-
-// タグを囲むコンテナ
 const TagContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 12px;
 `;
-
-// タグ用のスタイル
 const Tag = styled.span`
   display: inline-block;
   background-color: #f0f0f0;
@@ -101,17 +87,13 @@ const Tag = styled.span`
   border-radius: 4px;
   font-size: 0.8rem;
   font-weight: 500;
-  margin-bottom: 12px;
 `;
-
-// 場所とか費用とかの行
 const InfoRow = styled.div`
   display: flex;
   align-items: center;
   font-size: 0.9rem;
   color: #555;
   margin-bottom: 6px;
-
   & > svg {
     margin-right: 8px;
     width: 0.9rem;
@@ -120,21 +102,14 @@ const InfoRow = styled.div`
   }
 `;
 
-// 日付をフォーマットする簡単な関数
 const formatDateRange = (startStr, endStr) => {
   try {
     const startDate = new Date(startStr);
     const endDate = new Date(endStr);
-
-    // オプションを細かく指定して「月/日」だけ表示
     const options = { month: "numeric", day: "numeric" };
     const start = startDate.toLocaleDateString("ja-JP", options);
     const end = endDate.toLocaleDateString("ja-JP", options);
-
-    if (start === end) {
-      return start;
-    }
-    return `${start} - ${end}`;
+    return start === end ? start : `${start} - ${end}`;
   } catch (e) {
     return "日付情報なし";
   }
@@ -144,7 +119,7 @@ const formatDateRange = (startStr, endStr) => {
  * イベントカードを表示するコンポーネント
  * @param {{ event: object }} props - イベントデータオブジェクト
  */
-export default function EventCard({ event, source, query, codes }) {
+export default function EventCard({ event, source, query, codes, isFavorite }) {
   const {
     id,
     name,
@@ -155,65 +130,82 @@ export default function EventCard({ event, source, query, codes }) {
     start_datetime,
     end_datetime,
     image_url,
-    favorite,
+    // favorite, ← ★ 古いカラムは無視！絶対に使わない！
   } = event;
 
-  // タグの表示用配列を作成 (tags 配列があればそれを使い、なければ tag 文字列を使う)
-  const displayTags = event.tags || (tag ? [{ name: tag }] : []);
+  const displayTags = tags || (tag ? [{ name: tag }] : []);
 
   // お気に入りボタンのクリック処理
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false); // 連打防止用
+  const [isLoading, setIsLoading] = useState(false);
 
-  // お気に入り状態をトグルする関数
+  // ★ お気に入りボタンの処理 (favoritesテーブルへ)
   const handleToggleFavorite = async e => {
-    // ボタンをクリックした時に、親のLink(CardContainer)が発動しないようにする
     e.preventDefault();
     e.stopPropagation();
 
-    if (isLoading) return; // ローディング中は処理しない
+    if (isLoading) return;
     setIsLoading(true);
 
-    // 今の favorite の逆の状態 (trueならfalse、falseならtrue)
-    const newFavoriteStatus = !favorite;
+    try {
+      // 1. ユーザー確認
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    // Supabaseの "events" テーブルをアップデート
-    const { error } = await supabase
-      .from("events")
-      .update({ favorite: newFavoriteStatus }) // 'favorite' カラムを更新
-      .eq("id", id); // この 'id' のイベントだけ
+      if (!user) {
+        // アラートを出して、OKならログインページへ移動
+        if (
+          confirm(
+            "お気に入り機能を使うにはログインが必要です。\nログインページに移動しますか？"
+          )
+        ) {
+          router.push("/login");
+        }
+        setIsLoading(false);
+        return;
+      }
 
-    if (error) {
-      console.error("お気に入り更新エラー:", error.message);
-    } else {
-      // 成功したら、ページ全体をリフレッシュする
+      // 2. favorites テーブルへの操作
+      if (isFavorite) {
+        // 削除 (DELETE)
+        const { error } = await supabase
+          .from("favorites")
+          .delete()
+          .match({ user_id: user.id, event_id: id });
+        if (error) throw error;
+      } else {
+        // 追加 (INSERT)
+        const { error } = await supabase
+          .from("favorites")
+          .insert({ user_id: user.id, event_id: id });
+        if (error) throw error;
+      }
+
+      // 3. 画面更新
       router.refresh();
+    } catch (error) {
+      console.error("お気に入り更新エラー:", error.message);
+      // 重複エラーは無視してリフレッシュ
+      if (error.message.includes("duplicate")) {
+        router.refresh();
+      } else {
+        alert("処理に失敗しました。");
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
-  // イベント詳細ページへのリンクURLを作成
   const detailUrl = (() => {
     const base = `/events/${id}`;
-    // クエリパラメータを組み立てる
     const params = new URLSearchParams();
-    // 検索元ページの情報を付与
-    if (source) {
-      params.append("source", source);
-    }
-
-    // 検索キーワードや場所コードの情報を付与
-    if (source === "keyword" && query) {
-      params.append("q", query);
-    } else if (source === "location" && codes) {
-      params.append("codes", codes);
-    }
-    // クエリ文字列を組み立てる(source === 'mylist' の時は、'source=mylist' だけが付く)
+    if (source) params.append("source", source);
+    if (source === "keyword" && query) params.append("q", query);
+    else if (source === "location" && codes) params.append("codes", codes);
     const queryString = params.toString();
-    // クエリが何かあれば `?` を付けて、なければベースURLだけを返す
     return queryString ? `${base}?${queryString}` : base;
-  })(); // () で関数を即時実行
+  })();
 
   return (
     <CardContainer href={detailUrl}>
@@ -225,11 +217,11 @@ export default function EventCard({ event, source, query, codes }) {
           alt={name}
         />
         <FavoriteButton
-          isFavorite={favorite}
+          isFavorite={isFavorite} // ★ 親から受け取った判定結果を使う
           onClick={handleToggleFavorite}
           disabled={isLoading}
         >
-          {favorite ? <FaHeart /> : <FaRegHeart />}
+          {isFavorite ? <FaHeart /> : <FaRegHeart />}
         </FavoriteButton>
       </ImageWrapper>
       <CardContent>

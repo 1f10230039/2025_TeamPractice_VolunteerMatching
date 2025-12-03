@@ -315,43 +315,23 @@ export default function EventAdminForm({ eventToEdit }) {
       return;
     }
 
-    // フォームデータを整形
-    let submissionData = {
-      ...formData,
-      start_datetime: new Date(formData.start_datetime).toISOString(),
-      end_datetime: new Date(formData.end_datetime).toISOString(),
-      fee: parseInt(formData.fee, 10) || 0,
-      capacity: parseInt(formData.capacity, 10) || 0,
-      latitude: parseFloat(formData.latitude) || null,
-      longitude: parseFloat(formData.longitude) || null,
-      prefectures: formData.prefecture,
-    };
-    delete submissionData.prefecture;
-
-    // prefectureキーを削除（prefecturesを使ったため）
-    delete submissionData.prefecture;
-
-    let finalImageUrl = formData.image_url;
-
     try {
+      // 1. 画像がアップロードされていれば、まずStorageに保存
+      let finalImageUrl = eventToEdit?.image_url || formData.image_url;
       if (uploadFile) {
         console.log("新しい画像をアップロードします...");
-
-        // ファイル名を一意にする (例: public/17123456789.png)
         const fileExt = uploadFile.name.split(".").pop();
         const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`; // Supabase Storage のパス
+        const filePath = `${fileName}`;
 
-        // Supabase Storage にアップロード
         const { error: uploadError } = await supabase.storage
-          .from("events-images") // バケツ名
-          .upload(filePath, uploadFile); // パスとファイル
+          .from("events-images")
+          .upload(filePath, uploadFile);
 
         if (uploadError) {
           throw new Error(`画像アップロード失敗: ${uploadError.message}`);
         }
 
-        // アップロードしたファイルの「公開URL」を取得
         const { data: urlData } = supabase.storage
           .from("events-images")
           .getPublicUrl(filePath);
@@ -359,71 +339,50 @@ export default function EventAdminForm({ eventToEdit }) {
         if (!urlData || !urlData.publicUrl) {
           throw new Error("画像の公開URL取得に失敗しました。");
         }
-
-        finalImageUrl = urlData.publicUrl; // これがDBに保存するURL
+        finalImageUrl = urlData.publicUrl;
         console.log("アップロード成功！ URL:", finalImageUrl);
       }
 
-      submissionData = {
-        ...submissionData,
-        image_url: finalImageUrl, // 最終的なURLをセット
+      // 2. APIに送信するデータ本体を準備
+      const eventData = {
+        ...formData,
+        id: isEditMode ? eventToEdit.id : undefined, // 編集時のみIDを含める
         start_datetime: new Date(formData.start_datetime).toISOString(),
         end_datetime: new Date(formData.end_datetime).toISOString(),
+        fee: parseInt(formData.fee, 10) || 0,
+        capacity: parseInt(formData.capacity, 10) || 0,
+        latitude: parseFloat(formData.latitude) || null,
+        longitude: parseFloat(formData.longitude) || null,
+        prefectures: formData.prefecture,
+        image_url: finalImageUrl,
       };
+      // 不要なキーや重複するキーを削除
+      delete eventData.prefecture;
 
-      let targetEventId = null;
+      // 3. APIエンドポイントにリクエストを送信
+      const response = await fetch("/api/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventData: eventData, // 送信するイベントデータ
+          selectedTagIds: selectedTagIds, // 選択されたタグIDの配列
+        }),
+      });
 
-      if (isEditMode) {
-        // --- 更新 (UPDATE) ---
-        const { error } = await supabase
-          .from("events")
-          .update(submissionData)
-          .eq("id", eventToEdit.id);
-
-        if (error) throw error;
-        targetEventId = eventToEdit.id;
-      } else {
-        // --- 新規作成 (INSERT) ---
-        const { data, error } = await supabase
-          .from("events")
-          .insert([submissionData])
-          .select()
-          .single();
-
-        if (error) throw error;
-        targetEventId = data.id;
+      if (!response.ok) {
+        const errorBody = await response.json();
+        throw new Error(errorBody.error || "APIリクエストに失敗しました。");
       }
 
-      // タグの紐付け処理
-      if (targetEventId) {
-        // イベントに紐付く既存のタグを全削除 (リセット)
-        const { error: deleteTagsError } = await supabase
-          .from("event_tags")
-          .delete()
-          .eq("event_id", targetEventId);
+      const result = await response.json();
+      const targetEventId = result.eventId;
 
-        if (deleteTagsError) console.error("タグ削除エラー:", deleteTagsError);
-
-        // 選択されているタグがあれば、新しく紐付け (INSERT)
-        if (selectedTagIds.length > 0) {
-          const tagInsertData = selectedTagIds.map(tagId => ({
-            event_id: targetEventId,
-            tag_id: tagId,
-          }));
-
-          const { error: insertTagsError } = await supabase
-            .from("event_tags")
-            .insert(tagInsertData);
-
-          if (insertTagsError) throw insertTagsError;
-        }
-      }
-
-      alert(
-        isEditMode ? "イベントを更新しました！" : "イベントを作成しました！"
-      );
+      alert(result.message);
       router.push(`/events/${targetEventId}`);
       router.refresh();
+
     } catch (error) {
       console.error("イベントの保存に失敗:", error.message);
       alert(`エラーが発生しました: ${error.message}`);

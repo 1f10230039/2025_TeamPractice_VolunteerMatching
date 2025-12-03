@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import styled from "@emotion/styled";
+import { supabase } from "@/lib/supabaseClient";
 import EventList from "../events/EventList";
 import SearchOptions from "../search/SearchOptions";
 import {
@@ -10,17 +11,17 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 
-// Emotion
-// ページ全体のコンテナスタイル
-// --- Emotion Styles ---
+// ==========================================
+// Emotion Styles (スタイル定義)
+// ==========================================
 
-// ページ全体のレイアウト
+// ページ全体の背景とレイアウト
 const PageContainer = styled.div`
   background-color: #f9f9f9;
   min-height: 100vh;
 `;
 
-// 検索オプションセクション
+// 上部の青い検索エリア
 const SearchSection = styled.section`
   margin-bottom: 24px;
   background-color: #97cdf3;
@@ -28,7 +29,7 @@ const SearchSection = styled.section`
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 `;
 
-// イベントリストセクション
+// イベントリストを表示するメインエリア（幅制限あり）
 const EventSection = styled.section`
   padding: 0 24px 60px 24px;
   max-width: 1200px;
@@ -39,7 +40,7 @@ const EventSection = styled.section`
   }
 `;
 
-// セクションタイトルスタイル
+// セクションの見出し（「おすすめイベント」など）
 const SectionTitle = styled.h2`
   font-size: 1.5rem;
   font-weight: bold;
@@ -59,7 +60,7 @@ const SectionTitle = styled.h2`
   }
 `;
 
-// コントロールバー（件数表示とソートボタン）
+// リスト上部のコントロールバー（件数表示とソートボタン）
 const ControlBar = styled.div`
   display: flex;
   justify-content: space-between;
@@ -74,7 +75,7 @@ const ControlBar = styled.div`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 `;
 
-// 結果件数表示
+// 結果件数のテキスト
 const ResultCount = styled.p`
   font-size: 0.95rem;
   color: #666;
@@ -87,14 +88,14 @@ const ResultCount = styled.p`
   }
 `;
 
-// ソート選択エリア
+// ソート選択エリアのラッパー
 const SortWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
 `;
 
-// ソートラベル
+// 「並び替え:」のラベル
 const SortLabel = styled.label`
   font-size: 0.9rem;
   color: #666;
@@ -103,7 +104,7 @@ const SortLabel = styled.label`
   gap: 4px;
 `;
 
-// ソートセレクトボックス
+// ソート順を選ぶセレクトボックス
 const SortSelect = styled.select`
   padding: 8px 12px;
   font-size: 0.9rem;
@@ -120,7 +121,7 @@ const SortSelect = styled.select`
   }
 `;
 
-// ページネーションエリア
+// ページネーション（ページ送り）エリア
 const PaginationContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -129,7 +130,7 @@ const PaginationContainer = styled.div`
   margin-top: 40px;
 `;
 
-// ページネーションボタン
+// ページ送りボタン（「前のページ」「次のページ」）
 const PageButton = styled.button`
   display: flex;
   align-items: center;
@@ -158,16 +159,20 @@ const PageButton = styled.button`
   }
 `;
 
-// ページ情報表示
+// 現在のページ番号表示
 const PageInfo = styled.span`
   font-size: 1rem;
   color: #555;
   font-weight: 500;
 `;
 
+// ==========================================
+// コンポーネント本体
+// ==========================================
+
 /**
- * ページ全体のレイアウトと状態を管理するコンポーネント
- * @param {{ events: object[] }} props - page.jsから渡される全イベントデータ
+ * トップページ (HomePage)
+ * イベント一覧の表示、ソート、ページネーション、お気に入り情報の管理を行います。
  */
 export default function HomePage({ events }) {
   // 状態管理
@@ -175,36 +180,62 @@ export default function HomePage({ events }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // 1ページあたりの表示件数
 
-  // データのソート処理 (useMemoで重い計算を防ぐ)
+  // ユーザーのお気に入りIDリストを保持するState
+  const [userFavoriteIds, setUserFavoriteIds] = useState([]);
+
+  /**
+   * 初回ロード時 + イベントデータ更新時に実行
+   * ログインユーザーの「お気に入り済みイベントID一覧」を取得してStateに保存する。
+   * これにより、一覧画面のハートを赤く表示できる。
+   */
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      // 1. ログインユーザーを取得
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return; // 未ログインなら何もしない
+
+      // 2. favoritesテーブルから、自分の event_id 一覧を取得
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("event_id")
+        .eq("user_id", user.id);
+
+      if (!error && data) {
+        // IDを数値型に変換して保存 (型不一致を防ぐため)
+        setUserFavoriteIds(data.map(item => Number(item.event_id)));
+      }
+    };
+
+    fetchFavorites();
+  }, [events]);
+
+  /**
+   * データのソート処理 (useMemoで重い計算を防ぐ)
+   * 選択されたソート順(sortOption)に応じてイベント配列を並び替える
+   */
   const sortedEvents = useMemo(() => {
-    // 元の配列を破壊しないようにコピーする
     let sorted = [...(events || [])];
 
     switch (sortOption) {
       case "newest":
-        // 新しい順 (作成日時順)
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case "date_asc":
-        // 開催日が近い順 (昇順: 日付が小さい順)
         sorted.sort(
           (a, b) => new Date(a.start_datetime) - new Date(b.start_datetime)
         );
         break;
       case "date_desc":
-        // 開催日が遠い順 (降順: 日付が大きい順)
         sorted.sort(
           (a, b) => new Date(b.start_datetime) - new Date(a.start_datetime)
         );
         break;
       case "popular":
-        // 人気順 (現段階では新しい順と同じ)
-        // 将来的にはお気に入り数とか閲覧数でソートしたい
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case "nearest":
-        // 現在地から近い順 (現段階では新しい順と同じ)
-        // 将来的には Geolocation API で現在地を取って計算したい
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       default:
@@ -213,17 +244,15 @@ export default function HomePage({ events }) {
     return sorted;
   }, [events, sortOption]);
 
-  // ページネーション処理
+  // ページネーション処理: 現在のページに表示すべきデータだけを切り出す
   const totalItems = sortedEvents.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // 現在のページに表示するイベントだけを切り出す
   const currentEvents = sortedEvents.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // 件数表示用の開始・終了インデックス計算
   const startCount =
     totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endCount = Math.min(currentPage * itemsPerPage, totalItems);
@@ -242,7 +271,6 @@ export default function HomePage({ events }) {
     if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
   };
 
-  // --- JSX ---
   return (
     <PageContainer>
       <SearchSection>
@@ -278,8 +306,11 @@ export default function HomePage({ events }) {
           </SortWrapper>
         </ControlBar>
 
-        {/* イベント一覧 (切り出した10件だけを渡す) */}
-        <EventList events={currentEvents} />
+        {/* イベント一覧を表示 */}
+        <EventList
+          events={currentEvents}
+          userFavoriteIds={userFavoriteIds} // ★ お気に入りIDリストを渡す
+        />
 
         {/* ページネーション (イベントがある時だけ表示) */}
         {totalItems > 0 && (

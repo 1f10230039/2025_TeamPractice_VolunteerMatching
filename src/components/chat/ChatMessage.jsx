@@ -1,6 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import { css } from "@emotion/react";
 import React from "react";
+import ReactMarkdown from 'react-markdown';
 import EventCard from "../events/EventsCard";
 
 const messageContainer = css`
@@ -22,7 +23,21 @@ const messageBox = isUser => css`
 
 const messageText = css`
   color: var(--foreground);
-  white-space: pre-wrap;
+  
+  a {
+    color: #3182ce;
+    text-decoration: underline;
+  }
+
+  ul, ol {
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  li {
+    margin-bottom: 0.25rem;
+  }
 `;
 
 const eventCardWrapper = css`
@@ -69,7 +84,9 @@ const ChatMessage = ({ message, isUser, onOptionClick }) => {
   return (
     <div css={messageContainer}>
       <div css={messageBox(isUser)}>
-        <div css={messageText}>{message.content}</div>
+        <div css={messageText}>
+          <ReactMarkdown>{message.content}</ReactMarkdown>
+        </div>
         {/* 複数のイベントを表示 */}
         {hasEvents && (
           <div css={eventCardWrapper}>

@@ -9,7 +9,7 @@ import AIChatPage from "@/components/pages/AIChatPage";
 // Server Actionはサーバー環境でのみ実行されるため、サービスロールキーを安全に使用できる
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 );
 
 /**
@@ -90,6 +90,7 @@ export async function processChatMessage(messages) {
 提供されたイベント情報を基に、ユーザーの質問に最も適したイベントを提案してください。
 イベントを提案する際は、なぜそのイベントが適しているのか、具体的な情報（日時、場所など）を交えて説明してください。
 検索結果でイベントが見つからなかった場合でも、ユーザーの意図を汲み取り、一般的なアドバイスや代わりの提案をしてください。
+回答にはMarkdownを使用して、情報を整理し、読みやすくしてください。例えば、太字、リスト、斜体などを使用して、重要な点を強調することができます。
 ユーザーが次のアクションを取りやすいように、回答の最後に4つの選択肢を提示することがあります。その場合は、必ず以下のJSON形式で応答の末尾に含めてください：
 {"options": ["選択肢1", "選択肢2", "選択肢3", "選択肢4"]}`,
     };
