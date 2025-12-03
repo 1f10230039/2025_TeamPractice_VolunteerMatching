@@ -7,13 +7,18 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthPrompt from "@/components/auth/AuthPrompt";
 
-// Emotion Style Definitions
+// ==========================================
+// Emotion Style Definitions (スタイル定義)
+// ==========================================
+
 // マイページ全体のラッパー
+// ページの外枠としてパディングを設定しています
 const MyPageWrapper = styled.div`
   padding: 24px;
 `;
 
-// ページタイトル
+// ページタイトル (H1)
+// 青い下線が付いた見出しスタイルです
 const Title = styled.h1`
   font-size: 28px;
   font-weight: 600;
@@ -24,6 +29,7 @@ const Title = styled.h1`
 `;
 
 // プロフィール情報を表示する白いカード部分
+// 枠線と角丸をつけて、情報をグループ化しています
 const ProfileSection = styled.div`
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
@@ -32,7 +38,8 @@ const ProfileSection = styled.div`
   margin-bottom: 24px;
 `;
 
-// プロフィールの各項目（名前、大学、学部）
+// プロフィールの各項目（名前、大学、学部など）
+// ラベル部分(strong)の幅を固定して、揃えて表示します
 const ProfileItem = styled.div`
   font-size: 16px;
   margin-bottom: 12px;
@@ -45,9 +52,31 @@ const ProfileItem = styled.div`
 `;
 
 // プロフィール編集ページへのリンクボタン
+// 緑色(#28a745)をベースにしたLinkコンポーネントです
 const EditButton = styled(Link)`
   display: inline-block;
-  background-color: #28a745; /* 緑色 */
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  margin-right: 16px; /* 右隣のボタンとの間隔 */
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #218838;
+  }
+`;
+
+// ★追加: 管理画面へのリンクボタン
+// 管理者のみに表示されるボタン。目立つようにオレンジ色(#fd7e14)にしています
+const AdminButton = styled(Link)`
+  display: inline-block;
+  background-color: #fd7e14;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -60,13 +89,14 @@ const EditButton = styled(Link)`
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #218838;
+    background-color: #e36d0d;
   }
 `;
 
 // ログアウトボタン
+// 青色(#007bff)をベースにしたボタンです
 const LogoutButton = styled.button`
-  background-color: #007bff; /* 青色 */
+  background-color: #007bff;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -80,6 +110,10 @@ const LogoutButton = styled.button`
     background-color: #0056b3;
   }
 `;
+
+// ==========================================
+// コンポーネント本体
+// ==========================================
 
 /**
  * マイページ表示コンポーネント
@@ -99,7 +133,7 @@ export default function MyPage() {
   /**
    * 初回レンダリング時に実行される処理
    * 1. ログインチェック
-   * 2. プロフィールデータの取得
+   * 2. プロフィールデータの取得 (ロール情報含む)
    */
   useEffect(() => {
     const fetchProfile = async () => {
@@ -122,12 +156,14 @@ export default function MyPage() {
 
         // 2. プロフィールデータを取得
         // 関連する大学名(universities)と学部名(faculties)も結合して取得
+        // ★ role (権限) カラムも取得して、管理者かどうか判定できるようにする
         const { data, error } = await supabase
           .from("profiles")
           .select(
             `
             id,
             name,
+            role,
             universities ( name ), 
             faculties ( name )
           `
@@ -141,6 +177,7 @@ export default function MyPage() {
         setProfile({
           id: data.id,
           name: data.name,
+          role: data.role, // 権限情報 (admin or user)
           university: data.universities?.name || "（未設定）",
           faculty: data.faculties?.name || "（未設定）",
         });
@@ -182,6 +219,7 @@ export default function MyPage() {
     <MyPageWrapper>
       <Title>マイページ</Title>
 
+      {/* プロフィール情報表示エリア */}
       <ProfileSection>
         <ProfileItem>
           <strong>名前:</strong>
@@ -195,11 +233,28 @@ export default function MyPage() {
           <strong>学部:</strong>
           <span>{profile ? profile.faculty : "（未設定）"}</span>
         </ProfileItem>
+
+        {/* 管理者の場合のみ権限を表示 (オプション) */}
+        {profile?.role === "admin" && (
+          <ProfileItem>
+            <strong>権限:</strong>
+            <span style={{ color: "#fd7e14", fontWeight: "bold" }}>管理者</span>
+          </ProfileItem>
+        )}
       </ProfileSection>
 
       <div style={{ marginTop: "24px" }}>
         {/* プロフィール編集ページへのリンク */}
         <EditButton href="/mypage/edit">プロフィールを編集</EditButton>
+
+        {/* ★追加: 管理者(admin)の場合のみ「管理画面へ」ボタンを表示 */}
+        {profile?.role === "admin" && (
+          <AdminButton href="/volunteer-registration/admin/events">
+            管理画面へ
+          </AdminButton>
+        )}
+
+        {/* ログアウトボタン */}
         <LogoutButton onClick={handleLogout}>ログアウト</LogoutButton>
       </div>
     </MyPageWrapper>
