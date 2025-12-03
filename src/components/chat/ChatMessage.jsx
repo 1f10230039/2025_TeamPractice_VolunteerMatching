@@ -42,9 +42,13 @@ const messageText = css`
 
 const eventCardWrapper = css`
   margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const optionsContainer = css`

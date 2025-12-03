@@ -43,7 +43,7 @@ export async function processChatMessage(messages) {
     // RAG: Retrieval - セマンティック検索でイベントを検索
     const { data: events, error: searchError } = await findSimilarEvents(
       userMessage.content,
-      3
+      2
     );
 
     if (searchError) {
@@ -87,12 +87,13 @@ export async function processChatMessage(messages) {
     const systemMessage = {
       role: 'system',
       content: `あなたは大学生のためのボランティアイベントアドバイザーです。
-提供されたイベント情報を基に、ユーザーの質問に最も適したイベントを提案してください。
+提供されたイベント情報を基に、ユーザーの質問に最も適したイベントを2つ提案してください。
 イベントを提案する際は、なぜそのイベントが適しているのか、具体的な情報（日時、場所など）を交えて説明してください。
 検索結果でイベントが見つからなかった場合でも、ユーザーの意図を汲み取り、一般的なアドバイスや代わりの提案をしてください。
 回答にはMarkdownを使用して、情報を整理し、読みやすくしてください。例えば、太字、リスト、斜体などを使用して、重要な点を強調することができます。
 ユーザーが次のアクションを取りやすいように、回答の最後に4つの選択肢を提示することがあります。その場合は、必ず以下のJSON形式で応答の末尾に含めてください：
-{"options": ["選択肢1", "選択肢2", "選択肢3", "選択肢4"]}`,
+{"options": ["選択肢1", "選択肢2", "選択肢3", "選択肢4"]}
+イベントが見つかったら無理に選択肢を出さなくて大丈夫です。`,
     };
     
     const contextMessage = {
@@ -120,11 +121,11 @@ export async function processChatMessage(messages) {
       }
     }
 
-    // 応答メッセージオブジェクトを作成
+    // 応答メッセージオブジェクトを作成（最大2つのイベントに制限）
     return {
       role: 'assistant',
       content: content,
-      events: fullEvents.length > 0 ? fullEvents : null,
+      events: fullEvents.length > 0 ? fullEvents.slice(0, 2) : null,
       options: options,
     };
 
