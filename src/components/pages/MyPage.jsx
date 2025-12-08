@@ -111,6 +111,68 @@ const LogoutButton = styled.button`
   }
 `;
 
+// 活動記録へのリンクボタン
+const ActivityLogButton = styled(Link)`
+  display: inline-block;
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  margin-right: 16px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #138496;
+  }
+`;
+
+// マイリストへのリンクボタン（お気に入り）
+// ピンク色(#e83e8c)をベースに
+const FavoriteLinkButton = styled(Link)`
+  display: inline-block;
+  background-color: #e83e8c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  margin-right: 16px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #d63384;
+  }
+`;
+
+// マイリストへのリンクボタン（応募済み）
+// 緑色(#20c997)をベースに
+const AppliedLinkButton = styled(Link)`
+  display: inline-block;
+  background-color: #20c997;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  margin-right: 16px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #198754;
+  }
+`;
+
 // ==========================================
 // コンポーネント本体
 // ==========================================
@@ -246,6 +308,19 @@ export default function MyPage() {
       <div style={{ marginTop: "24px" }}>
         {/* プロフィール編集ページへのリンク */}
         <EditButton href="/mypage/edit">プロフィールを編集</EditButton>
+
+        {/* マイリストページへのリンクボタン */}
+        <FavoriteLinkButton href="/mylist?tab=favorites">
+          お気に入り一覧
+        </FavoriteLinkButton>
+        <AppliedLinkButton href="/mylist?tab=applied">
+          応募済み一覧
+        </AppliedLinkButton>
+
+        {/* 活動記録ページへのリンク */}
+        <ActivityLogButton href="/activity-log">
+          活動記録を見る
+        </ActivityLogButton>
 
         {/* ★追加: 管理者(admin)の場合のみ「管理画面へ」ボタンを表示 */}
         {profile?.role === "admin" && (
