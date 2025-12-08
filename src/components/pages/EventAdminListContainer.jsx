@@ -3,15 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import EventAdminListPage from "./EventAdminListPage"; // 既存の表示用コンポーネント
+import EventAdminListPage from "./EventAdminListPage";
 
 /**
  * 管理画面(イベント一覧)のコンテナ
- *
- * 役割:
- * 1. ログイン & 管理者権限(role === 'admin') のチェック
- * 2. 全イベントデータの取得 (タグ情報含む)
- * 3. 表示用コンポーネントへのデータ渡し
  */
 export default function EventAdminListContainer() {
   const router = useRouter();
@@ -31,11 +26,11 @@ export default function EventAdminListContainer() {
 
         if (userError || !user) {
           alert("ログインが必要です。");
-          router.push("/volunteer-registration/admin/login"); // 管理者用ログインへ
+          router.push("/volunteer-registration/admin/login");
           return;
         }
 
-        // 2. 権限チェック (profilesテーブルの role を見る)
+        // 2. 権限チェック
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
@@ -45,28 +40,52 @@ export default function EventAdminListContainer() {
         if (profileError || profile?.role !== "admin") {
           console.error("権限エラー: このユーザーは管理者ではありません。");
           alert("このページにアクセスする権限がありません。");
-          router.push("/"); // トップページへ強制送還
+          router.push("/");
           return;
         }
 
-        // ここまで来れば管理者確定
         setIsAdmin(true);
 
-        // 3. 全イベントデータの取得 (tagsも結合)
-        // 管理画面なので、全て(全件)取得する
+        // 3. 全イベントデータの取得 (タグ情報含む)
+        console.log("イベントデータの取得を開始します..."); // ★デバッグ用ログ
+
         const { data: eventsData, error: eventsError } = await supabase
           .from("events")
           .select(
             `
             *,
-            tags ( * )
-          `
+            event_tags (
+              tags (
+                *
+              )
+            )
+            `
           )
-          .order("created_at", { ascending: false }); // 新しい順
+          .order("created_at", { ascending: false });
 
-        if (eventsError) throw eventsError;
+        if (eventsError) {
+          console.error("イベント取得エラー:", eventsError); // ★エラー詳細をログに出す
+          throw eventsError;
+        }
 
-        setEvents(eventsData || []);
+        console.log("取得できた生のデータ:", eventsData); // ★Supabaseから来たデータをログに出す
+
+        // データの整形
+        const formattedEvents = (eventsData || []).map(event => {
+          const tags = event.event_tags
+            ? event.event_tags
+                .map(item => item.tags)
+                .filter(tag => tag !== null)
+            : [];
+
+          return {
+            ...event,
+            tags: tags,
+          };
+        });
+
+        console.log("整形後のデータ:", formattedEvents); // ★整形後のデータをログに出す
+        setEvents(formattedEvents);
       } catch (error) {
         console.error("管理画面読み込みエラー:", error);
         alert("データの読み込みに失敗しました。");
@@ -86,11 +105,9 @@ export default function EventAdminListContainer() {
     );
   }
 
-  // 管理者でなければ何も表示しない (useEffectでリダイレクト済みだが、念のため)
   if (!isAdmin) {
     return null;
   }
 
-  // 権限OKなら、一覧ページを表示
   return <EventAdminListPage events={events} />;
 }
