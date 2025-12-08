@@ -7,11 +7,21 @@ import { supabase } from "@/lib/supabaseClient";
 import styled from "@emotion/styled";
 import Breadcrumbs from "../common/Breadcrumbs";
 
+// --- 地域区分の定義 (JISコード順) ---
+const REGIONS = [
+  { name: "北海道・東北", range: [1, 7] },
+  { name: "関東", range: [8, 14] },
+  { name: "中部", range: [15, 23] },
+  { name: "近畿", range: [24, 30] },
+  { name: "中国・四国", range: [31, 39] },
+  { name: "九州・沖縄", range: [40, 47] },
+];
+
 // Emotion
 // ページ全体のコンテナ
 const PageContainer = styled.div`
   padding: 24px;
-  margin-bottom: 60px;
+  margin-bottom: 80px; /* 固定ボタンの分だけ余白を確保 */
 `;
 
 // セクションタイトル
@@ -19,8 +29,26 @@ const SectionTitle = styled.h2`
   font-size: 1.2rem;
   margin-top: 1.5em;
   margin-bottom: 0.8em;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 2px solid #007bff;
   padding-bottom: 8px;
+  color: #333;
+`;
+
+// 地域ごとのブロック
+const RegionBlock = styled.div`
+  margin-bottom: 24px;
+`;
+
+// 地域名の見出し (例: 関東)
+const RegionLabel = styled.h3`
+  font-size: 0.95rem;
+  color: #555;
+  font-weight: bold;
+  margin-bottom: 8px;
+  background-color: #f0f4f8;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-block;
 `;
 
 // 都道府県リストのコンテナ
@@ -34,11 +62,12 @@ const PrefListContainer = styled.div`
 const PrefButton = styled.button`
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid #ddd;
+  border: 1px solid ${props => (props.isSelected ? "#007bff" : "#ddd")};
   background-color: ${props => (props.isSelected ? "#007bff" : "#fff")};
   color: ${props => (props.isSelected ? "#fff" : "#333")};
   cursor: pointer;
   font-weight: 500;
+  transition: all 0.2s ease;
 
   &:hover {
     background-color: ${props => (props.isSelected ? "#0056b3" : "#f4f4f4")};
@@ -48,7 +77,7 @@ const PrefButton = styled.button`
 // 市町村リストのコンテナ
 const CityListContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 12px;
   margin-top: 16px;
 `;
@@ -57,10 +86,12 @@ const CityListContainer = styled.div`
 const CityLabel = styled.label`
   display: flex;
   align-items: center;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 6px;
+  padding: 12px;
+  background-color: ${props => (props.isChecked ? "#e3f2fd" : "#f9f9f9")};
+  border: 1px solid ${props => (props.isChecked ? "#90caf9" : "transparent")};
+  border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.2s;
 
   &:hover {
     background-color: #f0f0f0;
@@ -71,6 +102,7 @@ const CityCheckbox = styled.input`
   margin-right: 10px;
   width: 18px;
   height: 18px;
+  accent-color: #007bff;
 `;
 
 const ButtonContainer = styled.div`
@@ -80,7 +112,7 @@ const ButtonContainer = styled.div`
   right: 0;
   background-color: #fff;
   padding: 16px 24px;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   z-index: 100;
 `;
 
@@ -95,6 +127,7 @@ const SearchButton = styled.button`
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.2s;
 
   &:hover {
     background-color: #0056b3;
@@ -123,13 +156,8 @@ export default function LocationSearchPage({ initialPrefectures }) {
   // --- イベントハンドラ ---
   // 都道府県ボタンがクリックされた時の処理
   const handlePrefClick = async prefCode => {
-    // 同じ県をもう一度クリックしたら、選択を解除
-    if (selectedPrefCode === prefCode) {
-      setSelectedPrefCode(null);
-      setCities([]);
-      setCheckedCities({});
-      return;
-    }
+    // 同じ県をもう一度クリックしたら、何もしない（あるいは選択解除ロジックを入れてもいい）
+    if (selectedPrefCode === prefCode) return;
 
     setSelectedPrefCode(prefCode); // 選択した県をセット
     setIsLoadingCities(true); // ローディング開始
@@ -181,42 +209,66 @@ export default function LocationSearchPage({ initialPrefectures }) {
   const selectedCityCount = Object.values(checkedCities).filter(Boolean).length;
 
   // パンくずリスト用データ
-  const crumbs = [{ label: "場所から探す", href: "/location-search" }];
+  const crumbs = [{ label: "場所から探す", href: "/search/location" }];
 
   return (
     <>
       <Breadcrumbs crumbs={crumbs} />
       <PageContainer>
         <SectionTitle>1. 都道府県を選択</SectionTitle>
-        <PrefListContainer>
-          {prefectures.map(pref => (
-            <PrefButton
-              key={pref["prefecture-code"]}
-              isSelected={selectedPrefCode === pref["prefecture-code"]}
-              onClick={() => handlePrefClick(pref["prefecture-code"])}
-            >
-              {pref.name}
-            </PrefButton>
-          ))}
-        </PrefListContainer>
 
+        {/* 地域ごとにグループ化して表示 */}
+        {REGIONS.map(region => {
+          // この地域に含まれる都道府県を抽出
+          const regionPrefs = prefectures.filter(pref => {
+            const code = parseInt(pref["prefecture-code"], 10);
+            return code >= region.range[0] && code <= region.range[1];
+          });
+
+          // データがない地域はスキップ
+          if (regionPrefs.length === 0) return null;
+
+          return (
+            <RegionBlock key={region.name}>
+              <RegionLabel>{region.name}</RegionLabel>
+              <PrefListContainer>
+                {regionPrefs.map(pref => (
+                  <PrefButton
+                    key={pref["prefecture-code"]}
+                    isSelected={selectedPrefCode === pref["prefecture-code"]}
+                    onClick={() => handlePrefClick(pref["prefecture-code"])}
+                  >
+                    {pref.name}
+                  </PrefButton>
+                ))}
+              </PrefListContainer>
+            </RegionBlock>
+          );
+        })}
+
+        {/* 市町村選択エリア */}
         {selectedPrefCode && (
           <>
             <SectionTitle>2. 市町村を選択</SectionTitle>
-            {isLoadingCities && <p>市町村を読み込み中...</p>}
-
-            <CityListContainer>
-              {cities.map(city => (
-                <CityLabel key={city["city-code"]}>
-                  <CityCheckbox
-                    type="checkbox"
-                    checked={!!checkedCities[city["city-code"]]} // !! で true/false に変換
-                    onChange={() => handleCityCheck(city["city-code"])}
-                  />
-                  {city.name}
-                </CityLabel>
-              ))}
-            </CityListContainer>
+            {isLoadingCities ? (
+              <p style={{ color: "#666", padding: "20px" }}>読み込み中...</p>
+            ) : (
+              <CityListContainer>
+                {cities.map(city => {
+                  const isChecked = !!checkedCities[city["city-code"]];
+                  return (
+                    <CityLabel key={city["city-code"]} isChecked={isChecked}>
+                      <CityCheckbox
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleCityCheck(city["city-code"])}
+                      />
+                      {city.name}
+                    </CityLabel>
+                  );
+                })}
+              </CityListContainer>
+            )}
           </>
         )}
       </PageContainer>

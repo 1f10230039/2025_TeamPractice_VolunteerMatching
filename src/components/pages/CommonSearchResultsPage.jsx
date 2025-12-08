@@ -7,6 +7,9 @@ import EventList from "../events/EventList";
 import SearchOptionsMini from "../search/SearchOptionsMini";
 import Breadcrumbs from "../common/Breadcrumbs";
 
+import EmptyState from "../common/EmptyState";
+import { FaSearch } from "react-icons/fa";
+
 // Emotion
 
 // 検索窓を画面上部に固定するためのラッパー
@@ -195,9 +198,14 @@ export default function CommonSearchResultsPage({
           </ListWrapper>
         ) : (
           <ListWrapper>
-            <p style={{ color: "#666" }}>
-              条件に一致するイベントはありません。
-            </p>
+            <EmptyState
+              title="条件に一致するイベントが見つかりません"
+              description="キーワードを変えたり、タグの絞り込みを解除して、もう一度探してみてください。"
+              icon={<FaSearch />}
+              // ボタンはナシでもOK
+              actionLabel="トップページに戻る"
+              actionHref="/"
+            />
           </ListWrapper>
         )}
       </PageResultsContainer>

@@ -27,6 +27,7 @@ import {
   FaChalkboardTeacher,
   FaTwitter,
   FaLine,
+  FaMapMarkedAlt,
 } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
 import ConfirmApplyModal from "../events/ConfirmApplyModal";
@@ -383,6 +384,29 @@ const ShareLinkButton = styled.a`
   }
 `;
 
+// Google Maps 埋め込みコンテナ
+const MapContainer = styled.div`
+  width: 100%;
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 8px;
+  border: 1px solid #eee;
+  background-color: #f0f0f0; /* ロード中などの背景 */
+`;
+
+// 地図リンク
+const MapLink = styled.a`
+  display: inline-block;
+  margin-top: 8px;
+  color: #007bff;
+  font-size: 0.9rem;
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
 // ==========================================
 // ユーティリティ関数
 // ==========================================
@@ -498,6 +522,8 @@ export default function EventDetailPage({ event, source, q, codes }) {
     experience,
     appeal,
     review,
+    latitude,
+    longitude,
   } = event;
 
   // シェア用テキストの作成
@@ -845,6 +871,31 @@ export default function EventDetailPage({ event, source, q, codes }) {
             <InfoValue>{capacity ? `${capacity}名` : "特に指定なし"}</InfoValue>
           </InfoGrid>
         </DetailSection>
+
+        {latitude && longitude && (
+          <DetailSection>
+            <SectionTitle>
+              <FaMapMarkedAlt /> アクセスマップ
+            </SectionTitle>
+            <MapContainer>
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                src={`https://maps.google.com/maps?q=${latitude},${longitude}&hl=ja&z=15&output=embed`}
+                allowFullScreen
+                title="Google Maps"
+              ></iframe>
+            </MapContainer>
+            <MapLink
+              href={`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Googleマップで大きな地図を見る ↗
+            </MapLink>
+          </DetailSection>
+        )}
 
         {(selection_flow || belongings || clothing) && (
           <DetailSection>
