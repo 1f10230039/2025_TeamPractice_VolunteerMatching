@@ -126,7 +126,7 @@ export default function ActivityLogForm({ logToEdit }) {
     datetime: logToEdit?.datetime ? logToEdit.datetime.split("T")[0] : "", // 日付形式に合わせる
     reason: logToEdit?.reason || "",
     activity_scale: logToEdit?.activity_scale || "",
-    numbers: console.logToEdit?.numbers || "",    
+    numbers: console.logToEdit?.numbers || "",
     content: logToEdit?.content || "",
     learning: logToEdit?.learning || "",
     reflection: logToEdit?.reflection || "",
@@ -153,60 +153,72 @@ export default function ActivityLogForm({ logToEdit }) {
       return;
     }
 
+    // ログインユーザーの取得
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      alert("ログインしてください");
+      return;
+    }
+
     // datetimeはtimestamptz型だから、YYYY-MM-DDをYYYY-MM-DDTHH:MM:SSZみたいなISO形式に直す
     const submissionData = {
       ...formData,
+      user_id: user.id,
       datetime: new Date(formData.datetime).toISOString(),
-      numbers: formData.numbers && !isNaN(parseInt(formData.numbers)) ? parseInt(formData.numbers, 10) // 文字列の "50" を 数値の 50 に変換
-      : null,
+      numbers:
+        formData.numbers && !isNaN(parseInt(formData.numbers))
+          ? parseInt(formData.numbers, 10) // 文字列の "50" を 数値の 50 に変換
+          : null,
     };
 
-      // try...finally を使って、ローディング解除を確実に実行する
-      try {
-        if (isEditMode) {
-          // 「編集モード」の処理
-          const { error } = await supabase
-            .from("activity_log")
-            .update(submissionData) // フォームのデータで更新
-            .eq("id", logToEdit.id); // logToEditのIDと一致するもの
+    // try...finally を使って、ローディング解除を確実に実行する
+    try {
+      if (isEditMode) {
+        // 「編集モード」の処理
+        const { error } = await supabase
+          .from("activity_log")
+          .update(submissionData) // フォームのデータで更新
+          .eq("id", logToEdit.id); // logToEditのIDと一致するもの
 
-          if (error) {
-            throw error; // エラーを catch ブロックに投げる
-          }
-
-          alert("活動記録を更新しました！");
-          // 成功したら、その記録の「詳細ページ」に戻る
-          router.push(`/activity-log/${logToEdit.id}`);
-          router.refresh(); // サーバーのデータを再取得させる
-        } else {
-          // 「新規作成モード」の処理
-          const { data, error } = await supabase
-            .from("activity_log")
-            .insert([submissionData])
-            .select()
-            .single();
-
-          if (error) {
-            throw error; // エラーを catch ブロックに投げる
-          }
-
-          alert("活動記録を作成しました！");
-          if (data && data.id) {
-            router.push(`/activity-log/${data.id}`);
-          } else {
-            router.push("/activity-log");
-          }
+        if (error) {
+          throw error; // エラーを catch ブロックに投げる
         }
-        router.refresh();
-      } catch (error) {
-        // エラーハンドリングを共通化
-        console.error("活動記録の保存に失敗:", error.message);
-        alert("エラーが発生しました。");
-      } finally {
-        // 成功しても失敗しても、ローディングを解除する
-        setIsLoading(false);
+
+        alert("活動記録を更新しました！");
+        // 成功したら、その記録の「詳細ページ」に戻る
+        router.push(`/activity-log/${logToEdit.id}`);
+        router.refresh(); // サーバーのデータを再取得させる
+      } else {
+        // 「新規作成モード」の処理
+        const { data, error } = await supabase
+          .from("activity_log")
+          .insert([submissionData])
+          .select()
+          .single();
+
+        if (error) {
+          throw error; // エラーを catch ブロックに投げる
+        }
+
+        alert("活動記録を作成しました！");
+        if (data && data.id) {
+          router.push(`/activity-log/${data.id}`);
+        } else {
+          router.push("/activity-log");
+        }
       }
-    };
+      router.refresh();
+    } catch (error) {
+      // エラーハンドリングを共通化
+      console.error("活動記録の保存に失敗:", error.message);
+      alert("エラーが発生しました。");
+    } finally {
+      // 成功しても失敗しても、ローディングを解除する
+      setIsLoading(false);
+    }
+  };
 
   // 削除ボタンが押されたときの処理
   const handleDelete = async () => {
@@ -262,106 +274,106 @@ export default function ActivityLogForm({ logToEdit }) {
           {isEditMode ? "活動記録を編集" : "活動記録を新規作成"}
         </PageTitle>
 
-      {/* 活動名 */}
-      <FormGroup>
-        <Label htmlFor="name">活動名 (*必須*)</Label>
-        <Input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          placeholder="例：令和〇年能登半島地震　災害ボランティア"
-        />
-      </FormGroup>
+        {/* 活動名 */}
+        <FormGroup>
+          <Label htmlFor="name">活動名 (*必須*)</Label>
+          <Input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            placeholder="例：令和〇年能登半島地震　災害ボランティア"
+          />
+        </FormGroup>
 
-      {/* 活動日 */}
-      <FormGroup>
-        <Label htmlFor="datetime">活動日 (*必須*)</Label>
-        <Input
-          type="date" // HTML5の日付ピッカーを使う
-          id="datetime"
-          name="datetime"
-          value={formData.datetime}
-          onChange={handleChange}
-          required
-        />
-      </FormGroup>
+        {/* 活動日 */}
+        <FormGroup>
+          <Label htmlFor="datetime">活動日 (*必須*)</Label>
+          <Input
+            type="date" // HTML5の日付ピッカーを使う
+            id="datetime"
+            name="datetime"
+            value={formData.datetime}
+            onChange={handleChange}
+            required
+          />
+        </FormGroup>
 
-      {/* 参加した理由・目的 */}
-      <FormGroup>
-        <Label htmlFor="reason">参加した理由・目的</Label>
-        <Textarea
-          id="reason"
-          name="reason"
-          value={formData.reason}
-          onChange={handleChange}
-          placeholder="例：報道で見るだけでなく、実際に自分の目で現地の状況を確かめ、何かできることをしたかったから。"
-        />
-      </FormGroup>
+        {/* 参加した理由・目的 */}
+        <FormGroup>
+          <Label htmlFor="reason">参加した理由・目的</Label>
+          <Textarea
+            id="reason"
+            name="reason"
+            value={formData.reason}
+            onChange={handleChange}
+            placeholder="例：報道で見るだけでなく、実際に自分の目で現地の状況を確かめ、何かできることをしたかったから。"
+          />
+        </FormGroup>
 
-      {/* 活動内容 */}
-      <FormGroup>
-        <Label htmlFor="content">活動内容</Label>
-        <Textarea
-          id="content"
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
-          placeholder="例：石川県輪島市にて、被災家屋からの家財道具の運び出しと、災害ゴミの分別作業に従事した。"
-        />
-      </FormGroup>
+        {/* 活動内容 */}
+        <FormGroup>
+          <Label htmlFor="content">活動内容</Label>
+          <Textarea
+            id="content"
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            placeholder="例：石川県輪島市にて、被災家屋からの家財道具の運び出しと、災害ゴミの分別作業に従事した。"
+          />
+        </FormGroup>
 
-      {/* 活動規模 */}
-      <FormGroup>
-        <Label htmlFor="activity_scale">活動の規模</Label>
-        <Input
-          id="activity_scale"
-          name="activity_scale"
-          value={formData.activity_scale}
-          onChange={handleChange}
-          placeholder="例：大規模、約300名くらいのボランティアが集まった"
-        />
-      </FormGroup>
+        {/* 活動規模 */}
+        <FormGroup>
+          <Label htmlFor="activity_scale">活動の規模</Label>
+          <Input
+            id="activity_scale"
+            name="activity_scale"
+            value={formData.activity_scale}
+            onChange={handleChange}
+            placeholder="例：大規模、約300名くらいのボランティアが集まった"
+          />
+        </FormGroup>
 
-      {/* 参加人数 */}
-      <FormGroup>
-        <Label htmlFor="numbers">参加人数</Label>
-        <Input
-          type="number"
-          id="numbers"
-          name="numbers"
-          value={formData.numbers}
-          onChange={handleChange}
-          placeholder="例：300"
-        />
-      </FormGroup>
+        {/* 参加人数 */}
+        <FormGroup>
+          <Label htmlFor="numbers">参加人数</Label>
+          <Input
+            type="number"
+            id="numbers"
+            name="numbers"
+            value={formData.numbers}
+            onChange={handleChange}
+            placeholder="例：300"
+          />
+        </FormGroup>
 
-      {/* 活動による学び */}
-      <FormGroup>
-        <Label htmlFor="learning">活動による学び</Label>
-        <Textarea
-          id="learning"
-          name="learning"
-          value={formData.learning}
-          onChange={handleChange}
-          placeholder="例：チームで声を掛け合い、安全と効率を両立させながら作業する重要性を学んだ。"
-        />
-      </FormGroup>
+        {/* 活動による学び */}
+        <FormGroup>
+          <Label htmlFor="learning">活動による学び</Label>
+          <Textarea
+            id="learning"
+            name="learning"
+            value={formData.learning}
+            onChange={handleChange}
+            placeholder="例：チームで声を掛け合い、安全と効率を両立させながら作業する重要性を学んだ。"
+          />
+        </FormGroup>
 
-      {/* 活動の感想・反省 */}
-      <FormGroup>
-        <Label htmlFor="reflection">活動の感想・反省（*必須*）</Label>
-        <Textarea
-          id="reflection"
-          name="reflection"
-          value={formData.reflection}
-          onChange={handleChange}
-          required
-          placeholder="例：現地の方に直接「ありがとう」と言われ、無力ではないと実感できた。"
-        />
-      </FormGroup>
+        {/* 活動の感想・反省 */}
+        <FormGroup>
+          <Label htmlFor="reflection">活動の感想・反省（*必須*）</Label>
+          <Textarea
+            id="reflection"
+            name="reflection"
+            value={formData.reflection}
+            onChange={handleChange}
+            required
+            placeholder="例：現地の方に直接「ありがとう」と言われ、無力ではないと実感できた。"
+          />
+        </FormGroup>
 
         {/* 保存ボタンと削除ボタン */}
         <ButtonContainer>

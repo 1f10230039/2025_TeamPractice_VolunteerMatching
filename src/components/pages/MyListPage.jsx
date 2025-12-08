@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import styled from "@emotion/styled";
 import EventList from "../events/EventList";
+import Breadcrumbs from "../common/Breadcrumbs";
 
-// --- Emotion Styles ---
+// Emotion
+// ページ全体のコンテナ
 const PageContainer = styled.div`
   padding-bottom: 24px;
 `;
 
+// タブを囲むコンテナ
 const TabContainer = styled.div`
   display: flex;
   background-color: #97cdf3;
@@ -16,6 +20,7 @@ const TabContainer = styled.div`
   margin-bottom: 24px;
 `;
 
+// タブのボタン
 const TabButton = styled.button`
   padding: 12px 24px;
   font-size: 1.1rem;
@@ -33,25 +38,34 @@ const TabButton = styled.button`
   }
 `;
 
+// イベントリスト全体のコンテナ
 const EventListContainer = styled.div`
   padding: 0 24px;
 `;
 
 /**
- * マイリストページの表示コンポーネント (UI担当)
- * Containerからデータを受け取り、タブ切り替えとリスト表示を行う
- *
- * @param {object} props
- * @param {object[]} props.initialFavoriteEvents - お気に入りイベント一覧
- * @param {object[]} props.initialAppliedEvents - 応募済みイベント一覧
- * @param {number[]} props.userFavoriteIds - ハート判定用のIDリスト
+ * マイリストページコンポーネント
+ * @param  {{ initialFavoriteEvents: object[], initialAppliedEvents: object[] }} props - page.jsから渡される初期データ
  */
 export default function MyListPage({
   initialFavoriteEvents,
   initialAppliedEvents,
-  userFavoriteIds = [],
 }) {
-  const [activeTab, setActiveTab] = useState("favorites");
+  const searchParams = useSearchParams(); // URLのパラメータを取得するフック
+
+  // URLに "?tab=applied" があったら、初期値を "applied" にする
+  // なければ "favorites" にする
+  const defaultTab =
+    searchParams.get("tab") === "applied" ? "applied" : "favorites";
+
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "applied" || tab === "favorites") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   return (
     <PageContainer>
@@ -70,25 +84,15 @@ export default function MyListPage({
         </TabButton>
       </TabContainer>
 
-      <EventListContainer>
-        {/* お気に入りタブの内容 */}
+      <div>
         {activeTab === "favorites" && (
-          <EventList
-            events={initialFavoriteEvents}
-            source="mylist"
-            userFavoriteIds={userFavoriteIds} // EventListへバケツリレー
-          />
+          <EventList events={initialFavoriteEvents} source="mylist" />
         )}
 
-        {/* 応募済みタブの内容 */}
         {activeTab === "applied" && (
-          <EventList
-            events={initialAppliedEvents}
-            source="mylist"
-            userFavoriteIds={userFavoriteIds} // 応募済みタブでもハートの状態を反映
-          />
+          <EventList events={initialAppliedEvents} source="mylist" />
         )}
-      </EventListContainer>
+      </div>
     </PageContainer>
   );
 }
