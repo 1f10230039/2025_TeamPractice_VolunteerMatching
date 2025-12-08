@@ -25,9 +25,12 @@ import {
   FaThumbsUp,
   FaComments,
   FaChalkboardTeacher,
+  FaTwitter,
+  FaLine,
 } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
 import ConfirmApplyModal from "../events/ConfirmApplyModal";
+import EventImageGallery from "../events/EventImageGallery";
 
 // ==========================================
 // Emotion Styles (スタイル定義)
@@ -143,17 +146,6 @@ const Organizer = styled.p`
   display: flex;
   align-items: center;
   gap: 8px;
-`;
-
-// メインビジュアル画像
-const MainImage = styled(Image)`
-  width: 100%;
-  height: auto;
-  max-height: 400px;
-  border-radius: 12px;
-  object-fit: cover;
-  background-color: #f0f0f0;
-  margin-bottom: 24px;
 `;
 
 // 各詳細情報のセクション（ブロック）
@@ -346,6 +338,51 @@ const WebsiteLink = styled(Link)`
   }
 `;
 
+// 共有セクション
+const ShareSection = styled.div`
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid #eee;
+  text-align: center;
+`;
+
+// 共有ラベル
+const ShareLabel = styled.p`
+  font-weight: bold;
+  color: #666;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+`;
+
+// 共有ボタンのコンテナ
+const ShareButtonsContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+`;
+
+// 共有リンクボタン（丸型アイコンボタン）
+const ShareLinkButton = styled.a`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  color: white;
+  font-size: 24px;
+  text-decoration: none;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+`;
+
 // ==========================================
 // ユーティリティ関数
 // ==========================================
@@ -382,6 +419,9 @@ export default function EventDetailPage({ event, source, q, codes }) {
   const [isApplied, setIsApplied] = useState(false);
   const [user, setUser] = useState(null);
 
+  // シェア用のURL
+  const [shareUrl, setShareUrl] = useState("");
+
   // 応募確認モーダルの状態
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState({
@@ -403,6 +443,9 @@ export default function EventDetailPage({ event, source, q, codes }) {
         data: { user: currentUser },
       } = await supabase.auth.getUser();
       setUser(currentUser);
+
+      // シェア用のURLをセット（クライアント側で実行）
+      setShareUrl(window.location.href);
 
       // 未ログインまたはイベント情報がなければ終了
       if (!currentUser || !event) return;
@@ -439,6 +482,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
     name,
     tag,
     image_url,
+    event_images,
     start_datetime,
     end_datetime,
     place,
@@ -455,6 +499,15 @@ export default function EventDetailPage({ event, source, q, codes }) {
     appeal,
     review,
   } = event;
+
+  // シェア用テキストの作成
+  const shareText = `ボランティア募集: ${name} に参加しよう！`;
+  const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+    shareText
+  )}&url=${encodeURIComponent(shareUrl)}`;
+  const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
+    shareUrl
+  )}`;
 
   // パンくずリストの生成ロジック
   // どの画面から遷移してきたか(source)によって親ページを変える
@@ -575,8 +628,39 @@ export default function EventDetailPage({ event, source, q, codes }) {
           .from("applications")
           .insert({ user_id: user.id, event_id: id });
         if (error) throw error;
+
+        // 応募成功
         setIsApplied(true);
-        alert("応募が完了しました！");
+
+        try {
+          // ユーザーのプロフィール情報を取得（名前を使いたいから）
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", user.id)
+            .single();
+
+          const userName = profile?.name || "ゲスト";
+
+          // APIにデータを送る
+          await fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              eventName: name, // イベント名
+              applicantEmail: user.email, // 応募者のメアド (Auth情報から)
+              applicantName: userName, // 応募者の名前 (profilesから)
+            }),
+          });
+
+          console.log("メール送信リクエスト完了");
+        } catch (mailError) {
+          // メールが送れなくても、応募自体は成功してるからアラートは出さないでおく
+          // (または console.error だけしておく)
+          console.error("メール送信エラー:", mailError);
+        }
+
+        alert("応募が完了しました！確認メールを送信しました。");
       }
     } catch (error) {
       console.error("応募状態の更新エラー:", error.message);
@@ -675,13 +759,8 @@ export default function EventDetailPage({ event, source, q, codes }) {
           </Organizer>
         )}
 
-        <MainImage
-          src={image_url || placeholderImage}
-          alt={name || "イベント画像"}
-          width={800}
-          height={400}
-          priority
-        />
+        {/* 画像ギャラリーコンポーネントの挿入 */}
+        <EventImageGallery mainImageUrl={image_url} subImages={event_images} />
 
         {/* 各詳細セクション (省略なし) */}
         {long_description && (
@@ -854,6 +933,28 @@ export default function EventDetailPage({ event, source, q, codes }) {
             </InfoGrid>
           </DetailSection>
         )}
+
+        <ShareSection>
+          <ShareLabel>友達にシェア</ShareLabel>
+          <ShareButtonsContainer>
+            <ShareLinkButton
+              href={twitterShareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ backgroundColor: "#1DA1F2" }}
+            >
+              <FaTwitter />
+            </ShareLinkButton>
+            <ShareLinkButton
+              href={lineShareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ backgroundColor: "#06C755" }}
+            >
+              <FaLine />
+            </ShareLinkButton>
+          </ShareButtonsContainer>
+        </ShareSection>
       </MainContent>
 
       <ConfirmApplyModal

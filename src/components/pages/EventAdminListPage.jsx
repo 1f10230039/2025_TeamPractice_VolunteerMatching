@@ -48,8 +48,8 @@ const ListContainer = styled.div`
 `;
 
 // サーバーから渡された初期データを受け取る
-export default function EventAdminListPage({ initialEvents }) {
-  const events = initialEvents || [];
+export default function EventAdminListPage({ events }) {
+  const safeEvents = events || [];
 
   return (
     <PageContainer>
@@ -63,8 +63,8 @@ export default function EventAdminListPage({ initialEvents }) {
 
       {/* ボランティアカードの一覧 */}
       <ListContainer>
-        {events.length > 0 ? (
-          events.map(event => (
+        {safeEvents.length > 0 ? (
+          safeEvents.map(event => (
             // eventデータを丸ごと渡す
             <EventAdminCard key={event.id} event={event} />
           ))

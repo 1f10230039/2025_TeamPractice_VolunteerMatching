@@ -48,11 +48,17 @@ export default async function Page({ params, searchParams }) {
   // Supabaseから、そのIDのイベント "1件だけ" を取得する
   const { data: event, error } = await supabase
     .from("events")
-    .select("*")
-    .eq("id", id) // "id" カラムが params.id と一致する
-    .single(); // 1件だけ取得
+    .select(
+      `
+      *,
+      event_images (
+        image_url
+      )
+    `
+    )
+    .eq("id", id)
+    .single();
 
-  // エラー処理
   if (error || !event) {
     console.error("イベント詳細の取得に失敗しました:", error?.message);
     return <div>イベントが見つかりませんでした。</div>;
