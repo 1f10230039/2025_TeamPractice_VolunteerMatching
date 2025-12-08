@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import MyListPage from "./MyListPage";
 import AuthPrompt from "@/components/auth/AuthPrompt";
+import SkeletonList from "../events/SkeletonList";
 
 /**
  * マイリストページのコンテナ (Container)
@@ -103,7 +104,11 @@ export default function MyListContainer() {
   }, []);
 
   if (loading) {
-    return <div style={{ padding: "24px" }}>読み込み中...</div>;
+    return (
+      <div style={{ padding: "24px" }}>
+        <SkeletonList count={6} />
+      </div>
+    );
   }
 
   if (!isLoggedIn) {

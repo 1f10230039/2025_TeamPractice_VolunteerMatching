@@ -255,7 +255,7 @@ export default function HomePage({ events }) {
         {/* コントロールバー (件数 & ソート) */}
         <ControlBar>
           <ResultCount>
-            <strong>{startCount}</strong> - <strong>{endCount}</strong> 件を表示
+            <strong>{startCount}</strong>ー<strong>{endCount}</strong> 件を表示
             <span
               style={{ fontSize: "0.85em", marginLeft: "4px", color: "#888" }}
             >
@@ -266,14 +266,12 @@ export default function HomePage({ events }) {
           <SortWrapper>
             <SortLabel>
               <FaSortAmountDown />
-              並び替え:
+              並び替え
             </SortLabel>
             <SortSelect value={sortOption} onChange={handleSortChange}>
               <option value="newest">新規のイベント</option>
               <option value="date_asc">開催日が近い順</option>
               <option value="date_desc">開催日が遠い順</option>
-              <option value="popular">人気順 (仮)</option>
-              <option value="nearest">現在地から近い順 (仮)</option>
             </SortSelect>
           </SortWrapper>
         </ControlBar>
@@ -289,7 +287,8 @@ export default function HomePage({ events }) {
             </PageButton>
 
             <PageInfo>
-              Page <strong>{currentPage}</strong> / {totalPages}
+              <strong>{currentPage}</strong> / {totalPages}
+              ページ
             </PageInfo>
 
             <PageButton

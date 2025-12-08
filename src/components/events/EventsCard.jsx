@@ -2,7 +2,7 @@
 
 import styled from "@emotion/styled";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -13,7 +13,7 @@ import {
   FaRegHeart,
 } from "react-icons/fa";
 
-// --- Emotion Styles (そのまま) ---
+// --- Emotion Styles ---
 const CardContainer = styled(Link)`
   border: 1px solid #eee;
   border-radius: 12px;
@@ -117,9 +117,14 @@ const formatDateRange = (startStr, endStr) => {
 
 /**
  * イベントカードを表示するコンポーネント
- * @param {{ event: object }} props - イベントデータオブジェクト
  */
-export default function EventCard({ event, source, query, codes, isFavorite }) {
+export default function EventCard({
+  event,
+  source,
+  query,
+  codes,
+  isFavorite: initialIsFavorite,
+}) {
   const {
     id,
     name,
@@ -130,16 +135,43 @@ export default function EventCard({ event, source, query, codes, isFavorite }) {
     start_datetime,
     end_datetime,
     image_url,
-    // favorite, ← ★ 古いカラムは無視！絶対に使わない！
   } = event;
 
   const displayTags = tags || (tag ? [{ name: tag }] : []);
 
-  // お気に入りボタンのクリック処理
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  // ★ お気に入りボタンの処理 (favoritesテーブルへ)
+  // 内部でお気に入り状態を管理する State
+  // 親から渡された initialIsFavorite があればそれを使い、なければ false
+  const [localIsFavorite, setLocalIsFavorite] = useState(!!initialIsFavorite);
+
+  // マウント時に「自分がお気に入りしているか」を確認しにいく
+  useEffect(() => {
+    // すでに親から true が渡されている場合(マイリストなど)は確認不要だけど、トップページの場合はここで確認が必要！
+    const checkFavoriteStatus = async () => {
+      // ユーザー確認
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // favoritesテーブルを確認
+      const { data } = await supabase
+        .from("favorites")
+        .select("id")
+        .match({ user_id: user.id, event_id: id })
+        .maybeSingle();
+
+      if (data) {
+        setLocalIsFavorite(true);
+      }
+    };
+
+    checkFavoriteStatus();
+  }, [id]);
+
+  // お気に入りボタンの処理
   const handleToggleFavorite = async e => {
     e.preventDefault();
     e.stopPropagation();
@@ -148,13 +180,12 @@ export default function EventCard({ event, source, query, codes, isFavorite }) {
     setIsLoading(true);
 
     try {
-      // 1. ユーザー確認
+      // ユーザー確認
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
-        // アラートを出して、OKならログインページへ移動
         if (
           confirm(
             "お気に入り機能を使うにはログインが必要です。\nログインページに移動しますか？"
@@ -166,30 +197,40 @@ export default function EventCard({ event, source, query, codes, isFavorite }) {
         return;
       }
 
-      // 2. favorites テーブルへの操作
-      if (isFavorite) {
+      // 画面の見た目を先に変えちゃう（楽観的UI更新）
+      const nextStatus = !localIsFavorite;
+      setLocalIsFavorite(nextStatus);
+
+      // favorites テーブルへの操作
+      if (localIsFavorite) {
+        // (反転前の状態で判定)
         // 削除 (DELETE)
         const { error } = await supabase
           .from("favorites")
           .delete()
           .match({ user_id: user.id, event_id: id });
-        if (error) throw error;
+        if (error) {
+          // エラーなら見た目を元に戻す
+          setLocalIsFavorite(!nextStatus);
+          throw error;
+        }
       } else {
         // 追加 (INSERT)
         const { error } = await supabase
           .from("favorites")
           .insert({ user_id: user.id, event_id: id });
-        if (error) throw error;
+        if (error) {
+          setLocalIsFavorite(!nextStatus);
+          throw error;
+        }
       }
 
-      // 3. 画面更新
+      //  画面更新 (マイリストとかで一覧から消す必要がある場合に有効)
       router.refresh();
     } catch (error) {
       console.error("お気に入り更新エラー:", error.message);
-      // 重複エラーは無視してリフレッシュ
-      if (error.message.includes("duplicate")) {
-        router.refresh();
-      } else {
+      // 重複エラーなどは無視していいけど、それ以外はアラート
+      if (!error.message.includes("duplicate")) {
         alert("処理に失敗しました。");
       }
     } finally {
@@ -217,11 +258,11 @@ export default function EventCard({ event, source, query, codes, isFavorite }) {
           alt={name}
         />
         <FavoriteButton
-          isFavorite={isFavorite} // ★ 親から受け取った判定結果を使う
+          isFavorite={localIsFavorite}
           onClick={handleToggleFavorite}
           disabled={isLoading}
         >
-          {isFavorite ? <FaHeart /> : <FaRegHeart />}
+          {localIsFavorite ? <FaHeart /> : <FaRegHeart />}
         </FavoriteButton>
       </ImageWrapper>
       <CardContent>

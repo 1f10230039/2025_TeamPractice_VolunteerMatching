@@ -8,6 +8,9 @@ import ActivityLogCard from "../activity-log/ActivityLogCard";
 import { FaPlus } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
 
+import EmptyState from "../common/EmptyState";
+import { FaPenFancy } from "react-icons/fa";
+
 // ページ全体のコンテナ
 const PageContainer = styled.div`
   padding: 0;
@@ -92,7 +95,13 @@ export default function ActivityLogListPage({ initialLogs }) {
             <ActivityLogCard key={log.id} log={log} />
           ))
         ) : (
-          <p>活動記録はまだありません。</p>
+          <EmptyState
+            title="活動記録がありません"
+            description="ボランティアに参加したら、活動の思い出や学びをここに記録していきましょう！"
+            icon={<FaPenFancy />}
+            actionLabel="記録を作成する"
+            actionHref="/activity-log/new"
+          />
         )}
       </LogListContainer>
     </PageContainer>

@@ -6,6 +6,9 @@ import styled from "@emotion/styled";
 import EventList from "../events/EventList";
 import Breadcrumbs from "../common/Breadcrumbs";
 
+import EmptyState from "../common/EmptyState";
+import { FaRegHeart, FaRegCheckCircle } from "react-icons/fa";
+
 // Emotion
 // ページ全体のコンテナ
 const PageContainer = styled.div`
@@ -53,6 +56,10 @@ export default function MyListPage({
 }) {
   const searchParams = useSearchParams(); // URLのパラメータを取得するフック
 
+  // ★ここで受け取ったpropsを変数に入れる！★
+  const favoriteEvents = initialFavoriteEvents || [];
+  const appliedEvents = initialAppliedEvents || [];
+
   // URLに "?tab=applied" があったら、初期値を "applied" にする
   // なければ "favorites" にする
   const defaultTab =
@@ -66,6 +73,10 @@ export default function MyListPage({
       setActiveTab(tab);
     }
   }, [searchParams]);
+
+  // パンくずリスト
+  const crumbs = [{ label: "マイリスト", href: "/mylist" }];
+  const baseCrumb = { label: "マイページ", href: "/mypage" };
 
   return (
     <PageContainer>
@@ -84,15 +95,33 @@ export default function MyListPage({
         </TabButton>
       </TabContainer>
 
-      <div>
-        {activeTab === "favorites" && (
-          <EventList events={initialFavoriteEvents} source="mylist" />
-        )}
+      <EventListContainer>
+        {activeTab === "favorites" &&
+          (favoriteEvents.length > 0 ? (
+            <EventList events={favoriteEvents} source="mylist" />
+          ) : (
+            <EmptyState
+              title="お気に入りはまだありません"
+              description="気になるボランティアを見つけて、ハートマークを押してみましょう！あとで見返しやすくなります。"
+              icon={<FaRegHeart />}
+              actionLabel="イベントを探しに行く"
+              actionHref="/"
+            />
+          ))}
 
-        {activeTab === "applied" && (
-          <EventList events={initialAppliedEvents} source="mylist" />
-        )}
-      </div>
+        {activeTab === "applied" &&
+          (appliedEvents.length > 0 ? (
+            <EventList events={appliedEvents} source="mylist" />
+          ) : (
+            <EmptyState
+              title="応募済みのボランティアはありません"
+              description="まだ応募したイベントがないようです。興味のある活動に応募してみませんか？"
+              icon={<FaRegCheckCircle />}
+              actionLabel="イベントを探しに行く"
+              actionHref="/"
+            />
+          ))}
+      </EventListContainer>
     </PageContainer>
   );
 }
