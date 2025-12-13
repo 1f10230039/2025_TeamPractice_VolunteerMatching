@@ -1,7 +1,6 @@
 // src/app/api/events/route.js
 
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
@@ -34,7 +33,7 @@ async function createEmbedding(text) {
 export async function POST(request) {
   const body = await request.json();
   const { eventData, selectedTagIds } = body;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createSupabaseServerClient();
 
   // 編集モードかどうかを判定
   const isEditMode = Boolean(eventData.id);
@@ -93,8 +92,7 @@ export async function POST(request) {
         詳細: ${upsertedEvent.long_description || ""}
         アピールポイント: ${upsertedEvent.appeal || ""}
         得られる経験: ${upsertedEvent.experience || ""}
-      `
-      .trim();
+      `.trim();
 
       const embedding = await createEmbedding(inputText);
 
@@ -105,17 +103,16 @@ export async function POST(request) {
           .eq("id", upsertedEvent.id);
       }
     }
-    
+
     return NextResponse.json({
       message: isEditMode ? "イベントを更新しました" : "イベントを作成しました",
       eventId: targetEventId,
     });
-
   } catch (error) {
     console.error("Event processing error:", error);
-    return new NextResponse(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new NextResponse(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
