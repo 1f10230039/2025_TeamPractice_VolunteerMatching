@@ -19,7 +19,8 @@ export const metadata = {
   title: "ボランティアマッチング",
   description: "Next.jsとSupabaseで作るボランティアマッチングアプリ",
   icons: {
-    icon: "/public/favicon.ico",
+    icon: "/icon.png", // 普通のタブアイコン
+    apple: "/icon.png", // iPhone等のホーム画面用
   },
   manifest: "/manifest.json",
 };
