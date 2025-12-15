@@ -12,7 +12,7 @@ const FooterContainer = styled.footer`
   bottom: 0;
   left: 0;
   width: 100%;
-  background-color: #97cdf3;
+  background: #fff;
   border-top: 1px solid #eee;
   padding: 24px 0;
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);

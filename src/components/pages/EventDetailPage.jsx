@@ -28,148 +28,113 @@ import {
   FaTwitter,
   FaLine,
   FaMapMarkedAlt,
+  FaCaretDown,
+  FaMap,
 } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
 import ConfirmApplyModal from "../events/ConfirmApplyModal";
 import EventImageGallery from "../events/EventImageGallery";
 
+// --- インラインSVGアイコン ---
+const HeartIcon = () => (
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    strokeWidth="0"
+    viewBox="0 0 512 512"
+    height="1em"
+    width="1em"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"></path>
+  </svg>
+);
+const RegHeartIcon = () => (
+  <svg
+    stroke="currentColor"
+    fill="none"
+    strokeWidth="0"
+    viewBox="0 0 512 512"
+    height="1em"
+    width="1em"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M458.4 64.3C400.6 15.7 311.3 23 256 79.3 200.7 23 111.4 15.6 53.6 64.3-21.6 127.6-10.6 230.8 43 285.5l175.4 178.7c10 10.2 23.4 15.9 37.6 15.9 14.3 0 27.6-5.6 37.6-15.8L469 285.6c53.5-54.7 64.7-157.9-10.6-221.3zm-23.6 187.5L259.4 430.5c-2.4 2.4-4.4 2.4-6.8 0L77.2 251.8c-36.5-37.2-43.9-107.6 7.3-150.7 38.9-32.7 98.9-27.8 136.5 10.5l35 35.7 35-35.7c37.8-38.5 97.8-43.2 136.5-10.6 51.1 43.1 43.5 113.9 7.3 150.8z"
+      fill="currentColor"
+    ></path>
+  </svg>
+);
+
 // ==========================================
 // Emotion Styles (スタイル定義)
 // ==========================================
 
-// ページ全体のラッパー（下部固定バーの分だけ余白を確保）
+// ページ全体のラッパー
 const PageWrapper = styled.div`
-  padding-bottom: 80px;
+  min-height: 100vh;
+  background-color: #f5fafc;
+  padding-bottom: 120px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
 `;
 
-// 画面下部に固定される「お気に入り・応募ボタン」のバー
-const ActionMenu = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  gap: 12px;
-  padding: 16px 24px;
-  background-color: #fff;
-  border-top: 1px solid #eee;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
-  z-index: 50;
-`;
-
-// お気に入りボタン（ハートマーク）
-const FavoriteButton = styled.button`
-  background: #f0f0f0;
-  border: none;
-  border-radius: 8px;
-  width: 56px;
-  height: 56px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-
-  & > svg {
-    width: 24px;
-    height: 24px;
-    color: ${props => (props.isFavorite ? "#e74c3c" : "#555")};
-    transition: color 0.2s ease;
-  }
-`;
-
-// 応募ボタン（「応募する」または「応募済み」）
-const ApplyButton = styled.button`
-  flex-grow: 1;
-  padding: 12px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.2s ease;
-
-  /* isApplied(応募済み)かどうかで色を変える */
-  background-color: ${props => (props.isApplied ? "#5cb85c" : "#007bff")};
-  color: white;
-
-  &:hover:not(:disabled) {
-    background-color: ${props => (props.isApplied ? "#4cae4c" : "#0056b3")};
-  }
-
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-`;
-
-// コンテンツのメインエリア（幅制限と中央寄せ）
+// メインコンテンツエリア
 const MainContent = styled.div`
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 24px 20px;
 `;
 
-// カテゴリタグ（例: "教育", "環境"）
+// --- ヘッダーセクション ---
+const EventHeader = styled.div`
+  margin-bottom: 32px;
+`;
+
+// カテゴリタグのコンテナ
+const TagContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+`;
+
+// カテゴリタグ
 const Tag = styled.span`
   display: inline-block;
-  background-color: #e0eafc;
-  color: #0056b3;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: bold;
-  margin-bottom: 12px;
+  background-color: #e6f2ff;
+  color: #007bff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
 `;
 
 // イベントタイトル
 const EventTitle = styled.h1`
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 16px;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  line-height: 1.3;
+  color: #333;
+
+  @media (max-width: 600px) {
+    font-size: 1.8rem;
+  }
 `;
 
 // 主催者名
-const Organizer = styled.p`
-  font-size: 1rem;
-  font-weight: 500;
-  color: #555;
-  margin-bottom: 24px;
+const Organizer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
 `;
 
 // 各詳細情報のセクション（ブロック）
 const DetailSection = styled.section`
   margin-bottom: 32px;
-`;
-
-// セクションの見出し（募集要項、詳細など）
-const SectionTitle = styled.h2`
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: #333;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 8px;
-  margin: 0 0 20px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  & svg {
-    color: #007bff;
-    font-size: 1.1rem;
-  }
 `;
 
 // 情報グリッド（ラベルと値のペアを表示するレイアウト）
@@ -178,9 +143,7 @@ const InfoGrid = styled.div`
   grid-template-columns: auto 1fr;
   gap: 16px;
   border-radius: 8px;
-  border: 1px solid #eee;
   padding: 20px;
-  background-color: #fcfcfc;
 `;
 
 // 情報のラベル（左側）
@@ -207,124 +170,110 @@ const InfoValue = styled.dd`
   margin: 0;
 `;
 
-// 文章コンテンツ（改行を反映）
-const SectionContent = styled.div`
-  font-size: 1rem;
-  color: #555;
-  line-height: 1.7;
-  white-space: pre-wrap;
+// --- クイックサマリー (グリッド表示) ---
+const QuickSummaryGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
 `;
 
-// ポップなカード（「ボランティアの魅力」用）
-const PopCard = styled.div`
-  background-color: ${props => props.bgColor || "#f9f9f9"};
-  border: 2px solid ${props => props.borderColor || "transparent"};
+// サマリーカード
+const SummaryCard = styled.div`
+  background-color: white;
+  padding: 17px;
   border-radius: 16px;
-  padding: 24px;
+  box-shadow: 0 4px 15px rgba(122, 211, 232, 0.15);
   display: flex;
-  gap: 20px;
+  flex-direction: column;
   align-items: flex-start;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  gap: 10px;
+  transition: transform 0.2s;
 
-  @media (max-width: 600px) {
-    flex-direction: column;
-    gap: 12px;
+  &:hover {
+    transform: translateY(-2px);
   }
 `;
 
-// アイコン用の丸い背景
-const IconCircle = styled.div`
-  background-color: #fff;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-
-  & svg {
-    width: 28px;
-    height: 28px;
-    color: ${props => props.iconColor || "#333"};
-  }
-`;
-
-const PopCardTitle = styled.h3`
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: ${props => props.textColor || "#333"};
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const PopCardText = styled.div`
-  font-size: 1.2rem;
-  line-height: 1.7;
-  color: #444;
-  white-space: pre-wrap;
-`;
-
-// 吹き出しレイアウト（「得られる経験」用）
-const BubbleWrapper = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-`;
-
-// 吹き出しの本体（三角形のしっぽ付き）
-const BubbleContent = styled.div`
-  position: relative;
-  background-color: #e3f2fd;
-  color: #333;
-  padding: 24px;
+//  アイコン部分
+const SummaryIcon = styled.div`
+  font-size: 1.5rem;
+  color: #4a90e2;
+  background-color: #f0f8ff;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  flex: 1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 20px;
-    left: -12px;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 8px 12px 8px 0;
-    border-color: transparent #e3f2fd transparent transparent;
-  }
-`;
-
-// 話している人のアイコン
-const SpeakerIcon = styled.div`
-  width: 50px;
-  height: 50px;
-  background-color: #0277bd;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  margin-top: 5px;
+`;
 
-  & svg {
-    color: #fff;
-    width: 24px;
-    height: 24px;
+// ラベル部分
+const SummaryLabel = styled.span`
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: 600;
+`;
+
+// 値部分
+const SummaryValue = styled.span`
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  line-height: 1.4;
+`;
+
+// --- 魅力・経験セクション (ビジュアル重視) ---
+const HighlightSection = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 40px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
   }
 `;
 
-const BubbleTitle = styled.h4`
+const HighlightCard = styled.div`
+  padding: 32px;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+
+  /* タイプ別スタイル */
+  ${props =>
+    props.type === "appeal"
+      ? `
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 1px solid #90caf9;
+    color: #0d47a1;
+  `
+      : `
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 1px solid #90caf9;
+    color: #0d47a1;
+  `}
+`;
+
+const HighlightTitle = styled.h3`
   font-size: 1.2rem;
-  font-weight: bold;
-  color: #01579b;
-  margin-bottom: 8px;
+  font-weight: 800;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+
+  & svg {
+    font-size: 1.4rem;
+  }
+`;
+
+const HighlightText = styled.p`
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  font-weight: 500;
 `;
 
 // 外部リンク
@@ -399,11 +348,135 @@ const MapContainer = styled.div`
 const MapLink = styled.a`
   display: inline-block;
   margin-top: 8px;
+  margin-bottom: 16px;
   color: #007bff;
   font-size: 0.9rem;
   text-decoration: none;
   &:hover {
     text-decoration: underline;
+  }
+`;
+
+// --- 詳細情報セクション ---
+const DetailContainer = styled.section`
+  background-color: white;
+  padding: 32px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  margin-bottom: 32px;
+
+  @media (max-width: 600px) {
+    padding: 24px;
+  }
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &::before {
+    content: "";
+    width: 6px;
+    height: 28px;
+    background: linear-gradient(to bottom, #68b5d5, #4a90e2);
+    border-radius: 3px;
+    display: block;
+  }
+`;
+
+const SectionContent = styled.div`
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #555;
+  white-space: pre-wrap;
+`;
+
+// --- アクションメニュー (固定バー) ---
+const ActionMenu = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 24px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+`;
+
+// アクションボタンのコンテナ
+const ActionContainer = styled.div`
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  gap: 16px;
+`;
+
+// お気に入りボタン
+const FavoriteButton = styled.button`
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  border: 2px solid ${props => (props.isFavorite ? "#ff758c" : "#eee")};
+  background-color: ${props => (props.isFavorite ? "#fff0f3" : "#fff")};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 1.6rem;
+  color: ${props => (props.isFavorite ? "#ff758c" : "#ccc")};
+
+  &:hover {
+    transform: scale(1.05);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+// 応募ボタン
+const ApplyButton = styled.button`
+  flex-grow: 1;
+  height: 60px;
+  border-radius: 20px;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+  /* 応募済みかどうかでスタイル変更 */
+  ${props =>
+    props.isApplied
+      ? `
+    background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%);
+    color: white;
+  `
+      : `
+    background: linear-gradient(135deg, #68B5D5 0%, #4A90E2 100%);
+    color: white;
+  `}
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(74, 144, 226, 0.3);
+  }
+  &:active {
+    transform: translateY(0);
   }
 `;
 
@@ -505,6 +578,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
     id,
     name,
     tag,
+    tags,
     image_url,
     event_images,
     start_datetime,
@@ -525,6 +599,8 @@ export default function EventDetailPage({ event, source, q, codes }) {
     latitude,
     longitude,
   } = event;
+
+  const displayTags = tags || (tag ? [{ name: tag }] : []);
 
   // シェア用テキストの作成
   const shareText = `ボランティア募集: ${name} に参加しよう！`;
@@ -744,136 +820,108 @@ export default function EventDetailPage({ event, source, q, codes }) {
 
   return (
     <PageWrapper>
-      <ActionMenu>
-        {/* お気に入りボタン */}
-        <FavoriteButton
-          isFavorite={isFavorite}
-          onClick={handleToggleFavorite}
-          disabled={isFavoriteLoading || isApplyLoading}
-        >
-          {isFavorite ? <FaHeart /> : <FaRegHeart />}
-        </FavoriteButton>
-
-        {/* 応募ボタン */}
-        <ApplyButton
-          isApplied={isApplied}
-          onClick={handleApplyButtonPress}
-          disabled={isFavoriteLoading}
-        >
-          {isApplied ? (
-            <>
-              <FaCheckCircle />
-              応募済み
-            </>
-          ) : (
-            <>
-              <FaRegCheckCircle />
-              このボランティアに応募する
-            </>
-          )}
-        </ApplyButton>
-      </ActionMenu>
-
       <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
 
       <MainContent>
-        {tag && <Tag>{tag}</Tag>}
-        <EventTitle>{name || "無題のイベント"}</EventTitle>
-        {organaizer && (
-          <Organizer>
-            <FaBuilding /> {organaizer}
-          </Organizer>
-        )}
+        {/* ヘッダーエリア */}
+        <EventHeader>
+          {displayTags.length > 0 && (
+            <TagContainer>
+              {displayTags.map((t, index) => (
+                <Tag key={index}>{t.name || t}</Tag>
+              ))}
+            </TagContainer>
+          )}
+          <EventTitle>{name || "無題のイベント"}</EventTitle>
+          {organaizer && <Organizer>主催: {organaizer}</Organizer>}
+        </EventHeader>
 
-        {/* 画像ギャラリーコンポーネントの挿入 */}
+        {/* ギャラリー */}
         <EventImageGallery mainImageUrl={image_url} subImages={event_images} />
 
-        {/* 各詳細セクション (省略なし) */}
-        {long_description && (
-          <DetailSection>
-            <SectionTitle>
-              <FaInfoCircle /> ボランティア詳細
-            </SectionTitle>
-            <SectionContent>{long_description}</SectionContent>
-          </DetailSection>
-        )}
-
-        {appeal && (
-          <DetailSection>
-            <PopCard bgColor="#fff8e1" borderColor="#ffe082">
-              <IconCircle iconColor="#ff8f00">
-                <FaThumbsUp />
-              </IconCircle>
-              <div>
-                <PopCardTitle textColor="#ff6f00">
-                  ボランティアの魅力
-                </PopCardTitle>
-                <PopCardText>{appeal}</PopCardText>
-              </div>
-            </PopCard>
-          </DetailSection>
-        )}
-
-        {experience && (
-          <DetailSection>
-            <BubbleWrapper>
-              <SpeakerIcon>
-                <FaChalkboardTeacher />
-              </SpeakerIcon>
-              <BubbleContent>
-                <BubbleTitle>
-                  <FaLightbulb /> 得られる経験・スキル
-                </BubbleTitle>
-                <SectionContent>{experience}</SectionContent>
-              </BubbleContent>
-            </BubbleWrapper>
-          </DetailSection>
-        )}
-
-        <DetailSection>
-          <SectionTitle>
-            <FaCalendarAlt /> 募集要項
-          </SectionTitle>
-          <InfoGrid>
-            <InfoLabel>
+        {/* クイックサマリー (4つのカード) */}
+        <QuickSummaryGrid>
+          <SummaryCard>
+            <SummaryIcon>
               <FaCalendarAlt />
-              日時
-            </InfoLabel>
-            <InfoValue>
-              {formatDateTime(start_datetime)} 〜 {formatDateTime(end_datetime)}
-            </InfoValue>
-            <InfoLabel>
+            </SummaryIcon>
+            <div>
+              <SummaryLabel>日時</SummaryLabel>
+              <br />
+              <SummaryValue>
+                {formatDateTime(start_datetime)}
+                <br />～ {formatDateTime(end_datetime)}
+              </SummaryValue>
+            </div>
+          </SummaryCard>
+          <SummaryCard>
+            <SummaryIcon>
               <FaMapMarkerAlt />
-              場所
-            </InfoLabel>
-            <InfoValue>{place || "未定"}</InfoValue>
-            {access && (
-              <>
-                <InfoLabel>
-                  <FaRoute />
-                  アクセス
-                </InfoLabel>
-                <InfoValue>{access}</InfoValue>
-              </>
-            )}
-            <InfoLabel>
+            </SummaryIcon>
+            <div>
+              <SummaryLabel>場所</SummaryLabel>
+              <br />
+              <SummaryValue>{place || "未定"}</SummaryValue>
+            </div>
+          </SummaryCard>
+          <SummaryCard>
+            <SummaryIcon>
               <FaYenSign />
-              費用
-            </InfoLabel>
-            <InfoValue>
-              {fee === 0 ? "無料" : fee ? `${fee.toLocaleString()}円` : "未定"}
-            </InfoValue>
-
-            <InfoLabel>
+            </SummaryIcon>
+            <div>
+              <SummaryLabel>費用</SummaryLabel>
+              <br />
+              <SummaryValue>
+                {fee === 0 ? "無料" : `${fee?.toLocaleString()}円`}
+              </SummaryValue>
+            </div>
+          </SummaryCard>
+          <SummaryCard>
+            <SummaryIcon>
               <FaUsers />
-              定員
-            </InfoLabel>
-            <InfoValue>{capacity ? `${capacity}名` : "特に指定なし"}</InfoValue>
-          </InfoGrid>
-        </DetailSection>
+            </SummaryIcon>
+            <div>
+              <SummaryLabel>定員</SummaryLabel>
+              <br />
+              <SummaryValue>
+                {capacity ? `${capacity}名` : "指定なし"}
+              </SummaryValue>
+            </div>
+          </SummaryCard>
+        </QuickSummaryGrid>
+
+        {/* 魅力 & 経験 */}
+        {(appeal || experience) && (
+          <HighlightSection>
+            {appeal && (
+              <HighlightCard type="appeal">
+                <SectionTitle>
+                  <FaThumbsUp /> 魅力ポイント
+                </SectionTitle>
+                <HighlightText>{appeal}</HighlightText>
+              </HighlightCard>
+            )}
+            {experience && (
+              <HighlightCard type="experience">
+                <SectionTitle>
+                  <FaLightbulb /> 得られる経験
+                </SectionTitle>
+                <HighlightText>{experience}</HighlightText>
+              </HighlightCard>
+            )}
+          </HighlightSection>
+        )}
+
+        {/* 詳細テキスト */}
+        {long_description && (
+          <DetailContainer>
+            <SectionTitle>イベント詳細</SectionTitle>
+            <SectionContent>{long_description}</SectionContent>
+          </DetailContainer>
+        )}
 
         {latitude && longitude && (
-          <DetailSection>
+          <DetailContainer>
             <SectionTitle>
               <FaMapMarkedAlt /> アクセスマップ
             </SectionTitle>
@@ -894,11 +942,18 @@ export default function EventDetailPage({ event, source, q, codes }) {
             >
               Googleマップで大きな地図を見る ↗
             </MapLink>
-          </DetailSection>
+            <InfoGrid>
+              <InfoLabel>
+                <FaMapMarkerAlt />
+                アクセス情報
+              </InfoLabel>
+              <InfoValue>{access || "情報なし"}</InfoValue>
+            </InfoGrid>
+          </DetailContainer>
         )}
 
         {(selection_flow || belongings || clothing) && (
-          <DetailSection>
+          <DetailContainer>
             <SectionTitle>
               <FaSuitcase /> 応募情報
             </SectionTitle>
@@ -931,7 +986,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
                 </>
               )}
             </InfoGrid>
-          </DetailSection>
+          </DetailContainer>
         )}
 
         {review && (
@@ -953,7 +1008,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
         )}
 
         {(organaizer || website_url) && (
-          <DetailSection>
+          <DetailContainer>
             <SectionTitle>
               <FaBuilding /> 主催者情報
             </SectionTitle>
@@ -982,7 +1037,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
                 </>
               )}
             </InfoGrid>
-          </DetailSection>
+          </DetailContainer>
         )}
 
         <ShareSection>
@@ -1007,6 +1062,28 @@ export default function EventDetailPage({ event, source, q, codes }) {
           </ShareButtonsContainer>
         </ShareSection>
       </MainContent>
+
+      <ActionMenu>
+        <ActionContainer>
+          <FavoriteButton
+            isFavorite={isFavorite}
+            onClick={handleToggleFavorite}
+          >
+            {isFavorite ? <HeartIcon /> : <RegHeartIcon />}
+          </FavoriteButton>
+          <ApplyButton isApplied={isApplied} onClick={handleApplyButtonPress}>
+            {isApplied ? (
+              <>
+                <FaCheckCircle /> 応募済み
+              </>
+            ) : (
+              <>
+                <FaRegCheckCircle /> このボランティアに応募する
+              </>
+            )}
+          </ApplyButton>
+        </ActionContainer>
+      </ActionMenu>
 
       <ConfirmApplyModal
         isOpen={isModalOpen}

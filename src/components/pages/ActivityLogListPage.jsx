@@ -5,70 +5,89 @@
 import Link from "next/link";
 import styled from "@emotion/styled";
 import ActivityLogCard from "../activity-log/ActivityLogCard";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaPenFancy } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
-
 import EmptyState from "../common/EmptyState";
-import { FaPenFancy } from "react-icons/fa";
 
-// ページ全体のコンテナ
-const PageContainer = styled.div`
-  padding: 0;
+// --- Emotion Styles ---
+
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #f5fafc; /* マイページと同じ背景色 */
+  padding-bottom: 60px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
 `;
 
-// ページ上部のヘッダー（タイトルとボタン）
-const PageHeader = styled.div`
+const ContentContainer = styled.div`
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
+`;
+
+// ヘッダーエリア
+const HeaderArea = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding: 24px 24px 0 24px;
+  padding: 40px 0 32px 0;
 `;
 
 const PageTitle = styled.h1`
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 28px;
+  font-weight: 800;
   margin: 0;
+  color: #333;
 `;
 
-// 新規作成ボタン（Linkをボタン風にスタイリング）
+// 新規作成ボタン (リッチなデザインに)
 const CreateButton = styled(Link)`
   display: flex;
   align-items: center;
   gap: 8px;
-
-  padding: 10px 16px;
-  background-color: #007bff;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   color: white;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: 30px;
   font-weight: bold;
-  transition: background-color 0.2s ease;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+  transition: all 0.2s ease;
 
   &:hover {
-    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 
   & > svg {
-    width: 0.9em;
-    height: 0.9em;
+    font-size: 1rem;
   }
 `;
 
-// カードを並べるリストコンテナ
+// カードリストのグリッドレイアウト
 const LogListContainer = styled.div`
   display: grid;
-  gap: 20px;
-  /* 1列で表示（スマホ） */
+  gap: 24px;
+
+  /* スマホは1列 */
   grid-template-columns: 1fr;
-  padding: 0 24px 24px 24px;
-  /* pcサイズ */
-  @media (min-width: 768px) {
+
+  /* タブレット以上は2列 */
+  @media (min-width: 600px) {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* PCなら3列でもいいかも */
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(3, 1fr);
   }
 `;
 
-// サーバーから渡された初期データを受け取る
 export default function ActivityLogListPage({ initialLogs }) {
   const logs = initialLogs || [];
 
@@ -77,33 +96,33 @@ export default function ActivityLogListPage({ initialLogs }) {
   const baseCrumb = { label: "マイページ", href: "/mypage" };
 
   return (
-    <PageContainer>
+    <PageWrapper>
       <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
-      <PageHeader>
-        <PageTitle>活動の記録</PageTitle>
-        {/* 新規作成ボタン (入力ページへ飛ぶ) */}
-        <CreateButton href="/activity-log/new">
-          <FaPlus /> 新規作成
-        </CreateButton>
-      </PageHeader>
 
-      {/* 活動記録カードの一覧 */}
-      <LogListContainer>
-        {logs.length > 0 ? (
-          logs.map(log => (
-            // logデータを丸ごと渡す
-            <ActivityLogCard key={log.id} log={log} />
-          ))
-        ) : (
-          <EmptyState
-            title="活動記録がありません"
-            description="ボランティアに参加したら、活動の思い出や学びをここに記録していきましょう！"
-            icon={<FaPenFancy />}
-            actionLabel="記録を作成する"
-            actionHref="/activity-log/new"
-          />
-        )}
-      </LogListContainer>
-    </PageContainer>
+      <ContentContainer>
+        <HeaderArea>
+          <PageTitle>活動の記録</PageTitle>
+          <CreateButton href="/activity-log/new">
+            <FaPlus /> 新規作成
+          </CreateButton>
+        </HeaderArea>
+
+        <LogListContainer>
+          {logs.length > 0 ? (
+            logs.map(log => <ActivityLogCard key={log.id} log={log} />)
+          ) : (
+            <div style={{ gridColumn: "1 / -1" }}>
+              <EmptyState
+                title="活動記録がありません"
+                description="ボランティアに参加したら、活動の思い出や学びをここに記録していきましょう！"
+                icon={<FaPenFancy />}
+                actionLabel="記録を作成する"
+                actionHref="/activity-log/new"
+              />
+            </div>
+          )}
+        </LogListContainer>
+      </ContentContainer>
+    </PageWrapper>
   );
 }
