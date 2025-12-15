@@ -1,89 +1,106 @@
-// 検索オプションのコンポーネント
-
 "use client";
 
 import styled from "@emotion/styled";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { FaSearch, FaMapMarkerAlt, FaRobot } from "react-icons/fa";
 
 // Emotion
-// 検索オプション全体を包むコンテナ
 const SearchBoxContainer = styled.div`
-  padding: 16px;
-  max-width: 800px;
+  padding: 30px 24px;
+  max-width: 1000px;
   margin: 0 auto;
 `;
 
-// 3つのボタンを「1つのバー」としてまとめるコンテナ
 const OptionsContainer = styled.div`
   display: flex;
-  border: solid 1px #ccc;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  gap: 12px;
+  justify-content: center;
+
+  @media (max-width: 767px) {
+    gap: 8px;
+    overflow-x: auto; /* スマホなら横スクロール */
+    padding-bottom: 4px; /* スクロールバー用 */
+  }
 `;
 
-// 3等分される各ボタン
-const SearchLink = styled(Link)`
+// タブ風のボタンスタイル
+const SearchLink = styled(Link, {
+  shouldForwardProp: prop => prop !== "isActive",
+})`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px 20px;
-  background-color: #fff;
-  border-radius: 0;
+  padding: 10px 20px;
+  border-radius: 30px;
   text-decoration: none;
-  color: #333;
-  font-weight: bold;
-  font-size: 1.05rem;
-  transition: background-color 0.2s ease;
-  flex: 1;
-  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  white-space: nowrap; /* 折り返さない */
 
-  &:not(:last-child) {
-    border-right: solid 1px #eee;
-  }
+  /* アクティブな時 */
+  ${props =>
+    props.isActive
+      ? `
+    background-color: #fff;
+    color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+    border: 2px solid white;
+  `
+      : `
+    /* 非アクティブな時（背景色になじませる） */
+    background-color: rgba(255, 255, 255, 0.3);
+    color: #333;
+    border: 2px solid transparent;
 
-  &:hover {
-    background-color: #f5f5f5;
-  }
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.6);
+      color: #007bff;
+    }
+  `}
 
   & > svg {
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-right: 12px;
-    line-height: 1;
-    color: #555;
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-right: 8px;
   }
 
   @media (max-width: 767px) {
-    flex-direction: column;
-    padding: 12px 8px;
+    padding: 8px 16px;
     font-size: 0.85rem;
 
     & > svg {
-      margin-right: 0;
-      margin-bottom: 8px;
-      width: 1.4rem;
-      height: 1.4rem;
+      width: 1.1rem;
+      height: 1.1rem;
     }
   }
 `;
 
 export default function SearchOptionsMini() {
+  const pathname = usePathname();
+
+  // 今のページがどこかを判定
+  const isKeyword =
+    pathname.includes("/search/keyword") ||
+    pathname.includes("/search/results");
+  const isLocation = pathname.includes("/search/location");
+  const isAi = pathname.includes("/search/ai");
+
   return (
     <SearchBoxContainer>
       <OptionsContainer>
-        <SearchLink href="/search/keyword">
+        <SearchLink href="/search/keyword" isActive={isKeyword}>
           <FaSearch />
-          キーワードから探す
+          キーワード
         </SearchLink>
-        <SearchLink href="/search/location">
+        <SearchLink href="/search/location" isActive={isLocation}>
           <FaMapMarkerAlt />
-          場所から探す
+          場所から
         </SearchLink>
-        <SearchLink href="/search/ai">
+        <SearchLink href="/search/ai" isActive={isAi}>
           <FaRobot />
-          AIと相談して探す
+          AI相談
         </SearchLink>
       </OptionsContainer>
     </SearchBoxContainer>

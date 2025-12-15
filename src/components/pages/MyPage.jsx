@@ -3,222 +3,334 @@
 import { useState, useEffect } from "react";
 import styled from "@emotion/styled";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import {
+  FaUserCircle,
+  FaUniversity,
+  FaGraduationCap,
+  FaPen,
+  FaSignOutAlt,
+  FaHeart,
+  FaCheckCircle,
+  FaBookOpen,
+  FaTools,
+} from "react-icons/fa";
 import AuthPrompt from "@/components/auth/AuthPrompt";
 
 // ==========================================
-// Emotion Style Definitions (スタイル定義)
+// Emotion Style Definitions
 // ==========================================
 
-// マイページ全体のラッパー
-// ページの外枠としてパディングを設定しています
-const MyPageWrapper = styled.div`
-  padding: 24px;
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #f5fafc; /* ベース背景色 */
+  padding: 40px 20px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  margin-bottom: 60px;
 `;
 
-// ページタイトル (H1)
-// 青い下線が付いた見出しスタイルです
-const Title = styled.h1`
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 3px solid #007bff;
-  padding-bottom: 12px;
-  margin-bottom: 24px;
+const ContentContainer = styled.div`
+  max-width: 800px;
+  margin: 0 auto;
 `;
 
-// プロフィール情報を表示する白いカード部分
-// 枠線と角丸をつけて、情報をグループ化しています
-const ProfileSection = styled.div`
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 24px;
-`;
-
-// プロフィールの各項目（名前、大学、学部など）
-// ラベル部分(strong)の幅を固定して、揃えて表示します
-const ProfileItem = styled.div`
-  font-size: 16px;
-  margin-bottom: 12px;
-  strong {
-    display: inline-block;
-    width: 100px;
-    font-weight: 500;
-    color: #555;
-  }
-`;
-
-// プロフィール編集ページへのリンクボタン
-// 緑色(#28a745)をベースにしたLinkコンポーネントです
-const EditButton = styled(Link)`
-  display: inline-block;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: bold;
-  text-decoration: none;
-  cursor: pointer;
-  margin-right: 16px; /* 右隣のボタンとの間隔 */
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #218838;
-  }
-`;
-
-// ★追加: 管理画面へのリンクボタン
-// 管理者のみに表示されるボタン。目立つようにオレンジ色(#fd7e14)にしています
-const AdminButton = styled(Link)`
-  display: inline-block;
-  background-color: #fd7e14;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: bold;
-  text-decoration: none;
-  cursor: pointer;
-  margin-right: 16px;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #e36d0d;
-  }
-`;
-
-// ログアウトボタン
-// 青色(#007bff)をベースにしたボタンです
 const LogoutButton = styled.button`
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: bold;
+  background: white;
+  border: 2px solid #eee;
+  border-radius: 30px;
+  padding: 8px 16px;
+  color: #888;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  max-width: 150px;
 
   &:hover {
-    background-color: #0056b3;
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+    background-color: #fff0f0;
+    transform: translateY(-1px);
   }
 `;
 
-// 活動記録へのリンクボタン
-const ActivityLogButton = styled(Link)`
-  display: inline-block;
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: bold;
-  text-decoration: none;
-  cursor: pointer;
-  margin-right: 16px;
-  transition: background-color 0.2s;
+// --- プロフィールカード ---
+const ProfileCard = styled.div`
+  background-color: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 10px 30px rgba(122, 211, 232, 0.15);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 40px;
 
-  &:hover {
-    background-color: #138496;
+  @media (max-width: 600px) {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
   }
 `;
 
-// マイリストへのリンクボタン（お気に入り）
-// ピンク色(#e83e8c)をベースに
-const FavoriteLinkButton = styled(Link)`
-  display: inline-block;
-  background-color: #e83e8c;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: bold;
-  text-decoration: none;
-  cursor: pointer;
-  margin-right: 16px;
-  transition: background-color 0.2s;
+// AvatarIcon スタイル
+const AvatarIcon = styled.div`
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background-color: #f0f8ff;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 
-  &:hover {
-    background-color: #d63384;
+  /* アイコンの場合のスタイル */
+  font-size: 80px;
+  color: #a0c4ff;
+`;
+
+// Avatar画像用スタイル（将来の拡張用）
+const AvatarImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const ProfileInfo = styled.div`
+  flex-grow: 1;
+`;
+
+const UserName = styled.h2`
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 12px 0;
+`;
+
+const MetaInfo = styled.div`
+  display: flex;
+  gap: 16px;
+  color: #666;
+  font-size: 15px;
+  flex-wrap: wrap;
+
+  @media (max-width: 600px) {
+    justify-content: center;
   }
 `;
 
-// マイリストへのリンクボタン（応募済み）
-// 緑色(#20c997)をベースに
-const AppliedLinkButton = styled(Link)`
-  display: inline-block;
-  background-color: #20c997;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: bold;
-  text-decoration: none;
+const MetaItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  & svg {
+    color: #68b5d5;
+  }
+`;
+
+const EditProfileButton = styled.a`
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f0f4f8;
+  color: #5796c2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
   cursor: pointer;
-  margin-right: 16px;
-  transition: background-color 0.2s;
+  text-decoration: none;
 
   &:hover {
-    background-color: #198754;
+    background-color: #e1eaf5;
+    transform: scale(1.1);
+    color: #4a90e2;
   }
+
+  @media (max-width: 600px) {
+    position: static;
+    margin-top: 16px;
+    width: auto;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-weight: bold;
+    font-size: 14px;
+    gap: 8px;
+  }
+`;
+
+// --- ダッシュボードグリッド (メニューボタン) ---
+const DashboardGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+// 共通のカードボタンスタイル
+const MenuCard = styled.a`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  border-radius: 20px; /* 角丸を少し強く */
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  ${props =>
+    props.variant === "outline"
+      ? `
+    /* Outline Style (応募済み・お気に入り) */
+    background-color: #FFFFFF;
+    border: 2px solid #4A90E2;
+    color: #4A90E2;
+    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
+
+    &:hover {
+      background-color: #F0F8FF; /* AliceBlue */
+      border-color: #357ABD; /* 濃い青 */
+      color: #357ABD;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(74, 144, 226, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+      background-color: #E6F2FF;
+      box-shadow: none;
+    }
+    
+    /* アイコンの色も継承させる */
+    & > div {
+        color: inherit;
+        filter: none;
+    }
+  `
+      : `
+    /* Gradient Style (活動記録 - デフォルト) */
+    background: ${props.bg || "white"};
+    color: white;
+    border: none;
+    box-shadow: 0 10px 20px ${props.shadowColor || "rgba(0,0,0,0.1)"};
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px ${props.shadowColor || "rgba(0,0,0,0.15)"};
+      filter: brightness(1.05);
+    }
+
+    &:active {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 10px ${props.shadowColor || "rgba(0,0,0,0.1)"};
+      filter: brightness(0.95);
+    }
+  `}
+`;
+
+const MenuIcon = styled.div`
+  font-size: 36px;
+  margin-bottom: 12px;
+  color: ${props => props.iconColor || "inherit"};
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+`;
+
+const MenuLabel = styled.span`
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  ${props =>
+    props.variant === "outline" &&
+    `
+    text-shadow: none;
+  `}
+`;
+
+const MenuDesc = styled.span`
+  font-size: 13px;
+  opacity: 0.9;
+  margin-top: 6px;
+  font-weight: 500;
+`;
+
+// 管理者エリア
+const AdminSection = styled.div`
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px dashed #ccc;
+  text-align: center;
+`;
+
+const AdminLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background-color: #343a40;
+  color: white;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background-color: #495057;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const LogoutSection = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
 `;
 
 // ==========================================
 // コンポーネント本体
 // ==========================================
 
-/**
- * マイページ表示コンポーネント
- *
- * クライアントサイドで認証チェックとデータ取得を行います。
- * サーバーサイドでの取得によるクッキー読み込み漏れを防ぐため、
- * useEffectを使ってブラウザから直接データを取得する方式を採用しています。
- */
 export default function MyPage() {
-  const router = useRouter();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // 状態管理 (State)
-  const [profile, setProfile] = useState(null); // プロフィールデータ
-  const [loading, setLoading] = useState(true); // 読み込み中かどうか
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // ログインしているか
-
-  /**
-   * 初回レンダリング時に実行される処理
-   * 1. ログインチェック
-   * 2. プロフィールデータの取得 (ロール情報含む)
-   */
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // 1. 現在のユーザーを取得 (Supabaseに問い合わせ)
         const {
           data: { user },
           error: userError,
         } = await supabase.auth.getUser();
 
-        // ユーザーがいない、またはエラーの場合は未ログインとみなす
         if (userError || !user) {
           setIsLoggedIn(false);
           setLoading(false);
           return;
         }
 
-        // ユーザーがいればログイン済み
         setIsLoggedIn(true);
 
-        // 2. プロフィールデータを取得
-        // 関連する大学名(universities)と学部名(faculties)も結合して取得
-        // ★ role (権限) カラムも取得して、管理者かどうか判定できるようにする
         const { data, error } = await supabase
           .from("profiles")
           .select(
@@ -226,112 +338,158 @@ export default function MyPage() {
             id,
             name,
             role,
+            avatar_url,
             universities ( name ), 
             faculties ( name )
           `
           )
           .eq("id", user.id)
-          .single(); // 1件だけ取得
+          .single();
 
         if (error) throw error;
 
-        // 取得したデータを使いやすい形にセット
         setProfile({
           id: data.id,
           name: data.name,
-          role: data.role, // 権限情報 (admin or user)
-          university: data.universities?.name || "（未設定）",
-          faculty: data.faculties?.name || "（未設定）",
+          role: data.role,
+          avatarUrl: data.avatar_url,
+          university: data.universities?.name || "未設定",
+          faculty: data.faculties?.name || "未設定",
         });
       } catch (error) {
         console.error("データ取得エラー:", error);
       } finally {
-        // 成功・失敗に関わらずローディング終了
         setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [router]);
+  }, []);
 
-  // ローディング中の表示
+  const handleLogout = async () => {
+    if (confirm("ログアウトしますか？")) {
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    }
+  };
+
   if (loading) {
     return (
-      <MyPageWrapper>
-        <p>読み込み中...</p>
-      </MyPageWrapper>
+      <PageWrapper>
+        <ContentContainer
+          style={{ textAlign: "center", color: "#888", paddingTop: "100px" }}
+        >
+          <p>読み込み中...</p>
+        </ContentContainer>
+      </PageWrapper>
     );
   }
 
-  // ログインしていない場合は認証案内を表示
   if (!isLoggedIn) {
     return <AuthPrompt message="マイページを見るにはログインが必要です。" />;
   }
 
-  /**
-   * ログアウトボタンクリック時の処理
-   * Supabaseからサインアウトし、ホームページへリダイレクトする
-   */
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/"; // 確実にクッキーを消すためフルリロードで移動
-  };
-
   return (
-    <MyPageWrapper>
-      <Title>マイページ</Title>
+    <PageWrapper>
+      <ContentContainer>
+        {/* プロフィールカード */}
+        <ProfileSection>
+          <ProfileCard>
+            <AvatarIcon>
+              {profile?.avatarUrl ? (
+                // 画像がある場合は画像を表示
+                <AvatarImg src={profile.avatarUrl} alt={profile.name} />
+              ) : (
+                // ない場合はアイコンを表示
+                <FaUserCircle />
+              )}
+            </AvatarIcon>
+            <ProfileInfo>
+              <UserName>{profile ? profile.name : "ゲストユーザー"}</UserName>
+              <MetaInfo>
+                <MetaItem>
+                  <FaUniversity />
+                  {profile ? profile.university : "大学未設定"}
+                </MetaItem>
+                <MetaItem>
+                  <FaGraduationCap />
+                  {profile ? profile.faculty : "学部未設定"}
+                </MetaItem>
+              </MetaInfo>
+            </ProfileInfo>
 
-      {/* プロフィール情報表示エリア */}
-      <ProfileSection>
-        <ProfileItem>
-          <strong>名前:</strong>
-          <span>{profile ? profile.name : "（未設定）"}</span>
-        </ProfileItem>
-        <ProfileItem>
-          <strong>大学:</strong>
-          <span>{profile ? profile.university : "（未設定）"}</span>
-        </ProfileItem>
-        <ProfileItem>
-          <strong>学部:</strong>
-          <span>{profile ? profile.faculty : "（未設定）"}</span>
-        </ProfileItem>
+            {/* 編集ボタン */}
+            <EditProfileButton
+              href="/mypage/edit"
+              aria-label="プロフィール編集"
+            >
+              <FaPen size={16} />
+              {/* スマホ表示用テキスト */}
+              <span className="mobile-text" style={{ display: "none" }}>
+                編集
+              </span>
+            </EditProfileButton>
+          </ProfileCard>
+        </ProfileSection>
 
-        {/* 管理者の場合のみ権限を表示 (オプション) */}
-        {profile?.role === "admin" && (
-          <ProfileItem>
-            <strong>権限:</strong>
-            <span style={{ color: "#fd7e14", fontWeight: "bold" }}>管理者</span>
-          </ProfileItem>
-        )}
-      </ProfileSection>
+        {/* メインメニュー（ダッシュボード） */}
+        <DashboardGrid>
+          {/* 活動記録 */}
+          <MenuCard
+            href="/activity-log"
+            bg="linear-gradient(135deg, #68B5D5 0%, #4A90E2 100%)"
+            shadowColor="rgba(74, 144, 226, 0.3)"
+            style={{ gridColumn: "1 / -1" }} // 横幅いっぱいに
+          >
+            <MenuIcon>
+              <FaBookOpen />
+            </MenuIcon>
+            <MenuLabel>活動記録を見る</MenuLabel>
+            <MenuDesc>あなたのボランティアの軌跡を確認・編集できます</MenuDesc>
+          </MenuCard>
 
-      <div style={{ marginTop: "24px" }}>
-        {/* プロフィール編集ページへのリンク */}
-        <EditButton href="/mypage/edit">プロフィールを編集</EditButton>
+          {/* 2. 応募済み */}
+          <MenuCard href="/mylist?tab=applied" variant="outline">
+            <MenuIcon>
+              <FaCheckCircle />
+            </MenuIcon>
+            <MenuLabel variant="outline">応募済み</MenuLabel>
+            <MenuDesc>エントリー中のボランティア</MenuDesc>
+          </MenuCard>
 
-        {/* マイリストページへのリンクボタン */}
-        <FavoriteLinkButton href="/mylist?tab=favorites">
-          お気に入り一覧
-        </FavoriteLinkButton>
-        <AppliedLinkButton href="/mylist?tab=applied">
-          応募済み一覧
-        </AppliedLinkButton>
-
-        {/* 活動記録ページへのリンク */}
-        <ActivityLogButton href="/activity-log">
-          活動記録を見る
-        </ActivityLogButton>
-
-        {/* ★追加: 管理者(admin)の場合のみ「管理画面へ」ボタンを表示 */}
-        {profile?.role === "admin" && (
-          <AdminButton href="/volunteer-registration/admin/events">
-            管理画面へ
-          </AdminButton>
-        )}
+          {/* 3. お気に入り */}
+          <MenuCard href="/mylist?tab=favorites" variant="outline">
+            <MenuIcon>
+              <FaHeart />
+            </MenuIcon>
+            <MenuLabel variant="outline">お気に入り</MenuLabel>
+            <MenuDesc>気になっているボランティア</MenuDesc>
+          </MenuCard>
+        </DashboardGrid>
 
         {/* ログアウトボタン */}
-        <LogoutButton onClick={handleLogout}>ログアウト</LogoutButton>
-      </div>
-    </MyPageWrapper>
+        <LogoutSection>
+          <LogoutButton onClick={handleLogout}>
+            <FaSignOutAlt /> ログアウト
+          </LogoutButton>
+        </LogoutSection>
+
+        {/* 管理者メニュー */}
+        {profile?.role === "admin" && (
+          <AdminSection>
+            <p style={{ fontSize: "12px", color: "#888", marginBottom: "8px" }}>
+              管理者メニュー
+            </p>
+            <AdminLink href="/volunteer-registration/admin/events">
+              <FaTools /> イベント管理画面へ
+            </AdminLink>
+          </AdminSection>
+        )}
+      </ContentContainer>
+    </PageWrapper>
   );
 }
+
+const ProfileSection = styled.section`
+  /* 必要に応じてアニメーションなどを追加 */
+`;

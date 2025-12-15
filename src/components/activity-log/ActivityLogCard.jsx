@@ -1,93 +1,130 @@
-// 活動記録カードコンポーネント
-
 "use client";
 
-import Link from "next/link";
 import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
-import { FaCalendarAlt } from "react-icons/fa";
+import { FaCalendarAlt, FaPen } from "react-icons/fa";
 
-// カード全体（詳細ページへのリンク）
-const CardContainer = styled(Link)`
-  display: block;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 12px;
+// --- Emotion Styles ---
+
+// カード全体
+const CardContainer = styled.div`
+  position: relative;
   background-color: #fff;
-  text-decoration: none;
-  color: inherit;
-  transition:
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
 
+  /* ホバー時の動き */
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: #e0eafc;
+  }
+
+  /* 左側にアクセントカラーのラインを入れる */
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    background: linear-gradient(to bottom, #68b5d5, #4a90e2);
   }
 `;
 
-// カード上部（タイトルと編集ボタン）
+// 上部エリア（日付と編集ボタン）
 const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
 `;
 
-// ボランティア名
-const ActivityName = styled.h3`
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin: 0;
-  flex-grow: 1;
-  padding-right: 16px;
+// 日付バッジ
+const DateBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f0f8ff;
+  color: #4a90e2;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+
+  & svg {
+    font-size: 0.9rem;
+  }
 `;
 
 // 編集ボタン
 const EditButton = styled.button`
-  padding: 6px 12px;
-  background-color: #f0f0f0;
-  color: #333;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 0.9rem;
-  flex-shrink: 0;
-  transition: background-color 0.2s ease;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  color: #888;
   border: none;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #ddd;
-  }
-`;
-
-// カード下部（日付）
-const ActivityDate = styled.p`
-  font-size: 0.95rem;
-  color: #555;
-  margin: 0;
-  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
 
-  & > svg {
-    width: 0.95rem;
-    height: 0.95rem;
-    color: #888;
+  &:hover {
+    background-color: #e0eafc;
+    color: #4a90e2;
+    transform: scale(1.1);
   }
 `;
 
-// 日付を「YYYY年MM月DD日」にフォーマットする関数
+// 活動名
+const ActivityName = styled.h3`
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+  line-height: 1.4;
+
+  /* 長すぎる場合は省略 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+// 抜粋テキスト (理由などを少し見せる)
+const Excerpt = styled.p`
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.6;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 2行まで表示 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  opacity: 0.8;
+`;
+
+// 日付フォーマット関数
 const formatDate = dateString => {
   if (!dateString) return "日付未定";
   try {
     const date = new Date(dateString);
-    // 日本のロケールで、年月日を指定
     return date.toLocaleDateString("ja-JP", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
+      weekday: "short",
     });
   } catch (e) {
     return "日付形式エラー";
@@ -95,29 +132,37 @@ const formatDate = dateString => {
 };
 
 export default function ActivityLogCard({ log }) {
-  // logデータから必要なものを取り出す
-  const { id, name, datetime } = log;
+  const { id, name, datetime, reason } = log;
   const router = useRouter();
 
+  // カード全体をクリックした時の遷移
+  const handleCardClick = () => {
+    router.push(`/activity-log/${id}`);
+  };
+
+  // 編集ボタンをクリックした時の遷移
   const handleEditClick = e => {
-    // 親の Link (CardContainer) が動かないようにする
-    e.stopPropagation();
-    e.preventDefault(); // button のデフォルトの動作も止める
-    // 手動で編集ページに飛ばす
+    e.stopPropagation(); // 親のクリックイベントを止める
     router.push(`/activity-log/${id}/edit`);
   };
 
   return (
-    <CardContainer href={`/activity-log/${id}`}>
+    <CardContainer onClick={handleCardClick}>
       <CardHeader>
-        <ActivityName>{name || "無題の活動"}</ActivityName>
-        <EditButton onClick={handleEditClick}>編集</EditButton>
+        <DateBadge>
+          <FaCalendarAlt />
+          {formatDate(datetime)}
+        </DateBadge>
+
+        <EditButton onClick={handleEditClick} aria-label="編集する">
+          <FaPen size={14} />
+        </EditButton>
       </CardHeader>
 
-      <ActivityDate>
-        <FaCalendarAlt />
-        {formatDate(datetime)}
-      </ActivityDate>
+      <ActivityName>{name || "無題の活動"}</ActivityName>
+
+      {/* 理由があれば、少しだけプレビュー表示 */}
+      {reason && <Excerpt>{reason}</Excerpt>}
     </CardContainer>
   );
 }

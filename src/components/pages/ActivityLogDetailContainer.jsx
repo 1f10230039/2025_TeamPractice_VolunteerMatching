@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import ActivityLogForm from "../activity-log/ActivityLogForm";
+import ActivityLogDetailPage from "./ActivityLogDetailPage";
+// import { useRouter } from "next/navigation"; // 必要なら使う
 
-export default function ActivityLogEditContainer({ activityLogId }) {
-  const router = useRouter();
+export default function ActivityLogDetailContainer({ activityLogId }) {
+  // const router = useRouter();
 
   const [log, setLog] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ export default function ActivityLogEditContainer({ activityLogId }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // ログインチェック
+        // 1. ログインチェック
         const {
           data: { user },
           error: userError,
@@ -30,7 +30,8 @@ export default function ActivityLogEditContainer({ activityLogId }) {
 
         setIsLoggedIn(true);
 
-        // データ取得 (クライアントサイドで実行)
+        // 2. データ取得 (クライアントサイドで実行)
+        // RLSのおかげで、自分のデータなら取得できるはず！
         const { data, error } = await supabase
           .from("activity_log")
           .select("*")
@@ -42,8 +43,7 @@ export default function ActivityLogEditContainer({ activityLogId }) {
         setLog(data);
       } catch (error) {
         console.error("活動記録の取得エラー:", error);
-        alert("データの取得に失敗しました。");
-        // router.push("/activity-log");
+        // エラーハンドリングはお好みで（アラート出すとか）
       } finally {
         setLoading(false);
       }
@@ -52,11 +52,14 @@ export default function ActivityLogEditContainer({ activityLogId }) {
     if (activityLogId) {
       fetchData();
     }
-  }, [activityLogId, router]);
+  }, [activityLogId]);
 
+  // ローディング中
   if (loading) {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>読み込み中...</div>
+      <div style={{ padding: "40px", textAlign: "center", color: "#666" }}>
+        読み込み中...
+      </div>
     );
   }
 
@@ -64,10 +67,16 @@ export default function ActivityLogEditContainer({ activityLogId }) {
   if (!isLoggedIn) {
     return (
       <div style={{ padding: "40px", textAlign: "center" }}>
-        <p>編集するにはログインが必要です。</p>
+        <p style={{ marginBottom: "16px" }}>
+          活動記録を見るにはログインが必要です。
+        </p>
         <a
           href="/login"
-          style={{ color: "#007bff", textDecoration: "underline" }}
+          style={{
+            color: "#007bff",
+            textDecoration: "underline",
+            fontWeight: "bold",
+          }}
         >
           ログインする
         </a>
@@ -78,12 +87,12 @@ export default function ActivityLogEditContainer({ activityLogId }) {
   // データが取れなかった場合
   if (!log) {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
+      <div style={{ padding: "40px", textAlign: "center", color: "#666" }}>
         記録が見つかりませんでした。
       </div>
     );
   }
 
-  // データが取れたらフォームを表示
-  return <ActivityLogForm logToEdit={log} />;
+  // データが取れたら詳細ページを表示！
+  return <ActivityLogDetailPage log={log} />;
 }

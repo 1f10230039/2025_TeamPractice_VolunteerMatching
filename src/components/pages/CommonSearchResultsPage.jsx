@@ -14,7 +14,7 @@ import { FaSearch } from "react-icons/fa";
 
 // 検索窓を画面上部に固定するためのラッパー
 const SearchInputContainer = styled.div`
-  background-color: #97cdf3;
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   position: sticky;
   top: 0;
   z-index: 10;
