@@ -21,6 +21,7 @@ export const metadata = {
   icons: {
     icon: "/public/favicon.ico",
   },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({ children }) {
