@@ -90,7 +90,7 @@ export default async function Page({ searchParams }) {
   if (query) {
     titleText =
       events.length > 0
-        ? `「${query}」の検索結果 (${events.length}件)`
+        ? `「${query}」の検索結果(${events.length}件)`
         : `「${query}」に一致するイベントは見つかりませんでした。`;
   }
 

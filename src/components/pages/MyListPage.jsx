@@ -13,7 +13,7 @@ import { FaRegHeart, FaRegCheckCircle } from "react-icons/fa";
 const PageContainer = styled.div`
   min-height: 100vh;
   background-color: #f5fafc; /* マイページと統一した背景色 */
-  padding-bottom: 60px;
+  padding-bottom: 150px;
   font-family: "Helvetica Neue", Arial, sans-serif;
 `;
 
@@ -27,12 +27,6 @@ const ContentWrapper = styled.div`
 const HeaderArea = styled.div`
   padding: 20px 0 12px 0;
   text-align: center;
-`;
-
-const PageTitle = styled.h1`
-  font-size: 28px;
-  font-weight: 800;
-  color: #333;
 `;
 
 // タブを囲むコンテナ
@@ -85,6 +79,11 @@ const TabButton = styled.button`
       color: #5796C2;
     }
   `}
+
+  @media (max-width: 600px) {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
 `;
 
 // イベントリスト全体のコンテナ

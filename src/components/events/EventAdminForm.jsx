@@ -22,7 +22,7 @@ const FormContainer = styled.form`
 
   @media (max-width: 600px) {
     padding: 16px;
-    margin: 0 auto 100px auto;
+    margin: 0 auto 150px auto;
     box-shadow: none; /* スマホならフラットに */
   }
 `;

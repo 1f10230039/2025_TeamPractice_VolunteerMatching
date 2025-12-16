@@ -27,19 +27,26 @@ const SearchInputContainer = styled.div`
 // 検索結果のコンテナ
 const PageResultsContainer = styled.div`
   padding: 24px;
+  margin-bottom: 150px;
 `;
 
 // 検索結果というタイトルのスタイル
 const ResultTitle = styled.h2`
   font-size: 1.3rem;
   font-weight: bold;
-  margin-bottom: 20px;
+  margin: 0 auto 16px auto;
   padding: 0 24px;
+  @media (max-width: 600px) {
+    font-size: 1rem;
+  }
 `;
 
 // イベント一覧（結果）を囲むラッパー
 const ListWrapper = styled.div`
   padding: 0 24px;
+  @media (max-width: 600px) {
+    margin: 0 auto;
+  }
 `;
 
 // フィルターコンテナ
@@ -63,6 +70,9 @@ const FilterTagButton = styled.button`
 
   &:hover {
     background-color: ${props => (props.isSelected ? "#0056b3" : "#f0f0f0")};
+  }
+  @media (max-width: 600px) {
+    font-size: 0.8rem;
   }
 `;
 

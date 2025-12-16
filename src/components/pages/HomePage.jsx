@@ -180,6 +180,10 @@ const PageButton = styled.button`
     box-shadow: none;
     cursor: not-allowed;
   }
+  @media (max-width: 600px) {
+    padding: 10px 20px; /* スマホは少し小さめに */
+    font-size: 0.9rem;
+  }
 `;
 
 const PageInfo = styled.span`
@@ -313,7 +317,8 @@ export default function HomePage({ events }) {
             </PageButton>
 
             <PageInfo>
-              Page <strong>{currentPage}</strong> / {totalPages}
+              <strong>{currentPage}</strong> / {totalPages}
+              ページ
             </PageInfo>
 
             <PageButton

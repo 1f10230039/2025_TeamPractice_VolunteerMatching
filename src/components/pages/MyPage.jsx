@@ -25,7 +25,9 @@ const PageWrapper = styled.div`
   background-color: #f5fafc; /* ベース背景色 */
   padding: 40px 20px;
   font-family: "Helvetica Neue", Arial, sans-serif;
-  margin-bottom: 60px;
+  @media (max-width: 600px) {
+    margin-bottom: 80px;
+  }
 `;
 
 const ContentContainer = styled.div`
@@ -175,10 +177,6 @@ const DashboardGrid = styled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   margin-bottom: 40px;
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
 `;
 
 // 共通のカードボタンスタイル
@@ -225,21 +223,29 @@ const MenuCard = styled.a`
   `
       : `
     /* Gradient Style (活動記録 - デフォルト) */
-    background: ${props.bg || "white"};
-    color: white;
-    border: none;
-    box-shadow: 0 10px 20px ${props.shadowColor || "rgba(0,0,0,0.1)"};
+    background-color: #FFFFFF;
+    border: 2px solid #4A90E2;
+    color: #4A90E2;
+    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
 
     &:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 30px ${props.shadowColor || "rgba(0,0,0,0.15)"};
-      filter: brightness(1.05);
+      background-color: #F0F8FF; /* AliceBlue */
+      border-color: #357ABD; /* 濃い青 */
+      color: #357ABD;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(74, 144, 226, 0.15);
     }
 
     &:active {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 10px ${props.shadowColor || "rgba(0,0,0,0.1)"};
-      filter: brightness(0.95);
+      transform: translateY(0);
+      background-color: #E6F2FF;
+      box-shadow: none;
+    }
+    
+    /* アイコンの色も継承させる */
+    & > div {
+        color: inherit;
+        filter: none;
     }
   `}
 `;
@@ -445,7 +451,7 @@ export default function MyPage() {
               <FaBookOpen />
             </MenuIcon>
             <MenuLabel>活動記録を見る</MenuLabel>
-            <MenuDesc>あなたのボランティアの軌跡を確認・編集できます</MenuDesc>
+            <MenuDesc>あなたのボランティアの軌跡を確認できます</MenuDesc>
           </MenuCard>
 
           {/* 2. 応募済み */}
@@ -454,7 +460,7 @@ export default function MyPage() {
               <FaCheckCircle />
             </MenuIcon>
             <MenuLabel variant="outline">応募済み</MenuLabel>
-            <MenuDesc>エントリー中のボランティア</MenuDesc>
+            <MenuDesc>応募済みのボランティアを確認できます</MenuDesc>
           </MenuCard>
 
           {/* 3. お気に入り */}
@@ -463,7 +469,7 @@ export default function MyPage() {
               <FaHeart />
             </MenuIcon>
             <MenuLabel variant="outline">お気に入り</MenuLabel>
-            <MenuDesc>気になっているボランティア</MenuDesc>
+            <MenuDesc>気になっているボランティアを確認できます</MenuDesc>
           </MenuCard>
         </DashboardGrid>
 

@@ -9,6 +9,9 @@ import EventAdminCard from "../events/EventAdminCard";
 // ページ全体のコンテナ
 const PageContainer = styled.div`
   padding: 24px;
+  @media (max-width: 600px) {
+    margin-bottom: 150px;
+  }
 `;
 
 // ページ上部のヘッダー（タイトルとボタン）
