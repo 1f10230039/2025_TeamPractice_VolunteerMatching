@@ -10,6 +10,9 @@ const SearchBoxContainer = styled.div`
   padding: 30px 24px;
   max-width: 1000px;
   margin: 0 auto;
+  @media (max-width: 600px) {
+    padding: 10px 5px;
+  }
 `;
 
 const OptionsContainer = styled.div`
@@ -17,7 +20,7 @@ const OptionsContainer = styled.div`
   gap: 12px;
   justify-content: center;
 
-  @media (max-width: 767px) {
+  @media (max-width: 600px) {
     gap: 8px;
     overflow-x: auto; /* スマホなら横スクロール */
     padding-bottom: 4px; /* スクロールバー用 */
@@ -66,9 +69,9 @@ const SearchLink = styled(Link, {
     margin-right: 8px;
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 600px) {
     padding: 8px 16px;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
 
     & > svg {
       width: 1.1rem;

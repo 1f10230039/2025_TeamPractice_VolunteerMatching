@@ -41,6 +41,9 @@ const Wrapper = styled.div`
   padding: 24px;
   max-width: 600px;
   margin: 0 auto;
+  @media (max-width: 600px) {
+    margin-bottom: 150px;
+  }
 `;
 
 const Title = styled.h1`

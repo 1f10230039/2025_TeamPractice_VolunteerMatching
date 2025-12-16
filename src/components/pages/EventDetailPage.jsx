@@ -173,15 +173,15 @@ const InfoValue = styled.dd`
 // --- クイックサマリー (グリッド表示) ---
 const QuickSummaryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
   margin-bottom: 40px;
 `;
 
 // サマリーカード
 const SummaryCard = styled.div`
   background-color: white;
-  padding: 17px;
+  padding: 10px;
   border-radius: 16px;
   box-shadow: 0 4px 15px rgba(122, 211, 232, 0.15);
   display: flex;
@@ -213,14 +213,20 @@ const SummaryLabel = styled.span`
   font-size: 0.85rem;
   color: #888;
   font-weight: 600;
+  @media (max-width: 600px) {
+    font-size: 0.75rem;
+  }
 `;
 
 // 値部分
 const SummaryValue = styled.span`
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: bold;
   color: #333;
   line-height: 1.4;
+  @media (max-width: 600px) {
+    font-size: 0.8rem;
+  }
 `;
 
 // --- 魅力・経験セクション (ビジュアル重視) ---
@@ -458,6 +464,9 @@ const ApplyButton = styled.button`
   gap: 12px;
   transition: all 0.2s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  @media (max-width: 600px) {
+    font-size: 1rem;
+  }
 
   /* 応募済みかどうかでスタイル変更 */
   ${props =>

@@ -14,7 +14,7 @@ import EmptyState from "../common/EmptyState";
 const PageWrapper = styled.div`
   min-height: 100vh;
   background-color: #f5fafc; /* マイページと同じ背景色 */
-  padding-bottom: 60px;
+  padding-bottom: 150px;
   font-family: "Helvetica Neue", Arial, sans-serif;
 `;
 

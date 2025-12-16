@@ -79,19 +79,19 @@ const Description = styled.p`
 const ActionButton = styled.a`
   display: inline-block;
   padding: 12px 32px;
-  background-color: #007bff;
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   color: white;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+  transform: translateY(-1px);
   text-decoration: none;
   border-radius: 50px;
   font-weight: bold;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
   cursor: pointer;
-
   &:hover {
-    background-color: #0056b3;
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+    box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
+    filter: brightness(1.05);
   }
 `;
 

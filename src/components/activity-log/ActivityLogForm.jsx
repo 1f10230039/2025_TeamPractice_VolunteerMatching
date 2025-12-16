@@ -11,7 +11,7 @@ import Breadcrumbs from "../common/Breadcrumbs";
 // Emotionでスタイル定義
 
 const FormContainer = styled.form`
-  padding: 24px;
+  padding: 24px 24px 150px 24px;
   max-width: 800px;
   margin: 0 auto;
 `;

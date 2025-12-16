@@ -21,6 +21,9 @@ const PageContainer = styled.div`
   padding: 24px;
   max-width: 800px;
   margin: 0 auto;
+  @media (max-width: 600px) {
+    margin-bottom: 150px;
+  }
 `;
 
 // ページ上部（タイトルと編集ボタン）
@@ -184,23 +187,23 @@ export default function ActivityLogDetailPage({ log }) {
           <SectionContent>{content || "記載なし"}</SectionContent>
         </DetailSection>
 
-      {/* 活動の規模 */}
-      <DetailSection>
-        <SectionTitle>
-          <FaBuilding />
-          活動の規模
-        </SectionTitle>
-        <SectionContent>{activity_scale || "記載なし"}</SectionContent>
-      </DetailSection>
+        {/* 活動の規模 */}
+        <DetailSection>
+          <SectionTitle>
+            <FaBuilding />
+            活動の規模
+          </SectionTitle>
+          <SectionContent>{activity_scale || "記載なし"}</SectionContent>
+        </DetailSection>
 
-      {/* 参加人数 */}
-      <DetailSection>
-        <SectionTitle>
-          <FaUsers />
-          参加人数
-        </SectionTitle>
-        <SectionContent>{numbers || "記載なし"}</SectionContent>
-      </DetailSection>
+        {/* 参加人数 */}
+        <DetailSection>
+          <SectionTitle>
+            <FaUsers />
+            参加人数
+          </SectionTitle>
+          <SectionContent>{numbers || "記載なし"}</SectionContent>
+        </DetailSection>
 
         {/* 活動による学び */}
         <DetailSection>
