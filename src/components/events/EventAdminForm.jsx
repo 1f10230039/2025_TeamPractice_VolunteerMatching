@@ -486,21 +486,10 @@ export default function EventAdminForm({ eventToEdit }) {
       return;
     }
 
-    let submissionData = {
-      ...formData,
-      start_datetime: new Date(formData.start_datetime).toISOString(),
-      end_datetime: new Date(formData.end_datetime).toISOString(),
-      fee: parseInt(formData.fee, 10) || 0,
-      capacity: parseInt(formData.capacity, 10) || 0,
-      latitude: parseFloat(formData.latitude) || null,
-      longitude: parseFloat(formData.longitude) || null,
-      prefectures: formData.prefecture,
-    };
-    delete submissionData.prefecture;
-
     let finalImageUrl = formData.image_url;
 
     try {
+      // 1. アイキャッチ画像のアップロード (これはクライアントサイドで先に行う)
       if (uploadFile) {
         const fileExt = uploadFile.name.split(".").pop();
         const fileName = `eyecatch_${Date.now()}.${fileExt}`;
@@ -521,45 +510,48 @@ export default function EventAdminForm({ eventToEdit }) {
 
         finalImageUrl = urlData.publicUrl;
       }
-      submissionData.image_url = finalImageUrl;
 
-      let targetEventId = null;
-
+      // 2. APIに送信するイベントデータ本体を準備
+      const submissionData = {
+        ...formData,
+        image_url: finalImageUrl,
+        start_datetime: new Date(formData.start_datetime).toISOString(),
+        end_datetime: new Date(formData.end_datetime).toISOString(),
+        fee: parseInt(formData.fee, 10) || 0,
+        capacity: parseInt(formData.capacity, 10) || 0,
+        latitude: parseFloat(formData.latitude) || null,
+        longitude: parseFloat(formData.longitude) || null,
+        prefectures: formData.prefecture,
+      };
+      delete submissionData.prefecture;
+      
       if (isEditMode) {
-        const { error } = await supabase
-          .from("events")
-          .update(submissionData)
-          .eq("id", eventToEdit.id);
-        if (error) throw error;
-        targetEventId = eventToEdit.id;
-      } else {
-        const { data, error } = await supabase
-          .from("events")
-          .insert([submissionData])
-          .select()
-          .single();
-        if (error) throw error;
-        targetEventId = data.id;
+        submissionData.id = eventToEdit.id;
       }
 
+      // 3. バックエンドAPIを呼び出して、イベントの登録/更新とベクトル化を実行
+      const response = await fetch("/api/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventData: submissionData,
+          selectedTagIds,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "APIリクエストに失敗しました。");
+      }
+
+      const result = await response.json();
+      const targetEventId = result.eventId;
+
+      // 4. ギャラリー画像の処理 (APIの成功後に行う)
       if (targetEventId) {
-        const { error: deleteTagsError } = await supabase
-          .from("event_tags")
-          .delete()
-          .eq("event_id", targetEventId);
-        if (deleteTagsError) console.error("タグ削除エラー:", deleteTagsError);
-
-        if (selectedTagIds.length > 0) {
-          const tagInsertData = selectedTagIds.map(tagId => ({
-            event_id: targetEventId,
-            tag_id: tagId,
-          }));
-          const { error: insertTagsError } = await supabase
-            .from("event_tags")
-            .insert(tagInsertData);
-          if (insertTagsError) throw insertTagsError;
-        }
-
+        // 削除指定された画像をストレージから消す（エラーは無視）
         if (deletedGalleryIds.length > 0) {
           const { error: deleteImgError } = await supabase
             .from("event_images")
@@ -568,6 +560,7 @@ export default function EventAdminForm({ eventToEdit }) {
           if (deleteImgError) console.error("画像削除エラー:", deleteImgError);
         }
 
+        // 新しいギャラリー画像をアップロード
         if (newGalleryFiles.length > 0) {
           const uploadPromises = newGalleryFiles.map(async item => {
             const file = item.file;
@@ -591,9 +584,7 @@ export default function EventAdminForm({ eventToEdit }) {
         }
       }
 
-      alert(
-        isEditMode ? "イベントを更新しました！" : "イベントを作成しました！"
-      );
+      alert(result.message);
       router.push(`/events/${targetEventId}?source=admin`);
       router.refresh();
     } catch (error) {
