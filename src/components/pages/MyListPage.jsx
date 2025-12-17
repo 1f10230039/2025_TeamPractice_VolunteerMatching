@@ -61,24 +61,53 @@ const TabButton = styled.button`
   }
 
   /* ★ アクティブ時のスタイル ★ */
+  /*  isActive (今いるページ) の時のスタイル */
   ${props =>
     props.isActive
       ? `
-    background: linear-gradient(135deg, #68B5D5 0%, #4A90E2 100%);
-    color: white;
-    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
-    transform: translateY(-1px);
+    /* アクティブ時: 薄い水色背景 × 濃い青文字 */
+    background-color: #e6f4ff; 
+    color: #007bff;
+    /* 影は消して、フラットにして「押すボタンじゃない感」を出す */
+    box-shadow: none; 
+    transform: none;
+    
+    /* ほんのり青い枠線をつけても締まるかも（お好みで！） */
+    /* border: 1px solid #b3d7ff; */
+
+    /* アイコンも青く */
+    & > svg {
+      color: #007bff;
+    }
   `
       : `
-    /* 非アクティブ時のスタイル */
+    /* 非アクティブの時のスタイル */
     background-color: transparent;
-    color: #888;
-    
+    color: #666;
+
     &:hover {
-      background-color: #f0f8ff;
-      color: #5796C2;
+      background-color: #f0f8ff; /* 薄い青 */
+      color: #007bff;
+      transform: translateY(-1px);
+      
+      & > svg {
+        color: #007bff;
+      }
     }
   `}
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
+  }
+
+  & > svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    transition: color 0.3s ease;
+    /* 非アクティブ時はちょっと薄く */
+    color: ${props => (props.isActive ? "#007bff" : "#999")};
+  }
 
   @media (max-width: 600px) {
     padding: 10px 20px;

@@ -1,5 +1,3 @@
-// 活動記録の詳細ページコンポーネント
-
 "use client";
 
 import styled from "@emotion/styled";
@@ -12,107 +10,224 @@ import {
   FaBuilding,
   FaUsers,
   FaLightbulb,
-  FaCommentDots,
+  FaQuoteLeft,
 } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
 
-// ページ全体のコンテナ
-const PageContainer = styled.div`
-  padding: 24px;
+// --- Emotion Styles ---
+
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #f5fafc; /* マイページと同じ優しい背景色 */
+  padding-bottom: 60px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+`;
+
+// パンくずリストを固定するためのラッパー
+const StickyHeader = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #f5fafc;
+`;
+
+const ContentContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
-  @media (max-width: 600px) {
-    margin-bottom: 150px;
+  padding: 0 20px;
+`;
+
+// --- ヒーローエリア（タイトル・日付） ---
+const HeroSection = styled.div`
+  background-color: white;
+  padding: 40px 32px;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(122, 211, 232, 0.15);
+  margin-top: 24px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+
+  /* 背景にうっすら装飾を入れる */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 8px;
+    height: 100%;
+    background: linear-gradient(to bottom, #68b5d5, #4a90e2);
   }
 `;
 
-// ページ上部（タイトルと編集ボタン）
-const PageHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 16px;
+const DateBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f0f8ff;
+  color: #4a90e2;
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 5px rgba(74, 144, 226, 0.1);
 `;
 
-// 活動名
 const LogTitle = styled.h1`
-  font-size: 1.8rem;
-  font-weight: bold;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #333;
+  line-height: 1.4;
   margin: 0;
-  padding-right: 16px;
+
+  @media (max-width: 600px) {
+    font-size: 1.6rem;
+  }
 `;
 
-// 編集ボタン
+// 編集ボタン (右上に配置)
 const EditButton = styled(Link)`
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+  color: #555;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: bold;
-  transition: background-color 0.2s ease;
-  flex-shrink: 0;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
   &:hover {
-    background-color: #0056b3;
-  }
-
-  & > svg {
-    width: 0.9em;
-    height: 0.9em;
+    background-color: #e0eafc;
+    color: #4a90e2;
+    transform: scale(1.1);
   }
 `;
 
-// 詳細を表示する各セクション
-const DetailSection = styled.section`
-  margin-bottom: 24px;
+// --- 「想い」のセクション (Reflection) ---
+const ReflectionCard = styled.div`
+  background: linear-gradient(135deg, #fff 0%, #fffbf0 100%);
+  border: 2px solid #fff;
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 40px;
+  position: relative;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
 `;
 
-// セクションのタイトル (「参加した理由」とか)
-const SectionTitle = styled.h2`
+const QuoteIcon = styled(FaQuoteLeft)`
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  font-size: 2rem;
+  color: #ffecd2; /* 淡いオレンジ */
+  z-index: 0;
+`;
+
+const ReflectionTitle = styled.h2`
   font-size: 1.1rem;
-  font-weight: bold;
-  color: #333;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 8px;
-  margin: 0 0 12px 0;
+  font-weight: 700;
+  color: #d4a373;
+  margin: 0 0 16px 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-
-  & > svg {
-    width: 1.1rem;
-    height: 1.1rem;
-    color: #555;
-  }
+  gap: 8px;
+  position: relative;
+  z-index: 1;
 `;
 
-// セクションの中身 (感想のテキストとか)
-const SectionContent = styled.div`
-  font-size: 1rem;
-  color: #555;
-  line-height: 1.7;
+const ReflectionText = styled.p`
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: #5d4037;
   white-space: pre-wrap;
-  background-color: #fdfdfd;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #f0f0f0;
-`;
-
-// 日付や規模を表示する用のセクション
-const SimpleInfo = styled.p`
-  font-size: 1rem;
-  color: #555;
-  line-height: 1.7;
+  position: relative;
+  z-index: 1;
   font-weight: 500;
 `;
 
-// 日付を「YYYY年MM月DD日」にフォーマットする関数
+// --- 詳細情報のグリッド ---
+const DetailGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+`;
+
+const DetailCard = styled.div`
+  background-color: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+  border: 1px solid #f0f0f0;
+`;
+
+const SectionHeader = styled.h3`
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &::before {
+    content: "";
+    width: 6px;
+    height: 28px;
+    background: linear-gradient(to bottom, #68b5d5, #4a90e2);
+    border-radius: 3px;
+    display: block;
+  }
+`;
+
+const SectionBody = styled.div`
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #555;
+  white-space: pre-wrap;
+`;
+
+// 3カラムの情報 (規模、人数など)
+const MetaInfoRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+`;
+
+const MetaCard = styled.div`
+  background-color: white;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  border: 1px solid #eee;
+
+  h4 {
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  p {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+  }
+`;
+
+// 日付フォーマット関数
 const formatDate = dateString => {
   if (!dateString) return "日付未定";
   try {
@@ -121,6 +236,7 @@ const formatDate = dateString => {
       year: "numeric",
       month: "long",
       day: "numeric",
+      weekday: "short",
     });
   } catch (e) {
     return "日付形式エラー";
@@ -128,20 +244,10 @@ const formatDate = dateString => {
 };
 
 export default function ActivityLogDetailPage({ log }) {
-  // サーバーから渡された log データを展開
-  const {
-    id,
-    name,
-    datetime,
-    reason,
-    activity_scale,
-    numbers,
-    content,
-    learning,
-    reflection,
-  } = log;
+  const { id, name, datetime, reason, numbers, content, learning, reflection } =
+    log;
 
-  // パンくずリスト用データ
+  // パンくずリスト
   const crumbs = [
     { label: "活動の記録", href: "/activity-log" },
     { label: name || "活動詳細", href: `/activity-log/${id}` },
@@ -149,80 +255,74 @@ export default function ActivityLogDetailPage({ log }) {
   const baseCrumb = { label: "マイページ", href: "/mypage" };
 
   return (
-    <>
-      <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
-      <PageContainer>
-        <PageHeader>
-          <LogTitle>{name || "無題の活動"}</LogTitle>
-          <EditButton href={`/activity-log/${id}/edit`}>
-            <FaPen />
-            編集する
-          </EditButton>
-        </PageHeader>
+    <PageWrapper>
+      {/* 1. 上部固定パンくずリスト */}
+      <StickyHeader>
+        <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
+      </StickyHeader>
 
-        {/* 活動日 */}
-        <DetailSection>
-          <SectionTitle>
+      <ContentContainer>
+        {/* 2. ヒーローセクション（タイトル・日付） */}
+        <HeroSection>
+          <DateBadge>
             <FaCalendarAlt />
-            活動日
-          </SectionTitle>
-          <SimpleInfo>{formatDate(datetime)}</SimpleInfo>
-        </DetailSection>
+            {formatDate(datetime)}
+          </DateBadge>
+          <LogTitle>{name || "無題の活動"}</LogTitle>
 
-        {/* 参加した理由・目的 */}
-        <DetailSection>
-          <SectionTitle>
-            <FaBullseye />
-            参加した理由・目的
-          </SectionTitle>
-          <SectionContent>{reason || "記載なし"}</SectionContent>
-        </DetailSection>
+          {/* 編集ボタン */}
+          <EditButton href={`/activity-log/${id}/edit`} aria-label="編集する">
+            <FaPen />
+          </EditButton>
+        </HeroSection>
 
-        {/* 活動内容 */}
-        <DetailSection>
-          <SectionTitle>
-            <FaPencilAlt />
-            活動内容
-          </SectionTitle>
-          <SectionContent>{content || "記載なし"}</SectionContent>
-        </DetailSection>
+        {/* 3. 「あの日の想い」セクション (一番目立たせる！) */}
+        {reflection && (
+          <ReflectionCard>
+            <QuoteIcon />
+            <ReflectionTitle>活動の感想・反省</ReflectionTitle>
+            <ReflectionText>{reflection}</ReflectionText>
+          </ReflectionCard>
+        )}
 
-        {/* 活動の規模 */}
-        <DetailSection>
-          <SectionTitle>
-            <FaBuilding />
-            活動の規模
-          </SectionTitle>
-          <SectionContent>{activity_scale || "記載なし"}</SectionContent>
-        </DetailSection>
+        {/* 4. 基本情報 (人数など) */}
+        <MetaInfoRow>
+          <MetaCard>
+            <h4>
+              <FaUsers /> 参加人数
+            </h4>
+            <p>{numbers ? `${numbers}人` : "-"}</p>
+          </MetaCard>
+          {/* 必要なら他のメタ情報もここに追加 */}
+        </MetaInfoRow>
 
-        {/* 参加人数 */}
-        <DetailSection>
-          <SectionTitle>
-            <FaUsers />
-            参加人数
-          </SectionTitle>
-          <SectionContent>{numbers || "記載なし"}</SectionContent>
-        </DetailSection>
+        {/* 5. ストーリー詳細 */}
+        <DetailGrid>
+          {/* きっかけ */}
+          <DetailCard>
+            <SectionHeader>
+              <FaBullseye /> 参加した理由・目的
+            </SectionHeader>
+            <SectionBody>{reason || "記載なし"}</SectionBody>
+          </DetailCard>
 
-        {/* 活動による学び */}
-        <DetailSection>
-          <SectionTitle>
-            <FaLightbulb />
-            活動による学び
-          </SectionTitle>
-          <SectionContent>{learning || "記載なし"}</SectionContent>
-        </DetailSection>
+          {/* やったこと */}
+          <DetailCard>
+            <SectionHeader>
+              <FaPencilAlt /> 活動内容
+            </SectionHeader>
+            <SectionBody>{content || "記載なし"}</SectionBody>
+          </DetailCard>
 
-        {/* 活動の感想・反省 */}
-        <DetailSection>
-          <SectionTitle>
-            <FaCommentDots />
-            活動の感想・反省
-          </SectionTitle>
-          <SectionContent>{reflection || "記載なし"}</SectionContent>
-        </DetailSection>
-      </PageContainer>
-    </>
+          {/* 学び */}
+          <DetailCard>
+            <SectionHeader>
+              <FaLightbulb /> 活動による学び
+            </SectionHeader>
+            <SectionBody>{learning || "記載なし"}</SectionBody>
+          </DetailCard>
+        </DetailGrid>
+      </ContentContainer>
+    </PageWrapper>
   );
 }
