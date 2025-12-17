@@ -78,6 +78,14 @@ const PageWrapper = styled.div`
   font-family: "Helvetica Neue", Arial, sans-serif;
 `;
 
+// パンくずリストを固定するためのラッパー
+const StickyHeader = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #f5fafc; /* 透けないように背景色を指定 */
+`;
+
 // メインコンテンツエリア
 const MainContent = styled.div`
   max-width: 900px;
@@ -260,19 +268,6 @@ const HighlightCard = styled.div`
     border: 1px solid #90caf9;
     color: #0d47a1;
   `}
-`;
-
-const HighlightTitle = styled.h3`
-  font-size: 1.2rem;
-  font-weight: 800;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  & svg {
-    font-size: 1.4rem;
-  }
 `;
 
 const HighlightText = styled.p`
@@ -634,10 +629,23 @@ export default function EventDetailPage({ event, source, q, codes }) {
         base = { label: "マイリスト", href: "/mylist" };
         crumbList = [thisPageCrumb];
         break;
+
+      // ★ 追加: 管理画面から来た場合
+      case "admin":
+        base = { label: "マイページ", href: "/mypage" };
+        crumbList = [
+          {
+            label: "ボランティア管理",
+            href: "/volunteer-registration/admin/events",
+          },
+          thisPageCrumb,
+        ];
+        break;
+
       case "keyword":
         crumbList = [
           { label: "キーワードから探す", href: "/search/keyword" },
-          { label: "検索結果", href: `/search/keyword-results?q=${q || ""}` },
+          { label: "検索結果", href: `/search/results?q=${q || ""}` },
           thisPageCrumb,
         ];
         break;
@@ -658,34 +666,22 @@ export default function EventDetailPage({ event, source, q, codes }) {
     return { baseCrumb: base, crumbs: crumbList };
   })();
 
-  const placeholderImage =
-    "https://placehold.co/800x400/e0e0e0/777?text=No+Image";
-
-  /**
-   * お気に入りボタンの処理
-   * favorites テーブルに対して INSERT (登録) または DELETE (解除) を行う
-   */
   const handleToggleFavorite = async e => {
     e.preventDefault();
     if (isFavoriteLoading) return;
-
-    // 未ログイン時の誘導
     if (!user) {
       if (
         confirm(
           "お気に入り機能を使うにはログインが必要です。\nログインページに移動しますか？"
         )
       ) {
-        router.push("/login");
+        window.location.href = "/login";
       }
       return;
     }
-
     setIsFavoriteLoading(true);
-
     try {
       if (isFavorite) {
-        // 登録解除 (DELETE)
         const { error } = await supabase
           .from("favorites")
           .delete()
@@ -693,7 +689,6 @@ export default function EventDetailPage({ event, source, q, codes }) {
         if (error) throw error;
         setIsFavorite(false);
       } else {
-        // 新規登録 (INSERT)
         const { error } = await supabase
           .from("favorites")
           .insert({ user_id: user.id, event_id: id });
@@ -829,7 +824,9 @@ export default function EventDetailPage({ event, source, q, codes }) {
 
   return (
     <PageWrapper>
-      <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
+      <StickyHeader>
+        <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
+      </StickyHeader>
 
       <MainContent>
         {/* ヘッダーエリア */}
@@ -924,7 +921,9 @@ export default function EventDetailPage({ event, source, q, codes }) {
         {/* 詳細テキスト */}
         {long_description && (
           <DetailContainer>
-            <SectionTitle>イベント詳細</SectionTitle>
+            <SectionTitle>
+              <FaInfoCircle /> イベント詳細
+            </SectionTitle>
             <SectionContent>{long_description}</SectionContent>
           </DetailContainer>
         )}

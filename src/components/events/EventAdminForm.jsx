@@ -9,30 +9,46 @@ import styled from "@emotion/styled";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import { FaCloudUploadAlt, FaImages, FaTrash } from "react-icons/fa";
+import Breadcrumbs from "../common/Breadcrumbs";
 
 // --- Emotionでスタイル定義 ---
 
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #f5fafc; /* マイページと同じ背景色 */
+  padding-bottom: 40px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+`;
+
+// パンくずリストを固定するためのラッパー
+const StickyHeader = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #f5fafc;
+`;
+
 const FormContainer = styled.form`
-  padding: 24px;
+  padding: 32px;
   max-width: 800px;
   margin: 0 auto;
   background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15); /* ふんわり青い影 */
 
   @media (max-width: 600px) {
-    padding: 16px;
-    margin: 0 auto 150px auto;
-    box-shadow: none; /* スマホならフラットに */
+    padding: 20px;
+    margin: 0 16px 100px 16px; /* 横の余白と下部の余白 */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   }
 `;
 
 const PageTitle = styled.h1`
-  font-size: 1.8rem;
-  font-weight: bold;
-  margin-bottom: 32px;
-  text-align: center;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 20px 0 32px 0;
   color: #333;
+  text-align: center;
 `;
 
 const FormGroup = styled.div`
@@ -41,15 +57,16 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
   display: block;
-  font-weight: bold;
+  font-weight: 600;
   margin-bottom: 8px;
-  font-size: 1rem;
-  color: #444;
+  font-size: 0.95rem;
+  color: #555;
 
   /* 必須マーク */
   &.required::after {
     content: " *";
     color: #e74c3c;
+    margin-left: 4px;
   }
 `;
 
@@ -63,7 +80,7 @@ const Input = styled.input`
   transition: border-color 0.2s ease;
 
   &:focus {
-    border-color: #007bff;
+    border-color: #4a90e2;
     outline: none;
   }
 `;
@@ -77,11 +94,11 @@ const Textarea = styled.textarea`
   box-sizing: border-box;
   min-height: 120px;
   font-family: inherit;
-  resize: vertical; /* 縦方向のみリサイズ可 */
+  resize: vertical;
   transition: border-color 0.2s ease;
 
   &:focus {
-    border-color: #007bff;
+    border-color: #4a90e2;
     outline: none;
   }
 `;
@@ -93,8 +110,20 @@ const GridWrapper = styled.div`
   gap: 20px;
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* スマホでは1列 */
     gap: 16px;
+  }
+`;
+
+// 日付入力用のラッパー（スマホでの幅調整用）
+const DateInputWrapper = styled.div`
+  width: 100%;
+  @media (max-width: 600px) {
+    /* スマホで日付ピッカーがはみ出さないように調整 */
+    input {
+      max-width: 100%;
+      min-width: 0; /* Flexアイテムで潰れないように */
+    }
   }
 `;
 
@@ -121,26 +150,33 @@ const CheckboxInput = styled.input`
   accent-color: #007bff;
 `;
 
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 16px;
+  margin-top: 40px;
+
+  @media (max-width: 600px) {
+    flex-direction: column-reverse; /* スマホならキャンセルを下に */
+  }
+`;
+
 const SubmitButton = styled.button`
-  display: block;
-  width: 100%;
-  padding: 16px;
+  flex: 2;
+  padding: 14px;
   font-size: 1.1rem;
   font-weight: bold;
   color: white;
-  background-color: #007bff;
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   border: none;
-  border-radius: 8px;
+  border-radius: 30px;
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease;
-  margin-top: 40px;
-  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 
   &:hover {
-    background-color: #0056b3;
     transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
+    filter: brightness(1.05);
   }
 
   &:active {
@@ -148,14 +184,32 @@ const SubmitButton = styled.button`
   }
 
   &:disabled {
-    background-color: #ccc;
+    background: #ccc;
     cursor: not-allowed;
-    transform: none;
     box-shadow: none;
   }
 `;
 
-// --- 画像アップロードUIの改善 ---
+const CancelButton = styled.button`
+  flex: 1;
+  background-color: #fff;
+  color: #666;
+  border: 2px solid #eee;
+  padding: 14px;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f9f9f9;
+    border-color: #ddd;
+    color: #444;
+  }
+`;
+
+// 画像アップロードUI
 const DropzoneContainer = styled.div`
   width: 100%;
   border-radius: 12px;
@@ -200,7 +254,6 @@ const UploadSubText = styled.span`
   display: block;
 `;
 
-// プレビュー画像（アイキャッチ用）
 const EyeCatchPreview = styled.div`
   margin-top: 16px;
   width: 100%;
@@ -212,7 +265,6 @@ const EyeCatchPreview = styled.div`
   border: 1px solid #eee;
 `;
 
-// ギャラリーグリッド
 const GalleryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -223,7 +275,7 @@ const GalleryGrid = styled.div`
 const GalleryItem = styled.div`
   position: relative;
   width: 100%;
-  padding-bottom: 100%; /* 正方形 */
+  padding-bottom: 100%;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid #eee;
@@ -259,7 +311,6 @@ const RemoveImageButton = styled.button`
   }
 `;
 
-// タグコンテナ
 const TagSelectionContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -293,7 +344,6 @@ const TagCheckbox = styled.input`
   display: none;
 `;
 
-// --- ヘルパー関数 ---
 const formatDatetimeLocal = isoString => {
   if (!isoString) return "";
   try {
@@ -312,7 +362,6 @@ export default function EventAdminForm({ eventToEdit }) {
   const [isLoading, setIsLoading] = useState(false);
   const isEditMode = Boolean(eventToEdit);
 
-  // 画像・タグの状態
   const [uploadFile, setUploadFile] = useState(null);
   const [availableTags, setAvailableTags] = useState([]);
   const [selectedTagIds, setSelectedTagIds] = useState([]);
@@ -320,7 +369,6 @@ export default function EventAdminForm({ eventToEdit }) {
   const [newGalleryFiles, setNewGalleryFiles] = useState([]);
   const [deletedGalleryIds, setDeletedGalleryIds] = useState([]);
 
-  // フォームデータ
   const [formData, setFormData] = useState({
     name: eventToEdit?.name ?? "",
     place: eventToEdit?.place ?? "",
@@ -354,9 +402,7 @@ export default function EventAdminForm({ eventToEdit }) {
         .from("tags")
         .select("*")
         .order("id");
-      if (!error && data) {
-        setAvailableTags(data);
-      }
+      if (!error && data) setAvailableTags(data);
     };
     fetchTags();
 
@@ -369,20 +415,16 @@ export default function EventAdminForm({ eventToEdit }) {
           .from("event_images")
           .select("*")
           .eq("event_id", eventToEdit.id);
-
-        if (!error && data) {
-          setGalleryImages(data);
-        }
+        if (!error && data) setGalleryImages(data);
       };
       fetchGalleryImages();
     }
   }, [isEditMode, eventToEdit]);
 
   const handleTagToggle = tagId => {
-    setSelectedTagIds(prev => {
-      if (prev.includes(tagId)) return prev.filter(id => id !== tagId);
-      else return [...prev, tagId];
-    });
+    setSelectedTagIds(prev =>
+      prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
+    );
   };
 
   const handleChange = e => {
@@ -395,15 +437,11 @@ export default function EventAdminForm({ eventToEdit }) {
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
-  // Dropzone (アイキャッチ)
   const onDropEyeCatch = useCallback(acceptedFiles => {
     if (acceptedFiles && acceptedFiles[0]) {
       const file = acceptedFiles[0];
       setUploadFile(file);
-      setFormData(prev => ({
-        ...prev,
-        image_url: URL.createObjectURL(file),
-      }));
+      setFormData(prev => ({ ...prev, image_url: URL.createObjectURL(file) }));
     }
   }, []);
 
@@ -413,7 +451,6 @@ export default function EventAdminForm({ eventToEdit }) {
     multiple: false,
   });
 
-  // Dropzone (ギャラリー)
   const onDropGallery = useCallback(acceptedFiles => {
     if (acceptedFiles) {
       const newFiles = acceptedFiles.map(file => ({
@@ -537,29 +574,19 @@ export default function EventAdminForm({ eventToEdit }) {
             const fileExt = file.name.split(".").pop();
             const fileName = `gallery_${targetEventId}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
             const filePath = `${fileName}`;
-
             const { error: upError } = await supabase.storage
               .from("events-images")
               .upload(filePath, file);
-
             if (upError) throw upError;
-
             const { data: urlData } = supabase.storage
               .from("events-images")
               .getPublicUrl(filePath);
-
-            return {
-              event_id: targetEventId,
-              image_url: urlData.publicUrl,
-            };
+            return { event_id: targetEventId, image_url: urlData.publicUrl };
           });
-
           const uploadedImagesData = await Promise.all(uploadPromises);
-
           const { error: insertImgError } = await supabase
             .from("event_images")
             .insert(uploadedImagesData);
-
           if (insertImgError) throw insertImgError;
         }
       }
@@ -567,7 +594,7 @@ export default function EventAdminForm({ eventToEdit }) {
       alert(
         isEditMode ? "イベントを更新しました！" : "イベントを作成しました！"
       );
-      router.push(`/events/${targetEventId}`);
+      router.push(`/events/${targetEventId}?source=admin`);
       router.refresh();
     } catch (error) {
       console.error("イベントの保存に失敗:", error.message);
@@ -577,405 +604,388 @@ export default function EventAdminForm({ eventToEdit }) {
     }
   };
 
+  // パンくずリスト
+  const crumbs = [
+    { label: "ボランティア管理", href: "/volunteer-registration/admin/events" },
+    { label: isEditMode ? "編集" : "新規登録", href: "#" },
+  ];
+  const baseCrumb = { label: "マイページ", href: "/mypage" };
+
   return (
-    <FormContainer onSubmit={handleSubmit}>
-      <PageTitle>
-        {isEditMode ? "ボランティアを編集" : "ボランティアを新規登録"}
-      </PageTitle>
+    <PageWrapper>
+      <StickyHeader>
+        <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
+      </StickyHeader>
 
-      {/* --- 基本情報 --- */}
-      <FormGroup>
-        <Label className="required" htmlFor="name">
-          イベント名
-        </Label>
-        <Input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          placeholder="例: 第1回 ビーチクリーン活動"
-        />
-      </FormGroup>
+      <FormContainer onSubmit={handleSubmit}>
+        <PageTitle>
+          {isEditMode ? "ボランティアを編集" : "ボランティアを新規登録"}
+        </PageTitle>
 
-      {/* --- 日時 --- */}
-      <GridWrapper>
         <FormGroup>
-          <Label className="required" htmlFor="start_datetime">
-            開始日時
+          <Label className="required" htmlFor="name">
+            イベント名
           </Label>
           <Input
-            type="datetime-local"
-            id="start_datetime"
-            name="start_datetime"
-            value={formData.start_datetime}
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
             onChange={handleChange}
             required
+            placeholder="例: 第1回 ビーチクリーン活動"
           />
         </FormGroup>
-        {/* --- 終了日時 --- */}
-        <FormGroup>
-          <Label className="required" htmlFor="end_datetime">
-            終了日時
-          </Label>
-          <Input
-            type="datetime-local"
-            id="end_datetime"
-            name="end_datetime"
-            value={formData.end_datetime}
-            onChange={handleChange}
-            required
-          />
-        </FormGroup>
-      </GridWrapper>
 
-      {/* --- タグ選択 --- */}
-      <FormGroup>
-        <Label>タグ (複数選択)</Label>
-        <TagSelectionContainer>
-          {availableTags.length > 0 ? (
-            availableTags.map(tag => (
-              <TagLabel
-                key={tag.id}
-                isChecked={selectedTagIds.includes(tag.id)}
-              >
-                <TagCheckbox
-                  type="checkbox"
-                  checked={selectedTagIds.includes(tag.id)}
-                  onChange={() => handleTagToggle(tag.id)}
-                />
-                {selectedTagIds.includes(tag.id) && <span>✓</span>}
-                {tag.name}
-              </TagLabel>
-            ))
-          ) : (
-            <p style={{ color: "#888", fontSize: "0.9rem" }}>
-              タグが見つかりません
-            </p>
+        <GridWrapper>
+          <FormGroup>
+            <Label className="required" htmlFor="start_datetime">
+              開始日時
+            </Label>
+            <DateInputWrapper>
+              <Input
+                type="datetime-local"
+                id="start_datetime"
+                name="start_datetime"
+                value={formData.start_datetime}
+                onChange={handleChange}
+                required
+              />
+            </DateInputWrapper>
+          </FormGroup>
+          <FormGroup>
+            <Label className="required" htmlFor="end_datetime">
+              終了日時
+            </Label>
+            <DateInputWrapper>
+              <Input
+                type="datetime-local"
+                id="end_datetime"
+                name="end_datetime"
+                value={formData.end_datetime}
+                onChange={handleChange}
+                required
+              />
+            </DateInputWrapper>
+          </FormGroup>
+        </GridWrapper>
+
+        {/* タグ選択 */}
+        <FormGroup>
+          <Label>タグ (複数選択)</Label>
+          <TagSelectionContainer>
+            {availableTags.length > 0 ? (
+              availableTags.map(tag => (
+                <TagLabel
+                  key={tag.id}
+                  isChecked={selectedTagIds.includes(tag.id)}
+                >
+                  <TagCheckbox
+                    type="checkbox"
+                    checked={selectedTagIds.includes(tag.id)}
+                    onChange={() => handleTagToggle(tag.id)}
+                  />
+                  {selectedTagIds.includes(tag.id) && <span>✓</span>}
+                  {tag.name}
+                </TagLabel>
+              ))
+            ) : (
+              <p style={{ color: "#888", fontSize: "0.9rem" }}>
+                タグが見つかりません
+              </p>
+            )}
+          </TagSelectionContainer>
+        </FormGroup>
+
+        {/* アイキャッチ画像 */}
+        <FormGroup>
+          <Label>アイキャッチ画像 (1枚)</Label>
+          <DropzoneContainer
+            {...eyeCatchDropzone.getRootProps()}
+            isDragActive={eyeCatchDropzone.isDragActive}
+          >
+            <input {...eyeCatchDropzone.getInputProps()} />
+            <UploadIcon>
+              <FaCloudUploadAlt />
+            </UploadIcon>
+            <UploadText>
+              {eyeCatchDropzone.isDragActive
+                ? "ここにドロップ！"
+                : "クリックまたは画像をドラッグ"}
+            </UploadText>
+            <UploadSubText>PNG, JPG, WebP (最大5MB)</UploadSubText>
+          </DropzoneContainer>
+          {formData.image_url && (
+            <EyeCatchPreview>
+              <Image
+                src={formData.image_url}
+                alt="アイキャッチ"
+                layout="fill"
+                objectFit="cover"
+                onError={() =>
+                  setFormData(prev => ({ ...prev, image_url: "" }))
+                }
+              />
+            </EyeCatchPreview>
           )}
-        </TagSelectionContainer>
-      </FormGroup>
+        </FormGroup>
 
-      {/* --- 画像アップロード --- */}
-      <FormGroup>
-        <Label>アイキャッチ画像 (1枚)</Label>
-        <DropzoneContainer
-          {...eyeCatchDropzone.getRootProps()}
-          isDragActive={eyeCatchDropzone.isDragActive}
-        >
-          <input {...eyeCatchDropzone.getInputProps()} />
-          <UploadIcon>
-            <FaCloudUploadAlt />
-          </UploadIcon>
-          <UploadText>
-            {eyeCatchDropzone.isDragActive
-              ? "ここにドロップ！"
-              : "クリックまたは画像をドラッグ"}
-          </UploadText>
-          <UploadSubText>PNG, JPG, WebP (最大5MB)</UploadSubText>
-        </DropzoneContainer>
+        {/* 追加画像 */}
+        <FormGroup>
+          <Label>追加画像（スライドショー用・複数可）</Label>
+          <DropzoneContainer
+            {...galleryDropzone.getRootProps()}
+            isDragActive={galleryDropzone.isDragActive}
+            minHeight="150px"
+          >
+            <input {...galleryDropzone.getInputProps()} />
+            <UploadIcon style={{ fontSize: "2rem", marginBottom: "8px" }}>
+              <FaImages />
+            </UploadIcon>
+            <UploadText>追加画像を選択</UploadText>
+            <UploadSubText>複数枚アップロードできます</UploadSubText>
+          </DropzoneContainer>
+          {(galleryImages.length > 0 || newGalleryFiles.length > 0) && (
+            <GalleryGrid>
+              {galleryImages.map(img => (
+                <GalleryItem key={img.id}>
+                  <Image
+                    src={img.image_url}
+                    alt="追加画像"
+                    layout="fill"
+                    objectFit="cover"
+                  />
+                  <RemoveImageButton
+                    type="button"
+                    onClick={() => removeExistingGalleryImage(img.id)}
+                  >
+                    <FaTrash size={14} />
+                  </RemoveImageButton>
+                </GalleryItem>
+              ))}
+              {newGalleryFiles.map((item, index) => (
+                <GalleryItem key={`new-${index}`}>
+                  <Image
+                    src={item.previewUrl}
+                    alt="新規画像"
+                    layout="fill"
+                    objectFit="cover"
+                  />
+                  <RemoveImageButton
+                    type="button"
+                    onClick={() => removeNewGalleryImage(index)}
+                  >
+                    <FaTrash size={14} />
+                  </RemoveImageButton>
+                </GalleryItem>
+              ))}
+            </GalleryGrid>
+          )}
+        </FormGroup>
 
-        {formData.image_url && (
-          <EyeCatchPreview>
-            <Image
-              src={formData.image_url}
-              alt="アイキャッチ"
-              layout="fill"
-              objectFit="cover"
-              onError={() => setFormData(prev => ({ ...prev, image_url: "" }))}
+        {/* ... (詳細情報エリア: appeal, experience 含む) ... */}
+        <FormGroup>
+          <Label htmlFor="short_description">短い紹介文 (一覧用)</Label>
+          <Textarea
+            id="short_description"
+            name="short_description"
+            value={formData.short_description}
+            onChange={handleChange}
+            style={{ minHeight: "80px" }}
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label htmlFor="long_description">長い紹介文 (詳細用)</Label>
+          <Textarea
+            id="long_description"
+            name="long_description"
+            value={formData.long_description}
+            onChange={handleChange}
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label htmlFor="appeal">このボランティアの魅力 </Label>
+          <Textarea
+            id="appeal"
+            name="appeal"
+            value={formData.appeal}
+            onChange={handleChange}
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label htmlFor="experience">得られる経験・スキル </Label>
+          <Textarea
+            id="experience"
+            name="experience"
+            value={formData.experience}
+            onChange={handleChange}
+          />
+        </FormGroup>
+
+        <GridWrapper>
+          <FormGroup>
+            <Label htmlFor="place">開催場所</Label>
+            <Input
+              type="text"
+              id="place"
+              name="place"
+              value={formData.place}
+              onChange={handleChange}
             />
-          </EyeCatchPreview>
-        )}
-      </FormGroup>
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="fee" className="required">
+              費用
+            </Label>
+            <Input
+              type="number"
+              id="fee"
+              name="fee"
+              value={formData.fee}
+              onChange={handleChange}
+              required
+            />
+          </FormGroup>
+        </GridWrapper>
 
-      {/* --- 追加画像ギャラリー --- */}
-      <FormGroup>
-        <Label>追加画像（スライドショー用・複数可）</Label>
-        <DropzoneContainer
-          {...galleryDropzone.getRootProps()}
-          isDragActive={galleryDropzone.isDragActive}
-          minHeight="150px"
-        >
-          <input {...galleryDropzone.getInputProps()} />
-          <UploadIcon style={{ fontSize: "2rem", marginBottom: "8px" }}>
-            <FaImages />
-          </UploadIcon>
-          <UploadText>追加画像を選択</UploadText>
-          <UploadSubText>複数枚アップロードできます</UploadSubText>
-        </DropzoneContainer>
+        <GridWrapper>
+          <FormGroup>
+            <Label htmlFor="prefecture">都道府県</Label>
+            <Input
+              type="text"
+              id="prefecture"
+              name="prefecture"
+              value={formData.prefecture}
+              onChange={handleChange}
+              placeholder="例: 千葉県"
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="city">市町村</Label>
+            <Input
+              type="text"
+              id="city"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder="例: 松戸市"
+            />
+          </FormGroup>
+        </GridWrapper>
 
-        {/* プレビューエリア */}
-        {(galleryImages.length > 0 || newGalleryFiles.length > 0) && (
-          <GalleryGrid>
-            {/* 既存の画像 */}
-            {galleryImages.map(img => (
-              <GalleryItem key={img.id}>
-                <Image
-                  src={img.image_url}
-                  alt="追加画像"
-                  layout="fill"
-                  objectFit="cover"
-                />
-                <RemoveImageButton
-                  type="button"
-                  onClick={() => removeExistingGalleryImage(img.id)}
-                >
-                  <FaTrash size={14} />
-                </RemoveImageButton>
-              </GalleryItem>
-            ))}
-            {/* 新規追加予定の画像 */}
-            {newGalleryFiles.map((item, index) => (
-              <GalleryItem key={`new-${index}`}>
-                <Image
-                  src={item.previewUrl}
-                  alt="新規画像"
-                  layout="fill"
-                  objectFit="cover"
-                />
-                <RemoveImageButton
-                  type="button"
-                  onClick={() => removeNewGalleryImage(index)}
-                >
-                  <FaTrash size={14} />
-                </RemoveImageButton>
-              </GalleryItem>
-            ))}
-          </GalleryGrid>
-        )}
-      </FormGroup>
-
-      {/* --- 紹介文 --- */}
-      <FormGroup>
-        <Label htmlFor="short_description">短い紹介文 (一覧用)</Label>
-        <Textarea
-          id="short_description"
-          name="short_description"
-          value={formData.short_description}
-          onChange={handleChange}
-          placeholder="イベントの概要を100文字程度で入力してください。"
-          style={{ minHeight: "80px" }}
-        />
-      </FormGroup>
-
-      {/* --- 長い紹介文 --- */}
-      <FormGroup>
-        <Label htmlFor="long_description">長い紹介文 (詳細用)</Label>
-        <Textarea
-          id="long_description"
-          name="long_description"
-          value={formData.long_description}
-          onChange={handleChange}
-          placeholder="イベントの詳細な内容を入力してください。"
-        />
-      </FormGroup>
-
-      {/* --- 魅力・経験 --- */}
-      <FormGroup>
-        <Label htmlFor="appeal">このボランティアの魅力</Label>
-        <Textarea
-          id="appeal"
-          name="appeal"
-          value={formData.appeal}
-          onChange={handleChange}
-          placeholder="例: 初心者でも安心して参加できます！お昼には美味しいお弁当が出ます。"
-        />
-      </FormGroup>
-
-      {/* --- 得られる経験・スキル --- */}
-      <FormGroup>
-        <Label htmlFor="experience">得られる経験・スキル</Label>
-        <Textarea
-          id="experience"
-          name="experience"
-          value={formData.experience}
-          onChange={handleChange}
-          placeholder="例: チームワーク、環境問題への理解、地域の人との交流"
-        />
-      </FormGroup>
-
-      {/* --- 場所・費用 --- */}
-      <GridWrapper>
-        {/* --- 開催場所 --- */}
         <FormGroup>
-          <Label htmlFor="place">開催場所</Label>
+          <Label htmlFor="access">アクセス</Label>
+          <Textarea
+            id="access"
+            name="access"
+            value={formData.access}
+            onChange={handleChange}
+            style={{ minHeight: "80px" }}
+          />
+        </FormGroup>
+
+        <GridWrapper>
+          <FormGroup>
+            <Label htmlFor="latitude">緯度</Label>
+            <Input
+              type="number"
+              step="any"
+              id="latitude"
+              name="latitude"
+              value={formData.latitude}
+              onChange={handleChange}
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="longitude">経度</Label>
+            <Input
+              type="number"
+              step="any"
+              id="longitude"
+              name="longitude"
+              value={formData.longitude}
+              onChange={handleChange}
+            />
+          </FormGroup>
+        </GridWrapper>
+
+        <FormGroup>
+          <Label htmlFor="website_url">公式サイトURL</Label>
+          <Input
+            type="url"
+            id="website_url"
+            name="website_url"
+            value={formData.website_url}
+            onChange={handleChange}
+          />
+        </FormGroup>
+
+        <GridWrapper>
+          <FormGroup>
+            <Label htmlFor="capacity">定員</Label>
+            <Input
+              type="number"
+              id="capacity"
+              name="capacity"
+              value={formData.capacity}
+              onChange={handleChange}
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="organaizer">主催者</Label>
+            <Input
+              type="text"
+              id="organaizer"
+              name="organaizer"
+              value={formData.organaizer}
+              onChange={handleChange}
+            />
+          </FormGroup>
+        </GridWrapper>
+
+        <FormGroup>
+          <Label htmlFor="belongings">持ち物</Label>
           <Input
             type="text"
-            id="place"
-            name="place"
-            value={formData.place}
+            id="belongings"
+            name="belongings"
+            value={formData.belongings}
             onChange={handleChange}
           />
         </FormGroup>
-
-        {/* --- 費用 --- */}
         <FormGroup>
-          <Label htmlFor="fee" className="required">
-            費用
-          </Label>
-          <Input
-            type="number"
-            id="fee"
-            name="fee"
-            value={formData.fee}
-            onChange={handleChange}
-            required
-          />
-        </FormGroup>
-      </GridWrapper>
-
-      {/* --- 都道府県・市町村 --- */}
-      <GridWrapper>
-        {/* --- 都道府県 --- */}
-        <FormGroup>
-          <Label htmlFor="prefecture">都道府県</Label>
+          <Label htmlFor="clothing">服装</Label>
           <Input
             type="text"
-            id="prefecture"
-            name="prefecture"
-            value={formData.prefecture}
+            id="clothing"
+            name="clothing"
+            value={formData.clothing}
             onChange={handleChange}
-            placeholder="例: 千葉県"
           />
         </FormGroup>
-
-        {/* --- 市町村 --- */}
         <FormGroup>
-          <Label htmlFor="city">市町村</Label>
-          <Input
-            type="text"
-            id="city"
-            name="city"
-            value={formData.city}
+          <Label htmlFor="selection_flow">選考フロー</Label>
+          <Textarea
+            id="selection_flow"
+            name="selection_flow"
+            value={formData.selection_flow}
             onChange={handleChange}
-            placeholder="例: 松戸市"
-          />
-        </FormGroup>
-      </GridWrapper>
-
-      {/* --- アクセス --- */}
-      <FormGroup>
-        <Label htmlFor="access">アクセス</Label>
-        <Textarea
-          id="access"
-          name="access"
-          value={formData.access}
-          onChange={handleChange}
-          placeholder="例: ○○駅 徒歩5分"
-          style={{ minHeight: "80px" }}
-        />
-      </FormGroup>
-
-      {/* --- 緯度・経度 --- */}
-      <GridWrapper>
-        {/* --- 緯度 --- */}
-        <FormGroup>
-          <Label htmlFor="latitude">緯度</Label>
-          <Input
-            type="number"
-            step="any"
-            id="latitude"
-            name="latitude"
-            value={formData.latitude}
-            onChange={handleChange}
+            style={{ minHeight: "80px" }}
           />
         </FormGroup>
 
-        {/* --- 経度 --- */}
-        <FormGroup>
-          <Label htmlFor="longitude">経度</Label>
-          <Input
-            type="number"
-            step="any"
-            id="longitude"
-            name="longitude"
-            value={formData.longitude}
-            onChange={handleChange}
-          />
-        </FormGroup>
-      </GridWrapper>
-
-      {/* --- 公式サイトURL --- */}
-      <FormGroup>
-        <Label htmlFor="website_url">公式サイトURL</Label>
-        <Input
-          type="url"
-          id="website_url"
-          name="website_url"
-          value={formData.website_url}
-          onChange={handleChange}
-          placeholder="https://..."
-        />
-      </FormGroup>
-
-      {/* --- 定員・主催者 --- */}
-      <GridWrapper>
-        {/* --- 定員 --- */}
-        <FormGroup>
-          <Label htmlFor="capacity">定員</Label>
-          <Input
-            type="number"
-            id="capacity"
-            name="capacity"
-            value={formData.capacity}
-            onChange={handleChange}
-          />
-        </FormGroup>
-
-        {/* --- 主催者 --- */}
-        <FormGroup>
-          <Label htmlFor="organaizer">主催者</Label>
-          <Input
-            type="text"
-            id="organaizer"
-            name="organaizer"
-            value={formData.organaizer}
-            onChange={handleChange}
-          />
-        </FormGroup>
-      </GridWrapper>
-
-      {/* --- 持ち物 --- */}
-      <FormGroup>
-        <Label htmlFor="belongings">持ち物</Label>
-        <Input
-          type="text"
-          id="belongings"
-          name="belongings"
-          value={formData.belongings}
-          onChange={handleChange}
-        />
-      </FormGroup>
-
-      {/* --- 服装 --- */}
-      <FormGroup>
-        <Label htmlFor="clothing">服装</Label>
-        <Input
-          type="text"
-          id="clothing"
-          name="clothing"
-          value={formData.clothing}
-          onChange={handleChange}
-        />
-      </FormGroup>
-
-      {/* --- 選考フロー --- */}
-      <FormGroup>
-        <Label htmlFor="selection_flow">選考フロー</Label>
-        <Textarea
-          id="selection_flow"
-          name="selection_flow"
-          value={formData.selection_flow}
-          onChange={handleChange}
-          style={{ minHeight: "80px" }}
-        />
-      </FormGroup>
-
-      {/* --- 送信ボタン --- */}
-      <SubmitButton type="submit" disabled={isLoading}>
-        {isLoading ? "保存中..." : isEditMode ? "更新する" : "登録する"}
-      </SubmitButton>
-    </FormContainer>
+        <ButtonGroup>
+          <CancelButton
+            type="button"
+            onClick={() => router.push("/volunteer-registration/admin/events")}
+          >
+            キャンセル
+          </CancelButton>
+          <SubmitButton type="submit" disabled={isLoading}>
+            {isLoading ? "保存中..." : isEditMode ? "更新する" : "登録する"}
+          </SubmitButton>
+        </ButtonGroup>
+      </FormContainer>
+    </PageWrapper>
   );
 }

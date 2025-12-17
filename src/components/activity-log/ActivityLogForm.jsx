@@ -1,5 +1,3 @@
-// 新規作成・編集フォームコンポーネント
-
 "use client";
 
 import { useState } from "react";
@@ -8,131 +6,220 @@ import { supabase } from "@/lib/supabaseClient";
 import styled from "@emotion/styled";
 import Breadcrumbs from "../common/Breadcrumbs";
 
-// Emotionでスタイル定義
+// --- Emotion Styles ---
 
-const FormContainer = styled.form`
-  padding: 24px 24px 150px 24px;
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #f5fafc; /* マイページと同じ背景色 */
+  padding-bottom: 40px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+`;
+
+// パンくずリストを固定するためのラッパー
+const StickyHeader = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #f5fafc; /* 透けないように背景色を指定 */
+`;
+
+const ContentContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
+  padding: 0 20px;
+  @media (max-width: 600px) {
+    margin-bottom: 100px;
+  }
 `;
 
 const PageTitle = styled.h1`
-  font-size: 1.8rem;
-  font-weight: bold;
-  margin-bottom: 24px;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 20px 0 32px 0;
+  color: #333;
+  text-align: center;
 `;
 
-// 各入力項目のラッパー
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background-color: #fff;
+  padding: 32px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15); /* ふんわり青い影 */
+
+  @media (max-width: 600px) {
+    padding: 20px;
+  }
+`;
+
 const FormGroup = styled.div`
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;
 
-// 入力項目のラベル
 const Label = styled.label`
-  display: block;
-  font-weight: bold;
-  margin-bottom: 8px;
-  font-size: 1rem;
+  font-weight: 600;
+  color: #555;
+  font-size: 0.95rem;
+
+  /* 必須マーク */
+  &.required::after {
+    content: " *";
+    color: #e74c3c;
+    margin-left: 4px;
+  }
 `;
 
-// 1行の入力欄 (input)
 const Input = styled.input`
-  width: 100%;
   padding: 12px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+  }
 `;
 
-// 複数行の入力欄 (textarea)
 const Textarea = styled.textarea`
-  width: 100%;
   padding: 12px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
   min-height: 120px;
   font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+  }
 `;
 
-// ボタン配置用コンテナ
-const ButtonContainer = styled.div`
+// スマホ対応グリッド（PCは2列、スマホは1列）
+const GridWrapper = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const ButtonGroup = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap; /* スマホでボタンが多すぎたら折り返す */
 `;
 
-// 保存ボタン
+// メインボタン（青グラデーション）
 const SubmitButton = styled.button`
-  padding: 12px 24px;
-  font-size: 1.1rem;
-  font-weight: bold;
+  flex: 2; /* キャンセルより大きく */
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   color: white;
-  background-color: #007bff;
   border: none;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 
-  &:hover {
-    background-color: #0056b3;
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(74, 144, 226, 0.2);
   }
 
   &:disabled {
-    background-color: #ccc;
+    background: #ccc;
     cursor: not-allowed;
+    box-shadow: none;
   }
 `;
 
-// 削除ボタン
-const DeleteButton = styled.button`
-  padding: 10px 20px;
-  font-size: 1rem;
+// キャンセルボタン（白背景・シンプル）
+const CancelButton = styled.button`
+  flex: 1;
+  background-color: #fff;
+  color: #666;
+  border: 2px solid #eee;
+  padding: 14px;
+  border-radius: 30px;
+  font-size: 16px;
   font-weight: bold;
-  color: #ff4d4d;
-  background-color: transparent;
-  border: 2px solid #ff4d4d;
-  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: #ff4d4d;
-    color: white;
+    background-color: #f9f9f9;
+    border-color: #ddd;
+    color: #444;
   }
 
-  &:disabled {
-    background-color: #ccc;
-    border-color: #ccc;
-    color: #666;
-    cursor: not-allowed;
+  @media (max-width: 600px) {
+    font-size: 0.7rem;
   }
 `;
 
-// propsでlogToEditを受け取る（新規作成の時はundefinedになる）
+// 削除ボタン（赤枠）
+const DeleteButton = styled.button`
+  flex: 1;
+  background-color: #fff;
+  color: #ff4d4d;
+  border: 2px solid #ffecec;
+  padding: 14px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #fff5f5;
+    border-color: #ff4d4d;
+  }
+
+  @media (max-width: 600px) {
+    font-size: 0.7rem;
+  }
+`;
+
+// --- Component 本体 ---
+
 export default function ActivityLogForm({ logToEdit }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false); // 保存中の状態管理
-  const [isDeleting, setIsDeleting] = useState(false); // 削除中の状態管理
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // フォームのモードを判別。logToEdit があれば「編集モード」、なければ「新規モード」
   const isEditMode = Boolean(logToEdit);
 
-  // フォームの各入力値の状態管理。編集モードなら logToEdit の値を、新規モードなら空文字を初期値にする
+  // フォームの各入力値の状態管理
   const [formData, setFormData] = useState({
     name: logToEdit?.name || "",
-    datetime: logToEdit?.datetime ? logToEdit.datetime.split("T")[0] : "", // 日付形式に合わせる
+    datetime: logToEdit?.datetime ? logToEdit.datetime.split("T")[0] : "",
     reason: logToEdit?.reason || "",
-    activity_scale: logToEdit?.activity_scale || "",
-    numbers: console.logToEdit?.numbers || "",
+    // activity_scale は削除！
+    numbers: logToEdit?.numbers || "",
     content: logToEdit?.content || "",
     learning: logToEdit?.learning || "",
     reflection: logToEdit?.reflection || "",
   });
 
-  // 入力欄が変わった時に、formData の状態を更新する関数
   const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -141,67 +228,57 @@ export default function ActivityLogForm({ logToEdit }) {
     }));
   };
 
-  // フォームの送信処理(保存ボタンが押されたとき)
   const handleSubmit = async e => {
-    e.preventDefault(); // ページの再読み込みを防ぐ
+    e.preventDefault();
     setIsLoading(true);
 
-    // 入力必須項目のチェック（例：名前と日付）
     if (!formData.name || !formData.datetime) {
       alert("活動名と活動日は必須です。");
       setIsLoading(false);
       return;
     }
 
-    // ログインユーザーの取得
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
       alert("ログインしてください");
+      setIsLoading(false);
       return;
     }
 
-    // datetimeはtimestamptz型だから、YYYY-MM-DDをYYYY-MM-DDTHH:MM:SSZみたいなISO形式に直す
     const submissionData = {
       ...formData,
       user_id: user.id,
       datetime: new Date(formData.datetime).toISOString(),
       numbers:
         formData.numbers && !isNaN(parseInt(formData.numbers))
-          ? parseInt(formData.numbers, 10) // 文字列の "50" を 数値の 50 に変換
+          ? parseInt(formData.numbers, 10)
           : null,
+      // activity_scale は送らない
     };
 
-    // try...finally を使って、ローディング解除を確実に実行する
     try {
       if (isEditMode) {
-        // 「編集モード」の処理
+        // --- 更新 ---
         const { error } = await supabase
           .from("activity_log")
-          .update(submissionData) // フォームのデータで更新
-          .eq("id", logToEdit.id); // logToEditのIDと一致するもの
+          .update(submissionData)
+          .eq("id", logToEdit.id);
 
-        if (error) {
-          throw error; // エラーを catch ブロックに投げる
-        }
-
+        if (error) throw error;
         alert("活動記録を更新しました！");
-        // 成功したら、その記録の「詳細ページ」に戻る
         router.push(`/activity-log/${logToEdit.id}`);
-        router.refresh(); // サーバーのデータを再取得させる
+        router.refresh();
       } else {
-        // 「新規作成モード」の処理
+        // --- 新規作成 ---
         const { data, error } = await supabase
           .from("activity_log")
           .insert([submissionData])
           .select()
           .single();
 
-        if (error) {
-          throw error; // エラーを catch ブロックに投げる
-        }
-
+        if (error) throw error;
         alert("活動記録を作成しました！");
         if (data && data.id) {
           router.push(`/activity-log/${data.id}`);
@@ -211,55 +288,38 @@ export default function ActivityLogForm({ logToEdit }) {
       }
       router.refresh();
     } catch (error) {
-      // エラーハンドリングを共通化
-      console.error("活動記録の保存に失敗:", error.message);
+      console.error("保存エラー:", error.message);
       alert("エラーが発生しました。");
     } finally {
-      // 成功しても失敗しても、ローディングを解除する
       setIsLoading(false);
     }
   };
 
-  // 削除ボタンが押されたときの処理
   const handleDelete = async () => {
-    // 編集モードじゃなければ何もしない
     if (!isEditMode) return;
-
-    // 本当に削除するか、ユーザーに確認する
-    const confirmed = window.confirm(
-      "本当にこの活動記録を削除しますか？\nこの操作は元に戻せません。"
-    );
-
-    if (!confirmed) {
-      return; // ユーザーが「キャンセル」を押した
-    }
+    if (!confirm("本当に削除しますか？\nこの操作は元に戻せません。")) return;
 
     setIsDeleting(true);
-
     try {
-      // Supabaseからデータを削除
       const { error } = await supabase
         .from("activity_log")
         .delete()
         .eq("id", logToEdit.id);
 
-      if (error) {
-        throw error; // catch ブロックに投げる
-      }
+      if (error) throw error;
 
-      // 成功したらアラートを出して、一覧ページに飛ばす
       alert("活動記録を削除しました。");
       router.push("/activity-log");
-      router.refresh(); // 一覧ページのデータを最新にする
+      router.refresh();
     } catch (error) {
-      console.error("活動記録の削除に失敗:", error.message);
+      console.error("削除エラー:", error.message);
       alert("エラーが発生しました。");
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // パンくずリスト用のデータ
+  // パンくずリスト
   const crumbs = [
     { label: "活動の記録", href: "/activity-log" },
     { label: isEditMode ? "活動記録を編集" : "活動記録を新規作成", href: "#" },
@@ -267,136 +327,135 @@ export default function ActivityLogForm({ logToEdit }) {
   const baseCrumb = { label: "マイページ", href: "/mypage" };
 
   return (
-    <>
-      <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
-      <FormContainer onSubmit={handleSubmit}>
+    <PageWrapper>
+      {/* 1. パンくずリストを固定ヘッダー内に配置 */}
+      <StickyHeader>
+        <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
+      </StickyHeader>
+
+      <ContentContainer>
         <PageTitle>
           {isEditMode ? "活動記録を編集" : "活動記録を新規作成"}
         </PageTitle>
 
-        {/* 活動名 */}
-        <FormGroup>
-          <Label htmlFor="name">活動名 (*必須*)</Label>
-          <Input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            placeholder="例：令和〇年能登半島地震　災害ボランティア"
-          />
-        </FormGroup>
+        <Form onSubmit={handleSubmit}>
+          {/* 活動名 */}
+          <FormGroup>
+            <Label className="required" htmlFor="name">
+              活動名
+            </Label>
+            <Input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              placeholder="例：令和〇年能登半島地震　災害ボランティア"
+            />
+          </FormGroup>
 
-        {/* 活動日 */}
-        <FormGroup>
-          <Label htmlFor="datetime">活動日 (*必須*)</Label>
-          <Input
-            type="date" // HTML5の日付ピッカーを使う
-            id="datetime"
-            name="datetime"
-            value={formData.datetime}
-            onChange={handleChange}
-            required
-          />
-        </FormGroup>
+          {/* 日付と参加人数を横並び（スマホは縦並び） */}
+          <GridWrapper>
+            <FormGroup>
+              <Label className="required" htmlFor="datetime">
+                活動日
+              </Label>
+              <Input
+                type="date"
+                id="datetime"
+                name="datetime"
+                value={formData.datetime}
+                onChange={handleChange}
+                required
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label htmlFor="numbers">参加人数 (人)</Label>
+              <Input
+                type="number"
+                id="numbers"
+                name="numbers"
+                value={formData.numbers}
+                onChange={handleChange}
+                placeholder="例：300"
+              />
+            </FormGroup>
+          </GridWrapper>
 
-        {/* 参加した理由・目的 */}
-        <FormGroup>
-          <Label htmlFor="reason">参加した理由・目的</Label>
-          <Textarea
-            id="reason"
-            name="reason"
-            value={formData.reason}
-            onChange={handleChange}
-            placeholder="例：報道で見るだけでなく、実際に自分の目で現地の状況を確かめ、何かできることをしたかったから。"
-          />
-        </FormGroup>
+          {/* 参加した理由・目的 */}
+          <FormGroup>
+            <Label htmlFor="reason">参加した理由・目的</Label>
+            <Textarea
+              id="reason"
+              name="reason"
+              value={formData.reason}
+              onChange={handleChange}
+              placeholder="例：報道で見るだけでなく、実際に自分の目で現地の状況を確かめ、何かできることをしたかったから。"
+            />
+          </FormGroup>
 
-        {/* 活動内容 */}
-        <FormGroup>
-          <Label htmlFor="content">活動内容</Label>
-          <Textarea
-            id="content"
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            placeholder="例：石川県輪島市にて、被災家屋からの家財道具の運び出しと、災害ゴミの分別作業に従事した。"
-          />
-        </FormGroup>
+          {/* 活動内容 */}
+          <FormGroup>
+            <Label htmlFor="content">活動内容</Label>
+            <Textarea
+              id="content"
+              name="content"
+              value={formData.content}
+              onChange={handleChange}
+              placeholder="例：石川県輪島市にて、被災家屋からの家財道具の運び出しと、災害ゴミの分別作業に従事した。"
+            />
+          </FormGroup>
 
-        {/* 活動規模 */}
-        <FormGroup>
-          <Label htmlFor="activity_scale">活動の規模</Label>
-          <Input
-            id="activity_scale"
-            name="activity_scale"
-            value={formData.activity_scale}
-            onChange={handleChange}
-            placeholder="例：大規模、約300名くらいのボランティアが集まった"
-          />
-        </FormGroup>
+          {/* 活動による学び */}
+          <FormGroup>
+            <Label htmlFor="learning">活動による学び</Label>
+            <Textarea
+              id="learning"
+              name="learning"
+              value={formData.learning}
+              onChange={handleChange}
+              placeholder="例：チームで声を掛け合い、安全と効率を両立させながら作業する重要性を学んだ。"
+            />
+          </FormGroup>
 
-        {/* 参加人数 */}
-        <FormGroup>
-          <Label htmlFor="numbers">参加人数</Label>
-          <Input
-            type="number"
-            id="numbers"
-            name="numbers"
-            value={formData.numbers}
-            onChange={handleChange}
-            placeholder="例：300"
-          />
-        </FormGroup>
+          {/* 活動の感想・反省 */}
+          <FormGroup>
+            <Label htmlFor="reflection">活動の感想・反省</Label>
+            <Textarea
+              id="reflection"
+              name="reflection"
+              value={formData.reflection}
+              onChange={handleChange}
+              placeholder="例：現地の方に直接「ありがとう」と言われ、無力ではないと実感できた。"
+            />
+          </FormGroup>
 
-        {/* 活動による学び */}
-        <FormGroup>
-          <Label htmlFor="learning">活動による学び</Label>
-          <Textarea
-            id="learning"
-            name="learning"
-            value={formData.learning}
-            onChange={handleChange}
-            placeholder="例：チームで声を掛け合い、安全と効率を両立させながら作業する重要性を学んだ。"
-          />
-        </FormGroup>
-
-        {/* 活動の感想・反省 */}
-        <FormGroup>
-          <Label htmlFor="reflection">活動の感想・反省（*必須*）</Label>
-          <Textarea
-            id="reflection"
-            name="reflection"
-            value={formData.reflection}
-            onChange={handleChange}
-            required
-            placeholder="例：現地の方に直接「ありがとう」と言われ、無力ではないと実感できた。"
-          />
-        </FormGroup>
-
-        {/* 保存ボタンと削除ボタン */}
-        <ButtonContainer>
-          {/* 保存ボタン */}
-          <SubmitButton
-            type="submit"
-            disabled={isLoading || isDeleting} // 削除中も保存ボタンは押せないように
-          >
-            {isLoading ? "保存中..." : isEditMode ? "更新する" : "作成する"}
-          </SubmitButton>
-
-          {/* 編集モードの時だけ、削除ボタンを表示 */}
-          {isEditMode && (
-            <DeleteButton
-              type="button" // フォームを送信(submit)しないようにbuttonを指定
-              onClick={handleDelete}
-              disabled={isLoading || isDeleting} // 保存中・削除中どちらも無効化
+          {/* ボタンエリア */}
+          <ButtonGroup>
+            <CancelButton
+              type="button"
+              onClick={() => router.push("/activity-log")} // 一覧に戻る
             >
-              {isDeleting ? "削除中..." : "削除する"}
-            </DeleteButton>
-          )}
-        </ButtonContainer>
-      </FormContainer>
-    </>
+              キャンセル
+            </CancelButton>
+
+            <SubmitButton type="submit" disabled={isLoading || isDeleting}>
+              {isLoading ? "保存中..." : isEditMode ? "更新する" : "作成する"}
+            </SubmitButton>
+
+            {isEditMode && (
+              <DeleteButton
+                type="button"
+                onClick={handleDelete}
+                disabled={isLoading || isDeleting}
+              >
+                {isDeleting ? "削除中..." : "削除する"}
+              </DeleteButton>
+            )}
+          </ButtonGroup>
+        </Form>
+      </ContentContainer>
+    </PageWrapper>
   );
 }

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import ActivityLogDetailPage from "./ActivityLogDetailPage";
-// import { useRouter } from "next/navigation"; // 必要なら使う
 
 export default function ActivityLogDetailContainer({ activityLogId }) {
-  // const router = useRouter();
+  const router = useRouter();
 
   const [log, setLog] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +31,6 @@ export default function ActivityLogDetailContainer({ activityLogId }) {
         setIsLoggedIn(true);
 
         // 2. データ取得 (クライアントサイドで実行)
-        // RLSのおかげで、自分のデータなら取得できるはず！
         const { data, error } = await supabase
           .from("activity_log")
           .select("*")
@@ -43,7 +42,8 @@ export default function ActivityLogDetailContainer({ activityLogId }) {
         setLog(data);
       } catch (error) {
         console.error("活動記録の取得エラー:", error);
-        // エラーハンドリングはお好みで（アラート出すとか）
+        alert("データの取得に失敗しました。");
+        // router.push("/activity-log");
       } finally {
         setLoading(false);
       }
@@ -52,7 +52,7 @@ export default function ActivityLogDetailContainer({ activityLogId }) {
     if (activityLogId) {
       fetchData();
     }
-  }, [activityLogId]);
+  }, [activityLogId, router]);
 
   // ローディング中
   if (loading) {

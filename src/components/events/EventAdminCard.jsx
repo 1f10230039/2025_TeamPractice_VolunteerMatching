@@ -7,6 +7,7 @@ import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { FaCalendar } from "react-icons/fa";
 
 // カード全体（公開用の詳細ページへのリンク）
 const CardContainer = styled(Link)`
@@ -161,7 +162,7 @@ export default function EventAdminCard({ event }) {
   };
 
   return (
-    <CardContainer href={`/events/${id}`}>
+    <CardContainer href={`/events/${id}?source=admin`}>
       <CardHeader>
         <EventName>{name || "無題のイベント"}</EventName>
 

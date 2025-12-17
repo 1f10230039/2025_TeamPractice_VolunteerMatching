@@ -31,19 +31,23 @@ const StyledLink = styled(Link, {
   position: relative;
   overflow: hidden;
 
-  /* ★ isActive (今いるページ) の時のスタイル ★ */
-  /* マイページと同じ青グラデーション */
+  /* ★ isActive (今いるページ) の時のスタイルを変更！ ★ */
   ${props =>
     props.isActive
       ? `
-    background: linear-gradient(135deg, #68B5D5 0%, #4A90E2 100%);
-    color: white;
-    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
-    transform: translateY(-1px);
+    /* アクティブ時: 薄い水色背景 × 濃い青文字 */
+    background-color: #e6f4ff; 
+    color: #007bff;
+    /* 影は消して、フラットにして「押すボタンじゃない感」を出す */
+    box-shadow: none; 
+    transform: none;
+    
+    /* ほんのり青い枠線をつけても締まるかも（お好みで！） */
+    /* border: 1px solid #b3d7ff; */
 
-    /* アイコンも白く */
+    /* アイコンも青く */
     & > svg {
-      color: white;
+      color: #007bff;
     }
   `
       : `
@@ -72,7 +76,7 @@ const StyledLink = styled(Link, {
     height: 1.1rem;
     transition: color 0.3s ease;
     /* 非アクティブ時はちょっと薄く */
-    color: ${props => (props.isActive ? "white" : "#999")};
+    color: ${props => (props.isActive ? "#007bff" : "#999")};
   }
 `;
 

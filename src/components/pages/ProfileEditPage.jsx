@@ -2,63 +2,56 @@
 
 import { useState, useEffect, useCallback } from "react";
 import styled from "@emotion/styled";
-import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabaseClient"; // 相対パス
 import { useDropzone } from "react-dropzone";
-import Image from "next/image";
-
-// --- インラインSVGアイコン ---
-const UserCircleIcon = () => (
-  <svg
-    stroke="currentColor"
-    fill="currentColor"
-    strokeWidth="0"
-    viewBox="0 0 496 512"
-    height="1em"
-    width="1em"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 96c48.6 0 88 39.4 88 88s-39.4 88-88 88-88-39.4-88-88 39.4-88 88-88zm0 344c-58.7 0-111.3-26.6-146.5-68.2 18.8-35.4 55.6-59.8 98.5-59.8 2.4 0 4.8.4 7.1 1.1 13 4.2 26.6 6.9 40.9 6.9 14.3 0 28-2.7 40.9-6.9 2.3-.7 4.7-1.1 7.1-1.1 42.9 0 79.7 24.4 98.5 59.8C359.3 421.4 306.7 448 248 448z"></path>
-  </svg>
-);
-const CameraIcon = () => (
-  <svg
-    stroke="currentColor"
-    fill="currentColor"
-    strokeWidth="0"
-    viewBox="0 0 512 512"
-    height="1em"
-    width="1em"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path d="M512 144v288c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V144c0-26.5 21.5-48 48-48h88l12.3-32.9c7-18.7 24.9-31.1 44.9-31.1h125.5c20 0 37.9 12.4 44.9 31.1L376 96h88c26.5 0 48 21.5 48 48zM376 288c0-66.2-53.8-120-120-120s-120 53.8-120 120 53.8 120 120 120 120-53.8 120-120zm-32 0c0 48.6-39.4 88-88 88s-88-39.4-88-88 39.4-88 88-88 88 39.4 88 88z"></path>
-  </svg>
-);
+import Breadcrumbs from "../common/Breadcrumbs"; // パンくずリストをインポート
+import { FaCamera } from "react-icons/fa";
+import { VscAccount } from "react-icons/vsc";
 
 // --- Emotion Style Definitions ---
 
-const Wrapper = styled.div`
-  padding: 24px;
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #f5fafc; /* マイページと同じ背景色 */
+  padding-bottom: 40px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+`;
+
+// パンくずリストを固定するためのラッパー
+const StickyHeader = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* 背景色がないと透けちゃうので指定 */
+  background-color: #f5fafc;
+`;
+
+const ContentContainer = styled.div`
   max-width: 600px;
   margin: 0 auto;
-  @media (max-width: 600px) {
-    margin-bottom: 150px;
-  }
+  padding: 0 20px;
 `;
 
 const Title = styled.h1`
   font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 24px;
+  font-weight: 800;
+  margin: 20px 0 32px 0;
   color: #333;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 12px;
+  text-align: center;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  background-color: #fff;
+  padding: 32px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15); /* ふんわり青い影 */
+
+  @media (max-width: 600px) {
+    padding: 20px;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -68,64 +61,93 @@ const FormGroup = styled.div`
 `;
 
 const Label = styled.label`
-  font-weight: 500;
+  font-weight: 600;
   color: #555;
+  font-size: 0.95rem;
 `;
 
 const Input = styled.input`
   padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
   font-size: 16px;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+  }
 `;
 
 const Select = styled.select`
   padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
   font-size: 16px;
   background-color: white;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+  }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
   gap: 16px;
-  margin-top: 16px;
+  margin-top: 24px;
 `;
 
+// メインボタン（青グラデーション）
 const SubmitButton = styled.button`
   flex: 1;
-  background-color: #28a745;
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   color: white;
   border: none;
-  padding: 12px;
-  border-radius: 5px;
+  padding: 14px;
+  border-radius: 30px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+
   &:hover:not(:disabled) {
-    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(74, 144, 226, 0.2);
+  }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 `;
 
+// キャンセルボタン（白背景・シンプル）
 const CancelButton = styled.button`
   flex: 1;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 5px;
+  background-color: #fff;
+  color: #666;
+  border: 2px solid #eee;
+  padding: 14px;
+  border-radius: 30px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+
   &:hover {
-    background-color: #5a6268;
+    background-color: #f9f9f9;
+    border-color: #ddd;
+    color: #444;
   }
 `;
 
@@ -133,7 +155,7 @@ const CancelButton = styled.button`
 const AvatarContainer = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 `;
 
 const AvatarWrapper = styled.div`
@@ -143,7 +165,7 @@ const AvatarWrapper = styled.div`
   border-radius: 50%;
   cursor: pointer;
   border: 4px solid #fff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   background-color: #f0f8ff;
   display: flex;
   align-items: center;
@@ -165,7 +187,10 @@ const AvatarWrapper = styled.div`
   `}
 `;
 
-const AvatarImage = styled(Image)`
+// next/image の代わりに通常の img タグを使用
+const AvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 `;
 
@@ -194,7 +219,6 @@ const CameraOverlay = styled.div`
 `;
 
 export default function ProfileEditPage({ initialProfile, universities }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   // フォーム入力値
@@ -207,8 +231,8 @@ export default function ProfileEditPage({ initialProfile, universities }) {
   );
 
   // 画像関連のState
-  const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar_url || ""); // 表示用URL
-  const [uploadFile, setUploadFile] = useState(null); // アップロードするファイル
+  const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar_url || "");
+  const [uploadFile, setUploadFile] = useState(null);
 
   const [faculties, setFaculties] = useState([]);
 
@@ -228,7 +252,7 @@ export default function ProfileEditPage({ initialProfile, universities }) {
     multiple: false,
   });
 
-  // --- データ取得関連 (既存コード) ---
+  // --- データ取得関連 ---
   const fetchFaculties = async uniId => {
     if (!uniId) {
       setFaculties([]);
@@ -265,13 +289,13 @@ export default function ProfileEditPage({ initialProfile, universities }) {
       // 1. 画像が新しく選択されていたらアップロード
       if (uploadFile) {
         const fileExt = uploadFile.name.split(".").pop();
-        const fileName = `${initialProfile.id}/${Date.now()}.${fileExt}`; // ユーザーIDごとのフォルダに保存
+        const fileName = `${initialProfile.id}/${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         // Storageにアップロード
         const { error: uploadError } = await supabase.storage
           .from("avatars")
-          .upload(filePath, uploadFile, { upsert: true }); // 上書き許可
+          .upload(filePath, uploadFile, { upsert: true });
 
         if (uploadError)
           throw new Error(`画像アップロード失敗: ${uploadError.message}`);
@@ -285,7 +309,6 @@ export default function ProfileEditPage({ initialProfile, universities }) {
       }
 
       // 2. プロフィール情報を更新 (UPDATE)
-      // (もし uploadFile がなくても、既存の avatarUrl をそのまま使うか、変更なしで送る)
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -299,7 +322,6 @@ export default function ProfileEditPage({ initialProfile, universities }) {
       if (error) throw error;
 
       alert("プロフィールを更新しました！");
-      router.refresh();
       window.location.href = "/mypage";
     } catch (error) {
       console.error("更新エラー:", error);
@@ -309,97 +331,108 @@ export default function ProfileEditPage({ initialProfile, universities }) {
     }
   };
 
+  // パンくずリスト用データ
+  const crumbs = [{ label: "プロフィール編集", href: "/mypage/edit" }];
+  const baseCrumb = { label: "マイページ", href: "/mypage" };
+
   return (
-    <Wrapper>
-      <Title>プロフィール編集</Title>
+    <PageWrapper>
+      {/* 画面上部に固定されるパンくずリスト */}
+      <StickyHeader>
+        <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
+      </StickyHeader>
 
-      {/* 画像アップロードエリア */}
-      <AvatarContainer>
-        <AvatarWrapper {...getRootProps()} isDragActive={isDragActive}>
-          <input {...getInputProps()} />
+      <ContentContainer>
+        <Title>プロフィール編集</Title>
 
-          {avatarUrl ? (
-            <AvatarImage src={avatarUrl} alt="Avatar" layout="fill" />
-          ) : (
-            <AvatarPlaceholder>
-              <UserCircleIcon />
-            </AvatarPlaceholder>
-          )}
+        {/* 画像アップロードエリア */}
+        <AvatarContainer>
+          <AvatarWrapper {...getRootProps()} isDragActive={isDragActive}>
+            <input {...getInputProps()} />
 
-          {/* ホバー時にカメラアイコンを出すオーバーレイ */}
-          <CameraOverlay>
-            <CameraIcon />
-          </CameraOverlay>
-        </AvatarWrapper>
-      </AvatarContainer>
-      <p
-        style={{
-          textAlign: "center",
-          fontSize: "0.85rem",
-          color: "#666",
-          marginBottom: "20px",
-        }}
-      >
-        アイコンをタップして画像を変更
-      </p>
+            {avatarUrl ? (
+              <AvatarImage src={avatarUrl} alt="Avatar" />
+            ) : (
+              <AvatarPlaceholder>
+                <VscAccount />
+              </AvatarPlaceholder>
+            )}
 
-      <Form onSubmit={handleSubmit}>
-        {/* 名前入力 */}
-        <FormGroup>
-          <Label>名前</Label>
-          <Input
-            type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            required
-          />
-        </FormGroup>
+            {/* ホバー時にカメラアイコンを出すオーバーレイ */}
+            <CameraOverlay>
+              <FaCamera />
+            </CameraOverlay>
+          </AvatarWrapper>
+        </AvatarContainer>
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "0.85rem",
+            color: "#666",
+            marginBottom: "32px",
+          }}
+        >
+          アイコンをタップして画像を変更
+        </p>
 
-        {/* 大学選択 */}
-        <FormGroup>
-          <Label>大学</Label>
-          <Select
-            value={selectedUniversity}
-            onChange={handleUniversityChange}
-            required
-          >
-            <option value="">選択してください</option>
-            {universities.map(uni => (
-              <option key={uni.id} value={uni.id}>
-                {uni.name}
-              </option>
-            ))}
-          </Select>
-        </FormGroup>
+        <Form onSubmit={handleSubmit}>
+          {/* 名前入力 */}
+          <FormGroup>
+            <Label>名前</Label>
+            <Input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+            />
+          </FormGroup>
 
-        {/* 学部選択 */}
-        <FormGroup>
-          <Label>学部</Label>
-          <Select
-            value={selectedFaculty}
-            onChange={e => setSelectedFaculty(e.target.value)}
-            required
-            disabled={!selectedUniversity}
-          >
-            <option value="">選択してください</option>
-            {faculties.map(fac => (
-              <option key={fac.id} value={fac.id}>
-                {fac.name}
-              </option>
-            ))}
-          </Select>
-        </FormGroup>
+          {/* 大学選択 */}
+          <FormGroup>
+            <Label>大学</Label>
+            <Select
+              value={selectedUniversity}
+              onChange={handleUniversityChange}
+              required
+            >
+              <option value="">選択してください</option>
+              {universities.map(uni => (
+                <option key={uni.id} value={uni.id}>
+                  {uni.name}
+                </option>
+              ))}
+            </Select>
+          </FormGroup>
 
-        {/* ボタンエリア */}
-        <ButtonGroup>
-          <CancelButton type="button" onClick={() => router.back()}>
-            キャンセル
-          </CancelButton>
-          <SubmitButton type="submit" disabled={loading}>
-            {loading ? "更新中..." : "更新する"}
-          </SubmitButton>
-        </ButtonGroup>
-      </Form>
-    </Wrapper>
+          {/* 学部選択 */}
+          <FormGroup>
+            <Label>学部</Label>
+            <Select
+              value={selectedFaculty}
+              onChange={e => setSelectedFaculty(e.target.value)}
+              required
+              disabled={!selectedUniversity}
+            >
+              <option value="">選択してください</option>
+              {faculties.map(fac => (
+                <option key={fac.id} value={fac.id}>
+                  {fac.name}
+                </option>
+              ))}
+            </Select>
+          </FormGroup>
+
+          {/* ボタンエリア */}
+          <ButtonGroup>
+            <CancelButton type="button" onClick={() => window.history.back()}>
+              キャンセル
+            </CancelButton>
+            <SubmitButton type="submit" disabled={loading}>
+              {loading ? "更新中..." : "更新する"}
+            </SubmitButton>
+          </ButtonGroup>
+        </Form>
+      </ContentContainer>
+    </PageWrapper>
   );
 }
