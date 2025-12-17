@@ -31,18 +31,16 @@ const StyledLink = styled(Link, {
   position: relative;
   overflow: hidden;
 
-  /* ★ isActive (今いるページ) の時のスタイルを変更！ ★ */
+  /*  isActive (今いるページ) の時のスタイル */
   ${props =>
     props.isActive
       ? `
     /* アクティブ時: 薄い水色背景 × 濃い青文字 */
     background-color: #e6f4ff; 
     color: #007bff;
-    /* 影は消して、フラットにして「押すボタンじゃない感」を出す */
     box-shadow: none; 
     transform: none;
     
-    /* ほんのり青い枠線をつけても締まるかも（お好みで！） */
     /* border: 1px solid #b3d7ff; */
 
     /* アイコンも青く */

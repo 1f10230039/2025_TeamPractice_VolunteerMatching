@@ -72,7 +72,6 @@ const TabButton = styled.button`
     box-shadow: none; 
     transform: none;
     
-    /* ほんのり青い枠線をつけても締まるかも（お好みで！） */
     /* border: 1px solid #b3d7ff; */
 
     /* アイコンも青く */

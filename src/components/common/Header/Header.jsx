@@ -9,14 +9,10 @@ import Image from "next/image";
 // ヘッダー全体を包むコンテナ
 const HeaderContainer = styled.header`
   width: 100%;
-  height: 80px; /* 高さを固定して安定させる */
+  height: 80px;
   padding: 0 24px;
-
-  /* 白ベースで少し透過させる（モダン！） */
   background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px); /* すりガラス効果 */
-
-  /* 下線ではなく、ふんわりした影で浮き上がらせる */
+  backdrop-filter: blur(10px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 
@@ -24,7 +20,7 @@ const HeaderContainer = styled.header`
   justify-content: space-between;
   align-items: center;
 
-  position: sticky; /* スクロールしても上にくっついてくる */
+  position: relative;
   top: 0;
   z-index: 1000; /* 他の要素より手前に */
 
