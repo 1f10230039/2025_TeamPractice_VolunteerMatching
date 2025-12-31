@@ -15,14 +15,62 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// ビューポート設定
+export const viewport = {
+  width: "device-width", // デバイスの幅に合わせる
+  initialScale: 1, // 初期拡大率
+  maximumScale: 1, // 最大拡大率
+  userScalable: false, // スマホで勝手にズームされないようにする
+  themeColor: "#f5fafc", // 背景色に合わせる
+};
+
+// メタデータ設定
 export const metadata = {
-  title: "ボランティアマッチング",
-  description: "Next.jsとSupabaseで作るボランティアマッチングアプリ",
-  icons: {
-    icon: "/icon.png", // 普通のタブアイコン
-    apple: "/icon.png", // iPhone等のホーム画面用
+  title: {
+    template: "%s | Link.U",
+    default: "Link.U",
   },
+  description:
+    "2025年度、INIAD3年時にチーム7-1で制作したボランティアマッチングアプリ",
+
+  // PWA用の設定
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Link.U",
+  },
+
+  // アイコン設定
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png", // iPhoneのホーム画面に追加した時のアイコン
+  },
+
+  // Open Graph設定（SNSでシェアされたときに使われる）
+  openGraph: {
+    title: "Link.U - ボランティアマッチング",
+    description: "学生とボランティアをつなぐプラットフォーム",
+    url: "https://2025-team-practice-volunteer-matchi.vercel.app/",
+    siteName: "Link.U",
+    locale: "ja_JP",
+    type: "website",
+    images: [
+      {
+        url: "/ogp.png",
+        width: 1024,
+        height: 630,
+        alt: "Link.U OGP Image",
+      },
+    ],
+  },
+
+  // Twitter(X)用のカード設定
+  twitter: {
+    card: "summary_large_image",
+    title: "Link.U",
+    description: "学生とボランティアをつなぐプラットフォーム",
+  },
 };
 
 export default function RootLayout({ children }) {

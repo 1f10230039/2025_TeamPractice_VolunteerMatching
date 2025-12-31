@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import styled from "@emotion/styled";
-import { supabase } from "../../lib/supabaseClient"; // 相対パス
+import { supabase } from "@/lib/supabaseClient";
 import { useDropzone } from "react-dropzone";
-import Breadcrumbs from "../common/Breadcrumbs"; // パンくずリストをインポート
+import Breadcrumbs from "@/components/common/Breadcrumbs";
 import { FaCamera } from "react-icons/fa";
 import { VscAccount } from "react-icons/vsc";
 
@@ -15,6 +15,9 @@ const PageWrapper = styled.div`
   background-color: #f5fafc; /* マイページと同じ背景色 */
   padding-bottom: 40px;
   font-family: "Helvetica Neue", Arial, sans-serif;
+  @media (max-width: 600px) {
+    padding-bottom: 120px;
+  }
 `;
 
 // パンくずリストを固定するためのラッパー

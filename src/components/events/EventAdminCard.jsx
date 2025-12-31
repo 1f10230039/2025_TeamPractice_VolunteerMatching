@@ -7,24 +7,30 @@ import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { FaCalendar } from "react-icons/fa";
+import { FaCalendarAlt, FaPen } from "react-icons/fa";
+import { FiTrash2 } from "react-icons/fi";
 
 // カード全体（公開用の詳細ページへのリンク）
 const CardContainer = styled(Link)`
-  display: block;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   padding: 20px;
-  border: 1px solid #ddd;
+  border: 1px solid #e0e0e0;
   border-radius: 12px;
   background-color: #fff;
   text-decoration: none;
   color: inherit;
   transition:
     box-shadow 0.2s ease,
-    transform 0.2s ease;
+    transform 0.2s ease,
+    border-color 0.2s ease;
+  height: 100%;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
     transform: translateY(-4px);
+    border-color: #b0c4de;
   }
 `;
 
@@ -33,71 +39,78 @@ const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   gap: 16px;
 `;
 
 // ボランティア名
 const EventName = styled.h3`
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: bold;
   margin: 0;
-  flex-grow: 1;
+  color: #333;
+  line-height: 1.4;
+
+  flex-grow: 1; /* タイトルが可能な限りスペースを取るようにする */
+  overflow: hidden; /* はみ出し防止 */
+  text-overflow: ellipsis; /* はみ出したら省略記号に */
+  display: -webkit-box; /* WebKit系ブラウザ用 */
+  -webkit-line-clamp: 2; /* 最大2行まで表示 */
+  -webkit-box-orient: vertical; /* 縦方向のボックスにする */
+  max-height: 3.2em; /* 2行分の高さに制限 */
 `;
 
 // ボタンをまとめるコンテナ
 const ButtonContainer = styled.div`
   display: flex;
-  gap: 12px;
-  flex-shrink: 0;
+  gap: 8px;
+  flex-shrink: 0; /* タイトルに押しつぶされないようにする */
 `;
 
-// 編集ボタン
-const EditButton = styled.button`
+// 共通ボタンスタイル
+const BaseActionButton = styled.button`
   padding: 6px 12px;
-  background-color: #f0f0f0;
-  color: #333;
-  border: none;
   border-radius: 6px;
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.8rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: #ddd;
-  }
-`;
-
-// 削除ボタン
-const DeleteButton = styled.button`
-  padding: 6px 12px;
-  background-color: #fff;
-  color: #ff4d4d;
-  border: 1px solid #ff4d4d;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 0.9rem;
-  cursor: pointer;
+  white-space: nowrap;
   transition: all 0.2s ease;
+`;
+
+const EditButton = styled(BaseActionButton)`
+  background-color: #f3f4f6;
+  color: #555;
+  border: 1px solid transparent;
 
   &:hover {
-    background-color: #ff4d4d;
-    color: white;
+    background-color: #e5e7eb;
+    color: #333;
   }
 `;
 
-// イベント開始日
-const EventDate = styled.p`
-  font-size: 0.95rem;
-  color: #555;
-  margin: 0;
-  font-weight: 500;
+const DeleteButton = styled(BaseActionButton)`
+  background-color: #fff;
+  color: #ef4444;
+  border: 1px solid #fca5a5;
 
-  &::before {
-    content: "🗓️";
-    margin-right: 8px;
+  &:hover {
+    background-color: #fee2e2;
+    color: #dc2626;
   }
+`;
+
+// イベント開始日エリア（アイコンとセットにする）
+const EventDateWrapper = styled.div`
+  display: flex;
+  align-items: center; /* アイコンと文字の縦位置を中央揃え */
+  gap: 8px; /* アイコンと文字の間隔 */
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: auto; /* カードの下部に寄せる */
+  padding-top: 12px;
+  border-top: 1px dashed #eee;
 `;
 
 // 日付フォーマット関数
@@ -107,8 +120,9 @@ const formatDate = dateString => {
     const date = new Date(dateString);
     return date.toLocaleDateString("ja-JP", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
+      weekday: "short",
     });
   } catch (e) {
     return "日付形式エラー";
@@ -118,19 +132,16 @@ const formatDate = dateString => {
 export default function EventAdminCard({ event }) {
   const { id, name, start_datetime } = event;
   const router = useRouter();
-  const [isDeleting, setIsDeleting] = useState(false); // 削除中ローディング
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // 編集ボタンが押された時の処理
   const handleEditClick = e => {
-    e.stopPropagation(); // 親のLinkが動かないように
+    e.stopPropagation();
     e.preventDefault();
-    // 管理画面の編集ページに飛ばす
     router.push(`/volunteer-registration/admin/events/${id}/edit`);
   };
 
-  // 削除ボタンが押された時の処理
   const handleDeleteClick = async e => {
-    e.stopPropagation(); // 親のLinkが動かないように
+    e.stopPropagation();
     e.preventDefault();
 
     if (isDeleting) return;
@@ -143,15 +154,9 @@ export default function EventAdminCard({ event }) {
 
     setIsDeleting(true);
     try {
-      // Supabaseから "events" テーブルのデータを削除
       const { error } = await supabase.from("events").delete().eq("id", id);
-
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       alert("イベントを削除しました。");
-      // 削除が成功したら、一覧ページをリフレッシュして、サーバーにデータを再取得させる
       router.refresh();
     } catch (error) {
       console.error("イベントの削除に失敗:", error.message);
@@ -164,17 +169,22 @@ export default function EventAdminCard({ event }) {
   return (
     <CardContainer href={`/events/${id}?source=admin`}>
       <CardHeader>
-        <EventName>{name || "無題のイベント"}</EventName>
+        <EventName title={name}>{name || "無題のイベント"}</EventName>
 
         <ButtonContainer>
-          <EditButton onClick={handleEditClick}>編集</EditButton>
+          <EditButton onClick={handleEditClick}>
+            <FaPen size={12} /> 編集
+          </EditButton>
           <DeleteButton onClick={handleDeleteClick} disabled={isDeleting}>
-            {isDeleting ? "削除中..." : "削除"}
+            {isDeleting ? "..." : <FiTrash2 size={12} />} 削除
           </DeleteButton>
         </ButtonContainer>
       </CardHeader>
 
-      <EventDate>{formatDate(start_datetime)}</EventDate>
+      <EventDateWrapper>
+        <FaCalendarAlt size={16} />
+        <span>{formatDate(start_datetime)}</span>
+      </EventDateWrapper>
     </CardContainer>
   );
 }

@@ -26,6 +26,7 @@ const StickyHeader = styled.div`
   top: 0;
   z-index: 100;
   background-color: #f5fafc;
+  padding-bottom: 10px;
 `;
 
 const FormContainer = styled.form`
@@ -524,7 +525,7 @@ export default function EventAdminForm({ eventToEdit }) {
         prefectures: formData.prefecture,
       };
       delete submissionData.prefecture;
-      
+
       if (isEditMode) {
         submissionData.id = eventToEdit.id;
       }

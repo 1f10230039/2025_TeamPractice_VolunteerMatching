@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import ActivityLogForm from "../activity-log/ActivityLogForm";
+import ActivityLogForm from "@/components/activity-log/ActivityLogForm";
 
 export default function ActivityLogEditContainer({ activityLogId }) {
   const router = useRouter();

@@ -30,6 +30,9 @@ const ContentContainer = styled.div`
   max-width: 1000px; /* カードが並ぶので少し広めに */
   margin: 0 auto;
   padding: 0 20px;
+  @media (max-width: 600px) {
+    padding-bottom: 100px;
+  }
 `;
 
 // ヘッダーエリア
@@ -44,6 +47,9 @@ const PageTitle = styled.h1`
   font-size: 28px;
   font-weight: 800;
   margin: 0;
+  @media (max-width: 600px) {
+    font-size: 22px;
+  }
 `;
 
 // 新規作成ボタン (リッチなデザインに)
@@ -91,7 +97,7 @@ const ListContainer = styled.div`
 
   /* PCなら3列 */
   @media (min-width: 900px) {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 `;
 

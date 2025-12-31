@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import styled from "@emotion/styled";
-import Breadcrumbs from "../common/Breadcrumbs";
+import Breadcrumbs from "@/components/common/Breadcrumbs";
+import { FiSave, FiX, FiTrash2, FiSend } from "react-icons/fi";
 
 // --- Emotion Styles ---
 
@@ -29,6 +30,7 @@ const ContentContainer = styled.div`
   padding: 0 20px;
   @media (max-width: 600px) {
     margin-bottom: 100px;
+    padding: 0 10px;
   }
 `;
 
@@ -113,89 +115,104 @@ const GridWrapper = styled.div`
   }
 `;
 
-const ButtonGroup = styled.div`
+// ボタンエリア全体
+const ButtonContainer = styled.div`
   display: flex;
-  gap: 16px;
-  margin-top: 24px;
-  flex-wrap: wrap; /* スマホでボタンが多すぎたら折り返す */
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+  flex-wrap: wrap-reverse;
+  gap: 20px;
+
+  @media (max-width: 600px) {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
 `;
 
-// メインボタン（青グラデーション）
-const SubmitButton = styled.button`
-  flex: 2; /* キャンセルより大きく */
-  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
-  color: white;
-  border: none;
-  padding: 14px;
+// 右側の「キャンセル」「保存」をまとめるグループ
+const ActionGroup = styled.div`
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  justify-content: flex-end;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    gap: 12px;
+  }
+`;
+
+// 共通ボタンスタイル（ベース）
+const BaseButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
   border-radius: 30px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+
+  /* アイコンサイズ調整 */
+  svg {
+    font-size: 1.2em;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+// メインボタン（更新/作成）
+const SubmitButton = styled(BaseButton)`
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
+  color: white;
+  border: none;
   box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+  flex: 2;
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
-    filter: brightness(1.05);
-  }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 5px rgba(74, 144, 226, 0.2);
-  }
-
-  &:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    box-shadow: none;
   }
 `;
 
-// キャンセルボタン（白背景・シンプル）
-const CancelButton = styled.button`
-  flex: 1;
-  background-color: #fff;
+// キャンセルボタン
+const CancelButton = styled(BaseButton)`
+  background-color: transparent;
   color: #666;
   border: 2px solid #eee;
-  padding: 14px;
-  border-radius: 30px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  flex: 1;
 
   &:hover {
-    background-color: #f9f9f9;
+    background-color: #f5f5f5;
+    color: #333;
     border-color: #ddd;
-    color: #444;
-  }
-
-  @media (max-width: 600px) {
-    font-size: 0.7rem;
   }
 `;
 
-// 削除ボタン（赤枠）
-const DeleteButton = styled.button`
-  flex: 1;
-  background-color: #fff;
-  color: #ff4d4d;
-  border: 2px solid #ffecec;
-  padding: 14px;
-  border-radius: 30px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
+// 削除ボタン
+const DeleteButton = styled(BaseButton)`
+  background-color: #fff0f0;
+  color: #e74c3c;
+  border: none;
+  padding: 12px 20px;
 
   &:hover {
-    background-color: #fff5f5;
-    border-color: #ff4d4d;
+    background-color: #ffecec;
+    color: #c0392b;
   }
 
   @media (max-width: 600px) {
-    font-size: 0.7rem;
+    width: 100%;
+    margin-top: 10px;
+    background-color: transparent;
+    border: 1px dashed #ffcccc;
   }
 `;
 
@@ -432,28 +449,39 @@ export default function ActivityLogForm({ logToEdit }) {
           </FormGroup>
 
           {/* ボタンエリア */}
-          <ButtonGroup>
-            <CancelButton
-              type="button"
-              onClick={() => router.push("/activity-log")} // 一覧に戻る
-            >
-              キャンセル
-            </CancelButton>
-
-            <SubmitButton type="submit" disabled={isLoading || isDeleting}>
-              {isLoading ? "保存中..." : isEditMode ? "更新する" : "作成する"}
-            </SubmitButton>
-
+          <ButtonContainer>
             {isEditMode && (
               <DeleteButton
                 type="button"
                 onClick={handleDelete}
                 disabled={isLoading || isDeleting}
               >
-                {isDeleting ? "削除中..." : "削除する"}
+                <FiTrash2 />
+                <span>削除</span>
               </DeleteButton>
             )}
-          </ButtonGroup>
+
+            <ActionGroup>
+              <CancelButton
+                type="button"
+                onClick={() => router.push("/activity-log")}
+              >
+                <FiX />
+                <span>キャンセル</span>
+              </CancelButton>
+
+              <SubmitButton type="submit" disabled={isLoading || isDeleting}>
+                {isEditMode ? <FiSave /> : <FiSend />}
+                <span>
+                  {isLoading
+                    ? "保存中..."
+                    : isEditMode
+                      ? "更新する"
+                      : "作成する"}
+                </span>
+              </SubmitButton>
+            </ActionGroup>
+          </ButtonContainer>
         </Form>
       </ContentContainer>
     </PageWrapper>

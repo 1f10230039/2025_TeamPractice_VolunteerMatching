@@ -12,15 +12,18 @@ import {
   FaLightbulb,
   FaQuoteLeft,
 } from "react-icons/fa";
-import Breadcrumbs from "../common/Breadcrumbs";
+import Breadcrumbs from "@/components/common/Breadcrumbs";
 
 // --- Emotion Styles ---
 
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background-color: #f5fafc; /* マイページと同じ優しい背景色 */
+  background-color: #f5fafc;
   padding-bottom: 60px;
   font-family: "Helvetica Neue", Arial, sans-serif;
+  @media (max-width: 600px) {
+    padding-bottom: 120px;
+  }
 `;
 
 // パンくずリストを固定するためのラッパー

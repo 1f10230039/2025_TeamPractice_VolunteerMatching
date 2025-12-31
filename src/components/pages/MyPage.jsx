@@ -487,7 +487,7 @@ export default function MyPage() {
               管理者メニュー
             </p>
             <AdminLink href="/volunteer-registration/admin/events">
-              <FaTools /> イベント管理画面へ
+              <FaTools /> ボランティア管理画面へ
             </AdminLink>
           </AdminSection>
         )}
