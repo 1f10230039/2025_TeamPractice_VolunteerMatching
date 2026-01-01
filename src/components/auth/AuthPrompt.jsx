@@ -4,86 +4,130 @@
 
 import styled from "@emotion/styled";
 import Link from "next/link"; // ページ遷移用のLinkコンポーネント
+import { FiLogIn, FiUserPlus } from "react-icons/fi";
 
-// Emotion
+// --- Emotion Styles ---
+
 // コンポーネント全体のラッパー
 const PromptWrapper = styled.div`
-  padding: 40px 24px;
+  padding: 48px 32px;
   max-width: 600px;
-  margin: 40px auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  margin: 60px auto;
+  border-radius: 20px;
   background-color: #ffffff;
   text-align: center;
+  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15);
+  border: 1px solid #f0f8ff;
+
+  @media (max-width: 600px) {
+    padding: 32px 20px;
+    margin: 40px 20px;
+  }
 `;
 
 // メッセージテキスト
 const Message = styled.p`
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 24px;
+  font-size: 1.1rem;
+  color: #444;
+  margin-bottom: 32px;
+  line-height: 1.6;
+  font-weight: 500;
 `;
 
 // ボタンを横に並べるためのコンテナ
 const ButtonContainer = styled.div`
   display: flex;
   justify-content: center;
-  gap: 16px; /* ボタン間のスペース */
+  gap: 20px;
+  flex-wrap: wrap;
 `;
 
-// Next.jsのLinkをEmotionでスタイリング
+// Next.jsのLinkをスタイリング
 const StyledLink = styled(Link, {
   shouldForwardProp: prop => prop !== "primary",
 })`
-  display: inline-block;
-  padding: 12px 24px;
-  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: 30px;
   font-size: 16px;
   font-weight: bold;
-  text-decoration: none; /* リンクの下線を消す */
-  transition: all 0.2s;
+  text-decoration: none;
+  cursor: pointer;
 
-  /* ボタンごとのスタイル分岐 */
+  /* アニメーションの共通設定 */
+  transition: all 0.2s ease;
+
+  /* --- ボタンごとのスタイル分岐 --- */
   ${props =>
     props.primary
       ? `
-        background-color: #007bff; /* ログイン (キーカラー) */
+        /* ログインボタン（メイン） */
+        background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
         color: white;
+        border: none;
+        box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+
         &:hover {
-          background-color: #0056b3;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
+          filter: brightness(1.05);
+        }
+        
+        &:active {
+          transform: translateY(0);
+          box-shadow: 0 2px 5px rgba(74, 144, 226, 0.2);
         }
       `
       : `
-        background-color: #f0f0f0; /* 新規登録 (控えめ) */
-        color: #333;
-        border: 1px solid #ccc;
+        /* 新規登録ボタン（サブ） */
+        background-color: #fff;
+        color: #555;
+        border: 2px solid #eee;
+
         &:hover {
-          background-color: #e0e0e0;
+          transform: translateY(-2px);
+          background-color: #f9f9f9;
+          border-color: #ddd;
+          color: #333;
+        }
+
+        &:active {
+          transform: translateY(0);
         }
       `}
 `;
 
 /**
- * 未ログイン時にマイページで表示するコンポーネント
- * @param {{ message?: string }} props - オプションのメッセージ
+ * 未ログイン時にマイページなどで表示するコンポーネント
  */
 export default function AuthPrompt({ message }) {
   return (
     <PromptWrapper>
       <Message>
-        {message ||
-          "この機能を利用するには、ログインまたは新規登録が必要です。"}
+        {message || (
+          <>
+            この機能を利用するには、
+            <br className="sp-only" />
+            ログインまたは新規登録が必要です。
+          </>
+        )}
       </Message>
+
       <ButtonContainer>
-        {/*
-          Next.jsの <Link> コンポーネントを使うことで、
-          ブラウザリロードなしの高速なページ遷移(SPA)を実現します。
-          href="" で遷移先を指定します。
-        */}
-        <StyledLink href="/login" primary>
-          ログイン
+        {/* ログイン（メインアクション） */}
+        <StyledLink href="/login" primary="true">
+          <FiLogIn />
+          <span>ログイン</span>
         </StyledLink>
-        <StyledLink href="/signup">新規登録</StyledLink>
+
+        {/* 新規登録（サブアクション） */}
+        <StyledLink href="/signup">
+          <FiUserPlus />
+          <span>新規登録</span>
+        </StyledLink>
       </ButtonContainer>
     </PromptWrapper>
   );

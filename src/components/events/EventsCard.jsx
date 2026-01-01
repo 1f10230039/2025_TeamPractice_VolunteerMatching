@@ -19,7 +19,7 @@ const CardContainer = styled(Link)`
   border-radius: 12px;
   overflow: hidden;
   background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15);
   transition: transform 0.2s ease-in-out;
   display: block;
   text-decoration: none;

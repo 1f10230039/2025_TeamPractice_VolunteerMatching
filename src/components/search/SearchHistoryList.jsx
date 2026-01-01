@@ -15,6 +15,8 @@ const HistoryListContainer = styled.ul`
   border: 1px solid #eee;
   border-radius: 8px;
   overflow: hidden;
+  max-width: 800px;
+  margin: 0 auto;
 `;
 
 // 履歴の1行1行

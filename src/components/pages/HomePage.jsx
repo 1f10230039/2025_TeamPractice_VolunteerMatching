@@ -18,7 +18,7 @@ const PageContainer = styled.div`
   min-height: 100vh;
   padding-bottom: 60px;
   @media (max-width: 600px) {
-    margin-bottom: 70px;
+    margin-bottom: 20px;
   }
 `;
 
