@@ -9,6 +9,11 @@ import Breadcrumbs from "../common/Breadcrumbs";
 // ページ全体のコンテナ
 const PageContainer = styled.div`
   padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  @media (max-width: 600px) {
+    margin-bottom: 120px;
+  }
 `;
 
 // "以前検索した履歴" のタイトル

@@ -7,36 +7,68 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 // --- Emotion スタイル定義 ---
 
+// サインアップページ全体のラッパー
 const SignupWrapper = styled.div`
-  padding: 24px;
+  padding: 40px 32px;
   max-width: 500px;
-  margin: 40px auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  margin: 60px auto;
+  border-radius: 20px;
   background-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15);
+  border: 1px solid #f0f8ff;
+
+  @media (max-width: 600px) {
+    padding: 32px 20px;
+    margin: 40px 20px 120px 20px;
+    width: auto;
+  }
 `;
 
+// タイトル
 const Title = styled.h1`
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 800;
   color: #333;
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  letter-spacing: 0.05em;
 `;
 
+// フォーム全体
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 `;
 
+// 入力欄
 const Input = styled.input`
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
   width: 100%;
-  padding-right: 40px;
+  padding: 14px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 16px;
+  background-color: #f9f9f9;
+  transition: all 0.2s ease;
+  color: #333;
+
+  padding-right: ${props => (props.hasIcon ? "48px" : "16px")};
+
+  &::placeholder {
+    color: #aaa;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+  }
+
+  &:disabled {
+    background-color: #eee;
+    cursor: not-allowed;
+  }
 `;
 
 const PasswordInputWrapper = styled.div`
@@ -44,55 +76,107 @@ const PasswordInputWrapper = styled.div`
   width: 100%;
 `;
 
+// 目のアイコン
 const EyeIconButton = styled.button`
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 20px;
-  color: #555;
-  padding: 0;
+  font-size: 22px;
+  color: #888;
+  padding: 4px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  border-radius: 50%;
+
+  &:hover {
+    color: #4a90e2;
+    background-color: rgba(74, 144, 226, 0.1);
+  }
 `;
 
+// セレクトボックス
 const Select = styled.select`
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
   font-size: 16px;
-  background-color: white;
+  background-color: #f9f9f9;
+  transition: all 0.2s ease;
+  color: #333;
+  appearance: none;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+  }
+
+  /* 未選択の時 */
+  &:invalid {
+    color: #aaa;
+  }
+
+  /* 無効化されている時（大学未選択時の学部など） */
+  &:disabled {
+    background-color: #eaeaea;
+    color: #999;
+    border-color: #ddd;
+    cursor: not-allowed;
+  }
 `;
 
+// 登録ボタン
 const SubmitButton = styled.button`
-  background-color: #007bff;
+  margin-top: 12px;
+  width: 100%;
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   color: white;
   border: none;
-  padding: 12px;
-  border-radius: 5px;
+  padding: 14px;
+  border-radius: 30px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 
-  &:hover {
-    background-color: #0056b3;
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(74, 144, 226, 0.2);
   }
 
   &:disabled {
-    background-color: #ccc;
+    background: #ccc;
     cursor: not-allowed;
-    opacity: 0.7;
+    box-shadow: none;
+    transform: none;
   }
 `;
 
+// エラーメッセージ
 const ErrorMessage = styled.p`
-  color: red;
+  color: #e74c3c;
   font-size: 14px;
-  margin-top: 8px;
+  background-color: #fdf0f0;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #fadbd8;
 `;
 
 // --- コンポーネント本体 ---
@@ -205,6 +289,7 @@ export default function SignupPage({ initialUniversities }) {
             onChange={e => setPassword(e.target.value)}
             required
             disabled={isLoading}
+            hasIcon
           />
           <EyeIconButton
             type="button"
@@ -224,6 +309,7 @@ export default function SignupPage({ initialUniversities }) {
           disabled={isLoading}
         />
 
+        {/* 大学選択セレクトボックス */}
         <Select
           value={selectedUniversity}
           onChange={e => handleUniversityChange(e.target.value)}
@@ -238,6 +324,7 @@ export default function SignupPage({ initialUniversities }) {
           ))}
         </Select>
 
+        {/* 学部選択セレクトボックス */}
         <Select
           value={selectedFaculty}
           onChange={e => setSelectedFaculty(e.target.value)}

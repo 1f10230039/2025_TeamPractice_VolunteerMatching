@@ -39,7 +39,7 @@ const PageTitle = styled.h1`
   color: #333;
 `;
 
-// 新規作成ボタン (リッチなデザインに)
+// 新規作成ボタン
 const CreateButton = styled(Link)`
   display: flex;
   align-items: center;
