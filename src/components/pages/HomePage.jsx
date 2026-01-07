@@ -8,13 +8,14 @@ import {
   FaSortAmountDown,
   FaChevronLeft,
   FaChevronRight,
+  FaStar,
 } from "react-icons/fa";
 
 // --- Emotion Styles ---
 
 // ページ全体のレイアウト
 const PageContainer = styled.div`
-  background-color: #f5fafc; /* 全体を爽やかな薄い青グレーに */
+  background-color: #f5fafc;
   min-height: 100vh;
   padding-bottom: 60px;
   @media (max-width: 600px) {
@@ -25,11 +26,10 @@ const PageContainer = styled.div`
 // 検索エリア
 const SearchSection = styled.section`
   margin-bottom: 24px;
-  /* ヘッダー下を飾る美しいグラデーション */
   background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   padding: 40px 24px;
   box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
-  border-radius: 0 0 30px 30px; /* 下側だけ丸くしてモダンに */
+  border-radius: 0 0 30px 30px;
 
   @media (max-width: 600px) {
     padding: 30px 16px;
@@ -43,27 +43,28 @@ const EventSection = styled.section`
   margin: 0 auto;
 `;
 
+// 見出しのデザイン
 const SectionTitle = styled.h2`
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 800;
   margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: #333;
-
-  /* アクセントの棒 */
-  &::before {
-    content: "";
-    display: block;
-    width: 6px;
-    height: 32px;
-    background: linear-gradient(to bottom, #68b5d5, #4a90e2);
-    border-radius: 3px;
-  }
+  letter-spacing: 0.05em;
 `;
 
-// コントロールバー（件数表示とソートボタン）
+// アイコン
+const IconWrapper = styled.span`
+  color: #4a90e2;
+  display: flex;
+  align-items: center;
+  font-size: 1.8rem;
+  filter: drop-shadow(0 2px 4px rgba(74, 144, 226, 0.3));
+`;
+
+// コントロールバー
 const ControlBar = styled.div`
   display: flex;
   justify-content: space-between;
@@ -73,8 +74,8 @@ const ControlBar = styled.div`
   gap: 12px;
   background-color: #fff;
   padding: 16px 24px;
-  border-radius: 16px; /* 丸みアップ */
-  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15); /* ふんわり青い影 */
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15);
 `;
 
 const ResultCount = styled.p`
@@ -114,7 +115,7 @@ const SortSelect = styled.select`
   font-size: 0.95rem;
   color: #333;
   border: 1px solid #e0e0e0;
-  border-radius: 30px; /* カプセル型 */
+  border-radius: 30px;
   background-color: #f9f9f9;
   cursor: pointer;
   outline: none;
@@ -143,7 +144,6 @@ const PaginationContainer = styled.div`
   margin-bottom: 40px;
 `;
 
-// ページネーションボタン (カプセル型＆グラデーション)
 const PageButton = styled.button`
   display: flex;
   align-items: center;
@@ -156,7 +156,6 @@ const PageButton = styled.button`
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 
-  /* アクティブ（通常）時 */
   background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   color: white;
   border: none;
@@ -173,7 +172,6 @@ const PageButton = styled.button`
     filter: brightness(0.95);
   }
 
-  /* 無効時 */
   &:disabled {
     background: #e0e0e0;
     color: #999;
@@ -181,7 +179,7 @@ const PageButton = styled.button`
     cursor: not-allowed;
   }
   @media (max-width: 600px) {
-    padding: 10px 20px; /* スマホは少し小さめに */
+    padding: 10px 20px;
     font-size: 0.9rem;
   }
 `;
@@ -198,44 +196,32 @@ const PageInfo = styled.span`
 
 /**
  * ページ全体のレイアウトと状態を管理するコンポーネント
- * @param {{ events: object[] }} props - page.jsから渡される全イベントデータ
  */
 export default function HomePage({ events }) {
-  //状態管理
-  const [sortOption, setSortOption] = useState("newest"); // 'newest', 'popular', 'nearest'
+  const [sortOption, setSortOption] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // 1ページあたりの表示件数
+  const itemsPerPage = 10;
 
-  // データのソート処理 (useMemoで重い計算を防ぐ)
   const sortedEvents = useMemo(() => {
-    // 元の配列を破壊しないようにコピーする
     let sorted = [...(events || [])];
-
     switch (sortOption) {
       case "newest":
-        // 新しい順 (作成日時順)
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
-
       case "date_asc":
-        // 開催日が近い順 (昇順: 日付が小さい順)
         sorted.sort(
           (a, b) => new Date(a.start_datetime) - new Date(b.start_datetime)
         );
         break;
       case "date_desc":
-        // 開催日が遠い順 (降順: 日付が大きい順)
         sorted.sort(
           (a, b) => new Date(b.start_datetime) - new Date(a.start_datetime)
         );
         break;
-
       case "popular":
-        // 人気順 (仮: 作成日時順)
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case "nearest":
-        // 現在地から近い順 (仮: 作成日時順)
         sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       default:
@@ -244,25 +230,21 @@ export default function HomePage({ events }) {
     return sorted;
   }, [events, sortOption]);
 
-  // ページネーション処理 (表示するデータの切り出し)
   const totalItems = sortedEvents.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // 現在のページのデータを切り出す
   const currentEvents = sortedEvents.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // 表示中の件数範囲を計算 (例: 1-10件 / 全50件)
   const startCount =
     totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endCount = Math.min(currentPage * itemsPerPage, totalItems);
 
-  // イベントハンドラ
   const handleSortChange = e => {
     setSortOption(e.target.value);
-    setCurrentPage(1); // ソート順を変えたら1ページ目に戻す
+    setCurrentPage(1);
   };
 
   const handlePrevPage = () => {
@@ -273,16 +255,20 @@ export default function HomePage({ events }) {
     if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
   };
 
-  // --- JSX ---
   return (
     <PageContainer>
-      {/* 検索セクション (グラデーション背景) */}
       <SearchSection>
         <SearchOptions />
       </SearchSection>
 
       <EventSection>
-        {/* コントロールバー (件数 & ソート) */}
+        <SectionTitle>
+          <IconWrapper>
+            <FaStar />
+          </IconWrapper>
+          おすすめのボランティア
+        </SectionTitle>
+
         <ControlBar>
           <ResultCount>
             <strong>{startCount}</strong> - <strong>{endCount}</strong> 件を表示
@@ -306,10 +292,8 @@ export default function HomePage({ events }) {
           </SortWrapper>
         </ControlBar>
 
-        {/* イベント一覧 (切り出した10件だけを渡す) */}
         <EventList events={currentEvents} />
 
-        {/* ページネーション (イベントがある時だけ表示) */}
         {totalItems > 0 && (
           <PaginationContainer>
             <PageButton onClick={handlePrevPage} disabled={currentPage === 1}>

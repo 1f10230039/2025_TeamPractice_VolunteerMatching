@@ -24,8 +24,7 @@ const HeaderContainer = styled.header`
   top: 0;
   z-index: 1000; /* 他の要素より手前に */
 
-  /**スマホ(767px以下)ではロゴを中央に表示する */
-  @media (max-width: 767px) {
+  @media (max-width: 600px) {
     justify-content: center;
     height: 60px; /* スマホなら少し低く */
   }
@@ -43,12 +42,17 @@ const LogoLink = styled(Link)`
   &:hover {
     opacity: 0.8;
   }
+
+  @media (max-width: 767px) {
+    font-size: 1.2rem;
+    width: 120px;
+  }
 `;
 
 // PC用のナビゲーションを囲むラッパー
 const DesktopNavigation = styled.div`
   display: block;
-  @media (max-width: 767px) {
+  @media (max-width: 600px) {
     display: none;
   }
 `;
