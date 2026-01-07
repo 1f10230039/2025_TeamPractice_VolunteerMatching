@@ -19,7 +19,7 @@ const FooterContainer = styled.footer`
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
 
   /* 768px以上の画面（PC）では、このフッターを非表示にする */
-  @media (min-width: 768px) {
+  @media (min-width: 600px) {
     display: none;
   }
 

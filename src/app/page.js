@@ -20,6 +20,7 @@ async function fetchEventsWithTags() {
       )
     `
     )
+    .eq("recommended", true) // recommendedカラムが true のものだけに絞り込む
     .order("created_at", { ascending: false }); // 新着順
 
   if (error) {

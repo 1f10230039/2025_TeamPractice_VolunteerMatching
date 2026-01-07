@@ -1,5 +1,3 @@
-// ボランティア登録・編集フォームコンポーネント
-
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
@@ -9,18 +7,18 @@ import styled from "@emotion/styled";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import { FaCloudUploadAlt, FaImages, FaTrash } from "react-icons/fa";
+import { FiSave, FiX, FiStar, FiCheck } from "react-icons/fi";
 import Breadcrumbs from "../common/Breadcrumbs";
 
-// --- Emotionでスタイル定義 ---
+// --- Emotion Styles ---
 
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background-color: #f5fafc; /* マイページと同じ背景色 */
-  padding-bottom: 40px;
+  background-color: #f5fafc;
+  padding-bottom: 80px;
   font-family: "Helvetica Neue", Arial, sans-serif;
 `;
 
-// パンくずリストを固定するためのラッパー
 const StickyHeader = styled.div`
   position: sticky;
   top: 0;
@@ -30,40 +28,106 @@ const StickyHeader = styled.div`
 `;
 
 const FormContainer = styled.form`
-  padding: 32px;
+  padding: 40px;
   max-width: 800px;
   margin: 0 auto;
   background-color: #fff;
   border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15); /* ふんわり青い影 */
+  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15);
+  border: 1px solid #f0f8ff;
 
   @media (max-width: 600px) {
-    padding: 20px;
-    margin: 0 16px 100px 16px; /* 横の余白と下部の余白 */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    margin: 0 16px 100px 16px;
   }
 `;
 
 const PageTitle = styled.h1`
   font-size: 24px;
   font-weight: 800;
-  margin: 20px 0 32px 0;
+  margin: 10px 0 32px 0;
   color: #333;
   text-align: center;
+  letter-spacing: 0.05em;
+`;
+
+const SpecialSettingsBox = styled.div`
+  background-color: #fff9e6;
+  border: 2px solid #ffeba8;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const SpecialLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+  color: #d48806;
+  font-size: 1rem;
+  cursor: pointer;
+`;
+
+// トグルスイッチのデザイン
+const ToggleSwitch = styled.div`
+  position: relative;
+  width: 52px;
+  height: 28px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  span {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+  }
+
+  span:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+
+  input:checked + span {
+    background-color: #f39c12;
+  }
+
+  input:checked + span:before {
+    transform: translateX(24px);
+  }
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 `;
 
 const Label = styled.label`
   display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: 700;
+  margin-bottom: 10px;
   font-size: 0.95rem;
-  color: #555;
+  color: #444;
 
-  /* 必須マーク */
   &.required::after {
     content: " *";
     color: #e74c3c;
@@ -73,115 +137,101 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 16px;
   font-size: 1rem;
   border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  transition: all 0.2s ease;
 
   &:focus {
-    border-color: #4a90e2;
     outline: none;
+    border-color: #4a90e2;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
   }
 `;
 
 const Textarea = styled.textarea`
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 16px;
   font-size: 1rem;
   border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  box-sizing: border-box;
+  border-radius: 12px;
+  background-color: #f9f9f9;
   min-height: 120px;
   font-family: inherit;
   resize: vertical;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
 
   &:focus {
-    border-color: #4a90e2;
     outline: none;
+    border-color: #4a90e2;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
   }
 `;
 
-// --- スマホ対応: 画面幅が狭い時は1列にする ---
 const GridWrapper = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px;
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr; /* スマホでは1列 */
+    grid-template-columns: 1fr;
     gap: 16px;
   }
 `;
 
-// 日付入力用のラッパー（スマホでの幅調整用）
+// 日付入力用のラッパー
 const DateInputWrapper = styled.div`
   width: 100%;
+  input {
+    font-family: inherit; /* 日付フォントのズレ防止 */
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-end; /* 右寄せ */
+  gap: 16px;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px dashed #eee;
+
   @media (max-width: 600px) {
-    /* スマホで日付ピッカーがはみ出さないように調整 */
-    input {
-      max-width: 100%;
-      min-width: 0; /* Flexアイテムで潰れないように */
+    flex-direction: column-reverse;
+    width: 100%;
+
+    button {
+      width: 100%;
+      justify-content: center;
     }
   }
 `;
 
-const CheckboxWrapper = styled.label`
+const BaseButton = styled.button`
   display: flex;
   align-items: center;
-  font-weight: 500;
-  gap: 10px;
-  cursor: pointer;
-  padding: 12px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  border: 1px solid #eee;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #f0f8ff;
-  }
-`;
-
-const CheckboxInput = styled.input`
-  width: 20px;
-  height: 20px;
-  accent-color: #007bff;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 16px;
-  margin-top: 40px;
-
-  @media (max-width: 600px) {
-    flex-direction: column-reverse; /* スマホならキャンセルを下に */
-  }
-`;
-
-const SubmitButton = styled.button`
-  flex: 2;
-  padding: 14px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: white;
-  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
-  border: none;
+  gap: 8px;
+  padding: 14px 32px;
   border-radius: 30px;
+  font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+`;
+
+const SubmitButton = styled(BaseButton)`
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
+  color: white;
+  border: none;
   box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 
-  &:hover {
+  &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
     filter: brightness(1.05);
-  }
-
-  &:active {
-    transform: translateY(0);
   }
 
   &:disabled {
@@ -191,17 +241,10 @@ const SubmitButton = styled.button`
   }
 `;
 
-const CancelButton = styled.button`
-  flex: 1;
+const CancelButton = styled(BaseButton)`
   background-color: #fff;
   color: #666;
   border: 2px solid #eee;
-  padding: 14px;
-  border-radius: 30px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
 
   &:hover {
     background-color: #f9f9f9;
@@ -214,7 +257,7 @@ const CancelButton = styled.button`
 const DropzoneContainer = styled.div`
   width: 100%;
   border-radius: 12px;
-  border: 2px dashed ${props => (props.isDragActive ? "#007bff" : "#ccc")};
+  border: 2px dashed ${props => (props.isDragActive ? "#4a90e2" : "#ccc")};
   background-color: ${props => (props.isDragActive ? "#f0f8ff" : "#fafafa")};
   color: #666;
   position: relative;
@@ -229,14 +272,14 @@ const DropzoneContainer = styled.div`
   min-height: ${props => props.minHeight || "auto"};
 
   &:hover {
-    border-color: #007bff;
+    border-color: #4a90e2;
     background-color: #f0f8ff;
   }
 `;
 
 const UploadIcon = styled.div`
   font-size: 2.5rem;
-  color: #007bff;
+  color: #4a90e2;
   margin-bottom: 12px;
   opacity: 0.8;
 `;
@@ -260,9 +303,9 @@ const EyeCatchPreview = styled.div`
   width: 100%;
   height: 250px;
   position: relative;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid #eee;
 `;
 
@@ -277,10 +320,10 @@ const GalleryItem = styled.div`
   position: relative;
   width: 100%;
   padding-bottom: 100%;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   border: 1px solid #eee;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   background-color: #fff;
   transition: transform 0.2s;
 
@@ -316,10 +359,10 @@ const TagSelectionContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 16px;
+  padding: 20px;
   background-color: #fcfcfc;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 12px;
 `;
 
 const TagLabel = styled.label`
@@ -327,12 +370,13 @@ const TagLabel = styled.label`
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  padding: 8px 12px;
+  padding: 8px 16px;
   border-radius: 20px;
   font-size: 0.9rem;
   background-color: ${props => (props.isChecked ? "#e0eafc" : "#fff")};
-  border: 1px solid ${props => (props.isChecked ? "#007bff" : "#ddd")};
+  border: 1px solid ${props => (props.isChecked ? "#4a90e2" : "#ddd")};
   color: ${props => (props.isChecked ? "#0056b3" : "#555")};
+  font-weight: 500;
   transition: all 0.2s ease;
   user-select: none;
 
@@ -358,6 +402,8 @@ const formatDatetimeLocal = isoString => {
   }
 };
 
+// --- Component 本体 ---
+
 export default function EventAdminForm({ eventToEdit }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -377,6 +423,9 @@ export default function EventAdminForm({ eventToEdit }) {
     start_datetime: formatDatetimeLocal(eventToEdit?.start_datetime) ?? "",
     end_datetime: formatDatetimeLocal(eventToEdit?.end_datetime) ?? "",
     image_url: eventToEdit?.image_url ?? "",
+    recommended: eventToEdit?.recommended ?? false,
+
+    // 元のデータ構造はそのまま維持
     favorite: eventToEdit?.favorite ?? false,
     short_description: eventToEdit?.short_description ?? "",
     long_description: eventToEdit?.long_description ?? "",
@@ -433,6 +482,7 @@ export default function EventAdminForm({ eventToEdit }) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // チェックボックス（おすすめフラグなど）の処理
   const handleCheckboxChange = e => {
     const { name, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: checked }));
@@ -490,7 +540,7 @@ export default function EventAdminForm({ eventToEdit }) {
     let finalImageUrl = formData.image_url;
 
     try {
-      // 1. アイキャッチ画像のアップロード (これはクライアントサイドで先に行う)
+      // 1. アイキャッチ画像のアップロード
       if (uploadFile) {
         const fileExt = uploadFile.name.split(".").pop();
         const fileName = `eyecatch_${Date.now()}.${fileExt}`;
@@ -550,9 +600,8 @@ export default function EventAdminForm({ eventToEdit }) {
       const result = await response.json();
       const targetEventId = result.eventId;
 
-      // 4. ギャラリー画像の処理 (APIの成功後に行う)
+      // 4. ギャラリー画像の処理
       if (targetEventId) {
-        // 削除指定された画像をストレージから消す（エラーは無視）
         if (deletedGalleryIds.length > 0) {
           const { error: deleteImgError } = await supabase
             .from("event_images")
@@ -561,7 +610,6 @@ export default function EventAdminForm({ eventToEdit }) {
           if (deleteImgError) console.error("画像削除エラー:", deleteImgError);
         }
 
-        // 新しいギャラリー画像をアップロード
         if (newGalleryFiles.length > 0) {
           const uploadPromises = newGalleryFiles.map(async item => {
             const file = item.file;
@@ -613,6 +661,25 @@ export default function EventAdminForm({ eventToEdit }) {
         <PageTitle>
           {isEditMode ? "ボランティアを編集" : "ボランティアを新規登録"}
         </PageTitle>
+
+        <SpecialSettingsBox>
+          <SpecialLabel htmlFor="recommended">
+            <FiStar size={20} />
+            「おすすめ」イベントとしてトップページに表示する
+          </SpecialLabel>
+          <ToggleSwitch>
+            <label>
+              <input
+                type="checkbox"
+                id="recommended"
+                name="recommended"
+                checked={formData.recommended}
+                onChange={handleCheckboxChange}
+              />
+              <span></span>
+            </label>
+          </ToggleSwitch>
+        </SpecialSettingsBox>
 
         <FormGroup>
           <Label className="required" htmlFor="name">
@@ -677,7 +744,7 @@ export default function EventAdminForm({ eventToEdit }) {
                     checked={selectedTagIds.includes(tag.id)}
                     onChange={() => handleTagToggle(tag.id)}
                   />
-                  {selectedTagIds.includes(tag.id) && <span>✓</span>}
+                  {selectedTagIds.includes(tag.id) && <FiCheck />}
                   {tag.name}
                 </TagLabel>
               ))
@@ -775,7 +842,6 @@ export default function EventAdminForm({ eventToEdit }) {
           )}
         </FormGroup>
 
-        {/* ... (詳細情報エリア: appeal, experience 含む) ... */}
         <FormGroup>
           <Label htmlFor="short_description">短い紹介文 (一覧用)</Label>
           <Textarea
@@ -966,17 +1032,21 @@ export default function EventAdminForm({ eventToEdit }) {
           />
         </FormGroup>
 
-        <ButtonGroup>
+        <ButtonContainer>
           <CancelButton
             type="button"
             onClick={() => router.push("/volunteer-registration/admin/events")}
           >
-            キャンセル
+            <FiX />
+            <span>キャンセル</span>
           </CancelButton>
           <SubmitButton type="submit" disabled={isLoading}>
-            {isLoading ? "保存中..." : isEditMode ? "更新する" : "登録する"}
+            <FiSave />
+            <span>
+              {isLoading ? "保存中..." : isEditMode ? "更新する" : "登録する"}
+            </span>
           </SubmitButton>
-        </ButtonGroup>
+        </ButtonContainer>
       </FormContainer>
     </PageWrapper>
   );
