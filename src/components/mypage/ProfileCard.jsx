@@ -21,33 +21,34 @@ const RANK_STYLES = {
     label: "ブロンズ",
     min: 0,
     icon: <FaMedal />,
-    color: "#8c5836",
-    bg: "linear-gradient(135deg, #d9a7c7 0%, #fffcdc 100%)",
-    mainColor: "#8c5836",
+    color: "#a65d3b",
+    bg: "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)",
+    bg: "linear-gradient(135deg, #ffe8cc 0%, #f4b084 100%)",
+    mainColor: "#a65d3b",
   },
   SILVER: {
     label: "シルバー",
     min: 3,
     icon: <FaMedal />,
-    color: "#7f8c8d",
-    bg: "linear-gradient(135deg, #e0e0e0 0%, #f5f7fa 100%)",
-    mainColor: "#7f8c8d",
+    color: "#546e7a",
+    bg: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+    mainColor: "#7f909e",
   },
   GOLD: {
     label: "ゴールド",
     min: 6,
     icon: <FaTrophy />,
-    color: "#d4af37",
-    bg: "linear-gradient(135deg, #fce38a 0%, #f38181 100%)",
-    mainColor: "#d4af37",
+    color: "#b7791f",
+    bg: "linear-gradient(135deg, #fff7d1 0%, #ffcf40 100%)",
+    mainColor: "#d69e2e",
   },
   PLATINUM: {
     label: "プラチナ",
     min: 11,
     icon: <FaCrown />,
-    color: "#5e60ce",
-    bg: "linear-gradient(135deg, #dec9e9 0%, #a18cd1 100%)",
-    mainColor: "#5e60ce",
+    color: "#2c5282",
+    bg: "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
+    mainColor: "#4299e1",
   },
 };
 
@@ -70,8 +71,6 @@ const CardContainer = styled.div`
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   background: ${props => props.bg};
-  /* カード自体の枠線を少しつけると引き締まる */
-  border: 1px solid rgba(255, 255, 255, 0.3);
 `;
 
 // クロス柄レイヤー
