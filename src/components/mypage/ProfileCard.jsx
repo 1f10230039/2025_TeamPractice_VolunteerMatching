@@ -287,7 +287,7 @@ export default function ProfileCard({
           onClick={onOpenRankModal}
         >
           {rank.icon}
-          {rank.label}会員
+          {rank.label}サポーター
         </RankBadge>
 
         {/* アバター */}

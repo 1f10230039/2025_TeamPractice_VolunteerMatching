@@ -239,7 +239,9 @@ export default function RankModal({ isOpen, onClose, currentCount }) {
 
         <Title>ランクとは？</Title>
         <SubTitle>
-          ボランティアへの応募数に応じてランクがアップ！
+          ボランティアへの応募数に応じて
+          <br />
+          ランクがアップ！
           <br />
           現在あなたは <strong>{currentCount}件</strong> 応募済みです。
         </SubTitle>
