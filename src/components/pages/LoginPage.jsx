@@ -1,3 +1,4 @@
+// ログインページコンポーネント
 "use client";
 
 import { useState } from "react";
@@ -6,7 +7,6 @@ import styled from "@emotion/styled";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 // --- Emotion スタイル定義 ---
-
 // ログインページ全体のラッパー
 const LoginWrapper = styled.div`
   padding: 40px 32px;

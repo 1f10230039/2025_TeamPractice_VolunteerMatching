@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import styled from "@emotion/styled";
 import { FiSearch } from "react-icons/fi";
 
+// --- Emotion ---
 // 検索フォーム全体
 const SearchForm = styled.form`
   display: flex;
@@ -87,7 +88,7 @@ export default function KeywordSearchInput() {
 
   // 2. フォームが送信（ボタンクリック）された時の処理
   const handleSearch = e => {
-    e.preventDefault(); // ページがリロードされちゃうのを防ぐ
+    e.preventDefault();
     if (!query.trim()) {
       // もし入力が空っぽだったら何もしない
       return;

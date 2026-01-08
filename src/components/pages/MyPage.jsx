@@ -1,13 +1,10 @@
+// マイページコンポーネント
 "use client";
 
 import { useState, useEffect } from "react";
 import styled from "@emotion/styled";
 import { supabase } from "@/lib/supabaseClient";
 import {
-  FaUserCircle,
-  FaUniversity,
-  FaGraduationCap,
-  FaPen,
   FaSignOutAlt,
   FaHeart,
   FaCheckCircle,
@@ -15,14 +12,12 @@ import {
   FaTools,
 } from "react-icons/fa";
 import AuthPrompt from "@/components/auth/AuthPrompt";
-
-// ==========================================
-// Emotion Style Definitions
-// ==========================================
+import ProfileCard from "@/components/mypage/ProfileCard";
+import RankModal from "@/components/mypage/RankModal";
 
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background-color: #f5fafc; /* ベース背景色 */
+  background-color: #f5fafc;
   padding: 40px 20px;
   font-family: "Helvetica Neue", Arial, sans-serif;
   @media (max-width: 600px) {
@@ -59,119 +54,7 @@ const LogoutButton = styled.button`
   }
 `;
 
-// --- プロフィールカード ---
-const ProfileCard = styled.div`
-  background-color: white;
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 10px 30px rgba(122, 211, 232, 0.15);
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 40px;
-
-  @media (max-width: 600px) {
-    flex-direction: column;
-    text-align: center;
-    padding: 24px;
-  }
-`;
-
-// AvatarIcon スタイル
-const AvatarIcon = styled.div`
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  background-color: #f0f8ff;
-  border: 4px solid #fff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-
-  /* アイコンの場合のスタイル */
-  font-size: 80px;
-  color: #a0c4ff;
-`;
-
-// Avatar画像用スタイル（将来の拡張用）
-const AvatarImg = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const ProfileInfo = styled.div`
-  flex-grow: 1;
-`;
-
-const UserName = styled.h2`
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-  margin: 0 0 12px 0;
-`;
-
-const MetaInfo = styled.div`
-  display: flex;
-  gap: 16px;
-  color: #666;
-  font-size: 15px;
-  flex-wrap: wrap;
-
-  @media (max-width: 600px) {
-    justify-content: center;
-  }
-`;
-
-const MetaItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  & svg {
-    color: #68b5d5;
-  }
-`;
-
-const EditProfileButton = styled.a`
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #f0f4f8;
-  color: #5796c2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  cursor: pointer;
-  text-decoration: none;
-
-  &:hover {
-    background-color: #e1eaf5;
-    transform: scale(1.1);
-    color: #4a90e2;
-  }
-
-  @media (max-width: 600px) {
-    position: static;
-    margin-top: 16px;
-    width: auto;
-    border-radius: 20px;
-    padding: 8px 20px;
-    font-weight: bold;
-    font-size: 14px;
-    gap: 8px;
-  }
-`;
-
-// --- ダッシュボードグリッド (メニューボタン) ---
+// --- ダッシュボードグリッド ---
 const DashboardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -179,81 +62,54 @@ const DashboardGrid = styled.div`
   margin-bottom: 40px;
 `;
 
-// 共通のカードボタンスタイル
 const MenuCard = styled.a`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 30px;
-  border-radius: 20px; /* 角丸を少し強く */
+  border-radius: 20px;
   text-decoration: none;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  background-color: #ffffff;
+  border: 2px solid
+    ${props => (props.variant === "outline" ? "#4A90E2" : "transparent")};
+  color: #4a90e2;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
+
   ${props =>
-    props.variant === "outline"
-      ? `
-    /* Outline Style (応募済み・お気に入り) */
-    background-color: #FFFFFF;
-    border: 2px solid #4A90E2;
-    color: #4A90E2;
-    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
-
-    &:hover {
-      background-color: #F0F8FF; /* AliceBlue */
-      border-color: #357ABD; /* 濃い青 */
-      color: #357ABD;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(74, 144, 226, 0.15);
-    }
-
-    &:active {
-      transform: translateY(0);
-      background-color: #E6F2FF;
-      box-shadow: none;
-    }
-    
-    /* アイコンの色も継承させる */
-    & > div {
-        color: inherit;
-        filter: none;
-    }
-  `
-      : `
-    /* Gradient Style (活動記録 - デフォルト) */
-    background-color: #FFFFFF;
-    border: 2px solid #4A90E2;
-    color: #4A90E2;
-    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
-
-    &:hover {
-      background-color: #F0F8FF; /* AliceBlue */
-      border-color: #357ABD; /* 濃い青 */
-      color: #357ABD;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(74, 144, 226, 0.15);
-    }
-
-    &:active {
-      transform: translateY(0);
-      background-color: #E6F2FF;
-      box-shadow: none;
-    }
-    
-    /* アイコンの色も継承させる */
-    & > div {
-        color: inherit;
-        filter: none;
-    }
+    props.bg &&
+    `
+    background: ${props.bg};
+    color: white;
+    border: none;
+    box-shadow: 0 6px 15px rgba(74, 144, 226, 0.3);
   `}
+
+  &:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+    ${props =>
+      props.variant === "outline" &&
+      `
+        background-color: #F0F8FF;
+        border-color: #357ABD;
+        color: #357ABD;
+    `}
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 `;
 
 const MenuIcon = styled.div`
   font-size: 36px;
   margin-bottom: 12px;
-  color: ${props => props.iconColor || "inherit"};
+  color: inherit;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 `;
 
@@ -261,12 +117,6 @@ const MenuLabel = styled.span`
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  ${props =>
-    props.variant === "outline" &&
-    `
-    text-shadow: none;
-  `}
 `;
 
 const MenuDesc = styled.span`
@@ -312,17 +162,15 @@ const LogoutSection = styled.div`
   margin-top: 40px;
 `;
 
-// ==========================================
-// コンポーネント本体
-// ==========================================
-
 export default function MyPage() {
   const [profile, setProfile] = useState(null);
+  const [applicationCount, setApplicationCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isRankModalOpen, setIsRankModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
         const {
           data: { user },
@@ -337,14 +185,12 @@ export default function MyPage() {
 
         setIsLoggedIn(true);
 
-        const { data, error } = await supabase
+        // 1. プロフィール取得
+        const profilePromise = supabase
           .from("profiles")
           .select(
             `
-            id,
-            name,
-            role,
-            avatar_url,
+            id, name, role, avatar_url,
             universities ( name ), 
             faculties ( name )
           `
@@ -352,16 +198,33 @@ export default function MyPage() {
           .eq("id", user.id)
           .single();
 
-        if (error) throw error;
+        // 2. 応募済み件数の取得 (applicationsテーブルのカウント)
+        // { count: 'exact', head: true } でデータの中身は取らず件数だけ取る
+        const countPromise = supabase
+          .from("applications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id);
 
+        // 並列実行
+        const [profileRes, countRes] = await Promise.all([
+          profilePromise,
+          countPromise,
+        ]);
+
+        if (profileRes.error) throw profileRes.error;
+
+        const data = profileRes.data;
         setProfile({
           id: data.id,
           name: data.name,
           role: data.role,
           avatarUrl: data.avatar_url,
-          university: data.universities?.name || "未設定",
-          faculty: data.faculties?.name || "未設定",
+          university: data.universities?.name || "大学未設定",
+          faculty: data.faculties?.name || "学部未設定",
         });
+
+        // 件数をセット (エラーまたは0件の場合は0)
+        setApplicationCount(countRes.count || 0);
       } catch (error) {
         console.error("データ取得エラー:", error);
       } finally {
@@ -369,7 +232,7 @@ export default function MyPage() {
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, []);
 
   const handleLogout = async () => {
@@ -399,53 +262,19 @@ export default function MyPage() {
     <PageWrapper>
       <ContentContainer>
         {/* プロフィールカード */}
-        <ProfileSection>
-          <ProfileCard>
-            <AvatarIcon>
-              {profile?.avatarUrl ? (
-                // 画像がある場合は画像を表示
-                <AvatarImg src={profile.avatarUrl} alt={profile.name} />
-              ) : (
-                // ない場合はアイコンを表示
-                <FaUserCircle />
-              )}
-            </AvatarIcon>
-            <ProfileInfo>
-              <UserName>{profile ? profile.name : "ゲストユーザー"}</UserName>
-              <MetaInfo>
-                <MetaItem>
-                  <FaUniversity />
-                  {profile ? profile.university : "大学未設定"}
-                </MetaItem>
-                <MetaItem>
-                  <FaGraduationCap />
-                  {profile ? profile.faculty : "学部未設定"}
-                </MetaItem>
-              </MetaInfo>
-            </ProfileInfo>
+        <ProfileCard
+          profile={profile}
+          applicationCount={applicationCount}
+          onOpenRankModal={() => setIsRankModalOpen(true)}
+        />
 
-            {/* 編集ボタン */}
-            <EditProfileButton
-              href="/mypage/edit"
-              aria-label="プロフィール編集"
-            >
-              <FaPen size={16} />
-              {/* スマホ表示用テキスト */}
-              <span className="mobile-text" style={{ display: "none" }}>
-                編集
-              </span>
-            </EditProfileButton>
-          </ProfileCard>
-        </ProfileSection>
-
-        {/* メインメニュー（ダッシュボード） */}
+        {/* メインメニュー */}
         <DashboardGrid>
           {/* 活動記録 */}
           <MenuCard
             href="/activity-log"
-            bg="linear-gradient(135deg, #68B5D5 0%, #4A90E2 100%)"
-            shadowColor="rgba(74, 144, 226, 0.3)"
-            style={{ gridColumn: "1 / -1" }} // 横幅いっぱいに
+            variant="outline"
+            style={{ gridColumn: "1 / -1" }}
           >
             <MenuIcon>
               <FaBookOpen />
@@ -454,26 +283,26 @@ export default function MyPage() {
             <MenuDesc>あなたのボランティアの軌跡を確認できます</MenuDesc>
           </MenuCard>
 
-          {/* 2. 応募済み */}
+          {/* 応募済み */}
           <MenuCard href="/mylist?tab=applied" variant="outline">
             <MenuIcon>
               <FaCheckCircle />
             </MenuIcon>
-            <MenuLabel variant="outline">応募済み</MenuLabel>
-            <MenuDesc>応募済みのボランティアを確認できます</MenuDesc>
+            <MenuLabel>応募済み</MenuLabel>
+            <MenuDesc>現在の応募状況</MenuDesc>
           </MenuCard>
 
-          {/* 3. お気に入り */}
+          {/* お気に入り */}
           <MenuCard href="/mylist?tab=favorites" variant="outline">
             <MenuIcon>
               <FaHeart />
             </MenuIcon>
-            <MenuLabel variant="outline">お気に入り</MenuLabel>
-            <MenuDesc>気になっているボランティアを確認できます</MenuDesc>
+            <MenuLabel>お気に入り</MenuLabel>
+            <MenuDesc>気になるリスト</MenuDesc>
           </MenuCard>
         </DashboardGrid>
 
-        {/* ログアウトボタン */}
+        {/* ログアウト */}
         <LogoutSection>
           <LogoutButton onClick={handleLogout}>
             <FaSignOutAlt /> ログアウト
@@ -492,10 +321,13 @@ export default function MyPage() {
           </AdminSection>
         )}
       </ContentContainer>
+
+      {/* ランク説明モーダル */}
+      <RankModal
+        isOpen={isRankModalOpen}
+        onClose={() => setIsRankModalOpen(false)}
+        currentCount={applicationCount}
+      />
     </PageWrapper>
   );
 }
-
-const ProfileSection = styled.section`
-  /* 必要に応じてアニメーションなどを追加 */
-`;

@@ -1,5 +1,4 @@
 // ボランティア募集管理のイベント一覧ページコンポーネント
-
 "use client";
 
 import Link from "next/link";
@@ -10,10 +9,9 @@ import EmptyState from "../common/EmptyState";
 import { FaPlus, FaClipboardList } from "react-icons/fa";
 
 // --- Emotion Styles ---
-
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background-color: #f5fafc; /* マイページと同じ背景色 */
+  background-color: #f5fafc;
   padding-bottom: 60px;
   font-family: "Helvetica Neue", Arial, sans-serif;
 `;
@@ -27,7 +25,7 @@ const StickyHeader = styled.div`
 `;
 
 const ContentContainer = styled.div`
-  max-width: 1000px; /* カードが並ぶので少し広めに */
+  max-width: 1000px;
   margin: 0 auto;
   padding: 0 20px;
   @media (max-width: 600px) {
@@ -52,7 +50,7 @@ const PageTitle = styled.h1`
   }
 `;
 
-// 新規作成ボタン (リッチなデザインに)
+// 新規作成ボタン
 const CreateButton = styled(Link)`
   display: flex;
   align-items: center;
@@ -86,16 +84,12 @@ const CreateButton = styled(Link)`
 const ListContainer = styled.div`
   display: grid;
   gap: 24px;
-
-  /* スマホは1列 */
   grid-template-columns: 1fr;
 
-  /* タブレット以上は2列 */
   @media (min-width: 600px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* PCなら3列 */
   @media (min-width: 900px) {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -113,7 +107,6 @@ export default function EventAdminListPage({ events }) {
 
   return (
     <PageWrapper>
-      {/* 1. パンくずリストを固定ヘッダー内に配置 */}
       <StickyHeader>
         <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
       </StickyHeader>
@@ -121,7 +114,6 @@ export default function EventAdminListPage({ events }) {
       <ContentContainer>
         <HeaderArea>
           <PageTitle>ボランティア管理</PageTitle>
-          {/* 新規作成ボタン (入力ページへ飛ぶ) */}
           <CreateButton href="/volunteer-registration/admin/events/new">
             <FaPlus /> 新規登録
           </CreateButton>

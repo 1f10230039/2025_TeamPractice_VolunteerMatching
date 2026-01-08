@@ -1,3 +1,4 @@
+// ミニ検索結果コンポーネント
 "use client";
 
 import styled from "@emotion/styled";
@@ -5,16 +6,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaSearch, FaMapMarkerAlt, FaRobot } from "react-icons/fa";
 
-// Emotion
+// --- Emotion ---
 const SearchBoxContainer = styled.div`
-  padding: 30px 24px;
-  max-width: 1000px;
-  margin: 0 auto;
-  @media (max-width: 600px) {
-    padding: 10px 5px;
-  }
+  width: 100%;
+  display: flex;
+  justify-content: center;
 `;
 
+// オプション群のラッパー
 const OptionsContainer = styled.div`
   display: flex;
   gap: 12px;
@@ -22,60 +21,67 @@ const OptionsContainer = styled.div`
 
   @media (max-width: 600px) {
     gap: 8px;
-    overflow-x: auto; /* スマホなら横スクロール */
-    padding-bottom: 4px; /* スクロールバー用 */
+    width: 100%;
+    overflow-x: auto;
+    padding: 0 16px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 `;
 
-// タブ風のボタンスタイル
+// タブ風ボタン
 const SearchLink = styled(Link, {
   shouldForwardProp: prop => prop !== "isActive",
 })`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 20px;
-  border-radius: 30px;
+  padding: 10px 24px;
+  border-radius: 50px;
   text-decoration: none;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
-  white-space: nowrap; /* 折り返さない */
+  white-space: nowrap;
 
-  /* アクティブな時 */
   ${props =>
     props.isActive
       ? `
-    background-color: #fff;
-    color: #007bff;
-    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
-    border: 2px solid white;
+    /* アクティブ */
+    background-color: #ffffff;
+    color: #4a90e2;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
   `
       : `
-    /* 非アクティブな時（背景色になじませる） */
-    background-color: rgba(255, 255, 255, 0.3);
-    color: #333;
-    border: 2px solid transparent;
+    /* 非アクティブ */
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #666666;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.6);
-      color: #007bff;
+      background-color: #f0f0f0;
+      color: #4a90e2;
     }
   `}
 
   & > svg {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1.1rem;
+    height: 1.1rem;
     margin-right: 8px;
   }
 
   @media (max-width: 600px) {
     padding: 8px 16px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+    flex-shrink: 0;
 
     & > svg {
-      width: 1.1rem;
-      height: 1.1rem;
+      width: 1rem;
+      height: 1rem;
+      margin-right: 6px;
     }
   }
 `;
@@ -83,7 +89,6 @@ const SearchLink = styled(Link, {
 export default function SearchOptionsMini() {
   const pathname = usePathname();
 
-  // 今のページがどこかを判定
   const isKeyword =
     pathname.includes("/search/keyword") ||
     pathname.includes("/search/results");

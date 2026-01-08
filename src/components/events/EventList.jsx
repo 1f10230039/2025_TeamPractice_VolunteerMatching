@@ -1,28 +1,25 @@
+// ボランティアイベント一覧コンポーネント
 "use client";
 
 import styled from "@emotion/styled";
-import EventCard from "./EventsCard"; // ファイル名が EventCard.jsx なら "./EventCard" に修正してね！
+import EventCard from "./EventsCard"; // ファイル名は環境に合わせてね！
 
-// Emotion
+// --- Emotion Styles ---
+// イベントリスト全体のコンテナスタイル
 const ListContainer = styled.div`
   display: grid;
-  /* 基本は340px以上の幅で自動折り返し */
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
   margin-top: 16px;
-
-  /* ★追加: グリッド内のアイテム全体を中央寄せにする */
   justify-content: center;
 
-  /* ★追加: スマホなど画面幅が狭い時（400px以下など）の対応 */
-  @media (max-width: 480px) {
-    /* 強制的に1列にして、カード幅を画面に合わせる */
+  @media (max-width: 800px) {
     grid-template-columns: 1fr;
-    /* もしカードが大きすぎる場合は、少し小さくする設定を入れてもOK */
-    /* grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); */
+    gap: 16px;
   }
 `;
 
+// --- EventList Component ---
 /**
  * イベントカードをリスト表示するコンポーネント
  * @param {object[]} events - 表示するイベントの配列
@@ -35,11 +32,17 @@ export default function EventList({
   codes,
   userFavoriteIds = [],
 }) {
-  // イベントがない場合の表示
+  // もしイベントが空ならメッセージ表示
   if (!events || events.length === 0) {
-    return <p>表示できるイベントがありません。</p>;
+    // 表示できるイベントがない場合のメッセージ
+    return (
+      <p style={{ textAlign: "center", color: "#666", padding: "40px" }}>
+        表示できるイベントがありません。
+      </p>
+    );
   }
 
+  // イベントカードのリストをレンダリング
   return (
     <ListContainer>
       {events.map(event => {
@@ -55,7 +58,7 @@ export default function EventList({
             source={source}
             query={query}
             codes={codes}
-            isFavorite={isFav} // 判定結果をカードに渡す
+            isFavorite={isFav}
           />
         );
       })}

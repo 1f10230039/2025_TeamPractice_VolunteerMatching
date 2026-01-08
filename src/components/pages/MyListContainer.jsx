@@ -1,3 +1,4 @@
+// マイリストコンテナコンポーネント
 "use client";
 
 import { useState, useEffect } from "react";
@@ -89,7 +90,7 @@ export default function MyListContainer() {
         setFavoriteEvents(formattedFavorites);
         setAppliedEvents(formattedApplied);
 
-        // ★ ハートを赤く表示するためのIDリストを作成
+        // ハートを赤く表示するためのIDリストを作成
         // 型不一致を防ぐため、Number() で確実に数値に変換する
         const ids = formattedFavorites.map(event => Number(event.id));
         setUserFavoriteIds(ids);

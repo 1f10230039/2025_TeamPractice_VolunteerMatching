@@ -1,8 +1,8 @@
-// src/app/activity-log/page.js
+// ボランティア活動記録 一覧ページ
+import ActivityLogContainer from "@/components/pages/ActivityLogContainer";
 
-import ActivityLogContainer from "@/components/pages/ActivityLogContainer"; // 作ったコンテナをインポート
-
+// ロジックは全てクライアント側の Container に委譲する
 export default function Page() {
-  // サーバー側では何もせず、コンテナを表示するだけ
+  // Suspenseでラップしてコンテナを表示
   return <ActivityLogContainer />;
 }

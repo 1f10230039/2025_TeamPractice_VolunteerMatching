@@ -1,11 +1,14 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { getChatCompletion, createInitialMessages } from '@/lib/openai';
-import { findSimilarEvents } from '@/lib/embedding';
+//　APIルート: チャットメッセージの処理（RAG実装）
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { getChatCompletion, createInitialMessages } from "@/lib/openai";
+import { findSimilarEvents } from "@/lib/embedding";
 
+// Supabaseクライアントの初期化
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 /**
@@ -16,9 +19,9 @@ export async function GET() {
     const initialMessages = await createInitialMessages();
     return NextResponse.json({ messages: initialMessages });
   } catch (error) {
-    console.error('Error in GET /api/chat:', error);
+    console.error("Error in GET /api/chat:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
@@ -32,10 +35,10 @@ export async function POST(request) {
     const { messages } = await request.json();
 
     // ユーザーの最新メッセージを取得
-    const userMessage = messages.filter(msg => msg.role === 'user').pop();
+    const userMessage = messages.filter(msg => msg.role === "user").pop();
     if (!userMessage) {
       return NextResponse.json(
-        { error: 'User message not found' },
+        { error: "User message not found" },
         { status: 400 }
       );
     }
@@ -47,7 +50,7 @@ export async function POST(request) {
     );
 
     if (searchError) {
-      console.error('Error in findSimilarEvents:', searchError);
+      console.error("Error in findSimilarEvents:", searchError);
       // 検索エラーが発生してもAI応答は続行
     }
 
@@ -57,9 +60,9 @@ export async function POST(request) {
     if (events && events.length > 0) {
       const eventIds = events.map(e => e.id);
       const { data: fullEventsData, error: fetchError } = await supabase
-        .from('events')
-        .select('*')
-        .in('id', eventIds);
+        .from("events")
+        .select("*")
+        .in("id", eventIds);
 
       if (!fetchError && fullEventsData) {
         // 検索結果の順序を保持（similarity順）
@@ -80,20 +83,20 @@ export async function POST(request) {
             .map(
               event => `
 イベント名: ${event.name}
-場所: ${event.place || '場所未定'}
-日時: ${event.start_datetime ? new Date(event.start_datetime).toLocaleDateString('ja-JP') : '日時未定'} ${event.end_datetime ? `～ ${new Date(event.end_datetime).toLocaleDateString('ja-JP')}` : ''}
-説明: ${event.short_description || ''}
-${event.long_description ? `詳細: ${event.long_description}` : ''}
-参加費: ${event.fee ? `${event.fee}円` : '無料'}
-定員: ${event.capacity ? `${event.capacity}名` : '設定なし'}
+場所: ${event.place || "場所未定"}
+日時: ${event.start_datetime ? new Date(event.start_datetime).toLocaleDateString("ja-JP") : "日時未定"} ${event.end_datetime ? `～ ${new Date(event.end_datetime).toLocaleDateString("ja-JP")}` : ""}
+説明: ${event.short_description || ""}
+${event.long_description ? `詳細: ${event.long_description}` : ""}
+参加費: ${event.fee ? `${event.fee}円` : "無料"}
+定員: ${event.capacity ? `${event.capacity}名` : "設定なし"}
 `
             )
-            .join('\n\n')
-        : 'イベントは見つかりませんでした。';
+            .join("\n\n")
+        : "イベントは見つかりませんでした。";
 
     // AIへの指示とコンテキストを含めたシステムメッセージを作成
     const systemMessage = {
-      role: 'system',
+      role: "system",
       content: `あなたは大学生のためのボランティアイベントアドバイザーです。
 以下の要件に従って回答してください：
 1. 提供されたイベント情報を基に、ユーザーの質問や興味に最も適したイベントを提案してください。
@@ -111,7 +114,7 @@ ${context}`,
     };
 
     // 既存のメッセージからシステムメッセージを除外し、新しいシステムメッセージを先頭に追加
-    const messagesWithoutSystem = messages.filter(msg => msg.role !== 'system');
+    const messagesWithoutSystem = messages.filter(msg => msg.role !== "system");
     const messagesWithContext = [systemMessage, ...messagesWithoutSystem];
 
     // RAG: Augmented Generation - AIからの応答を取得
@@ -120,29 +123,34 @@ ${context}`,
     // 応答から選択肢を抽出（JSON形式で含まれている場合）
     let options = null;
     let content = aiResponse;
-    
+
     // JSON形式の選択肢を抽出
     const jsonMatch = aiResponse.match(/\{"options":\s*\[.*?\]\}/s);
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.options && Array.isArray(parsed.options) && parsed.options.length === 4) {
+        if (
+          parsed.options &&
+          Array.isArray(parsed.options) &&
+          parsed.options.length === 4
+        ) {
           options = parsed.options;
           // JSON部分を応答から削除
-          content = aiResponse.replace(/\{"options":\s*\[.*?\]\}/s, '').trim();
+          content = aiResponse.replace(/\{"options":\s*\[.*?\]\}/s, "").trim();
         }
       } catch (e) {
-        console.error('Failed to parse options JSON:', e);
+        console.error("Failed to parse options JSON:", e);
       }
     }
 
     // 検索結果のイベントをすべて含める（最大3件）
     // fullEventsを使用（完全な情報を含む）
-    const relevantEvents = fullEvents && fullEvents.length > 0 ? fullEvents : null;
+    const relevantEvents =
+      fullEvents && fullEvents.length > 0 ? fullEvents : null;
 
     // AIの応答とイベントデータ、選択肢を組み合わせる
     const responseMessage = {
-      role: 'assistant',
+      role: "assistant",
       content: content,
       events: relevantEvents, // 複数のイベントを配列で返す
       eventData: relevantEvents?.[0] || null, // 後方互換性のため最初のイベントも含める
@@ -151,11 +159,10 @@ ${context}`,
 
     return NextResponse.json({ message: responseMessage });
   } catch (error) {
-    console.error('Error in POST /api/chat:', error);
+    console.error("Error in POST /api/chat:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
-

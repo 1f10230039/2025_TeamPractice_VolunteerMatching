@@ -1,3 +1,4 @@
+// ヘッダーコンポーネント
 "use client";
 
 import styled from "@emotion/styled";
@@ -5,7 +6,7 @@ import Navigation from "../Navigation/Navigation";
 import Link from "next/link";
 import Image from "next/image";
 
-// Emotion
+// --- Emotion Styles ---
 // ヘッダー全体を包むコンテナ
 const HeaderContainer = styled.header`
   width: 100%;
@@ -22,11 +23,11 @@ const HeaderContainer = styled.header`
 
   position: relative;
   top: 0;
-  z-index: 1000; /* 他の要素より手前に */
+  z-index: 1000;
 
   @media (max-width: 600px) {
     justify-content: center;
-    height: 60px; /* スマホなら少し低く */
+    height: 60px;
   }
 `;
 
@@ -34,9 +35,9 @@ const HeaderContainer = styled.header`
 const LogoLink = styled(Link)`
   display: flex;
   align-items: center;
-  height: 100%; /* ヘッダーの高さに合わせる */
+  height: 100%;
   position: relative;
-  width: 160px; /* 少し大きめに確保 */
+  width: 160px;
   transition: opacity 0.2s;
 
   &:hover {
@@ -52,11 +53,13 @@ const LogoLink = styled(Link)`
 // PC用のナビゲーションを囲むラッパー
 const DesktopNavigation = styled.div`
   display: block;
+
   @media (max-width: 600px) {
     display: none;
   }
 `;
 
+// --- Header Component ---
 export default function Header() {
   return (
     <HeaderContainer>

@@ -1,13 +1,11 @@
-// src/components/auth/AuthPrompt.jsx
-
-"use client"; // クライアントコンポーネント宣言
+// ログイン・新規登録を促すコンポーネント
+"use client";
 
 import styled from "@emotion/styled";
-import Link from "next/link"; // ページ遷移用のLinkコンポーネント
+import Link from "next/link";
 import { FiLogIn, FiUserPlus } from "react-icons/fi";
 
 // --- Emotion Styles ---
-
 // コンポーネント全体のラッパー
 const PromptWrapper = styled.div`
   padding: 48px 32px;

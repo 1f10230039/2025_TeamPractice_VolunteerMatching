@@ -1,3 +1,4 @@
+// 活動記録の詳細コンテナコンポーネント
 "use client";
 
 import { useState, useEffect } from "react";
@@ -93,6 +94,6 @@ export default function ActivityLogDetailContainer({ activityLogId }) {
     );
   }
 
-  // データが取れたら詳細ページを表示！
+  // データが取れたら詳細ページを表示
   return <ActivityLogDetailPage log={log} />;
 }

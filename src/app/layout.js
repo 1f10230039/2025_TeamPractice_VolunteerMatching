@@ -1,3 +1,4 @@
+//　全体のレイアウト設定
 export const dynamic = "force-dynamic";
 import { Geist, Geist_Mono } from "next/font/google";
 import EmotionRegistry from "../lib/EmotionRegistry";
@@ -5,11 +6,13 @@ import GlobalStyles from "@/styles/GlobalStyles";
 import Header from "../components/common/Header/Header";
 import FooterTabBar from "../components/common/FooterTabBar/FooterTabBar";
 
+// フォント設定
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
+// モノスペースフォント設定
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -44,7 +47,7 @@ export const metadata = {
   // アイコン設定
   icons: {
     icon: "/icon.png",
-    apple: "/icon.png", // iPhoneのホーム画面に追加した時のアイコン
+    apple: "/icon.png",
   },
 
   // Open Graph設定（SNSでシェアされたときに使われる）
@@ -73,6 +76,7 @@ export const metadata = {
   },
 };
 
+// レイアウトコンポーネント本体
 export default function RootLayout({ children }) {
   return (
     <html lang="ja">

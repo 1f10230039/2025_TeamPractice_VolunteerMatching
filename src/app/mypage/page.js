@@ -1,10 +1,8 @@
-// src/app/mypage/page.js
-
-// サーバー側でのチェックを廃止したので、これだけでOKです
+// マイページのコンテナ
 import MyPage from "@/components/pages/MyPage.jsx";
 
+// ロジックは全てクライアント側のコンポーネントに委譲する
 export default function MyPageContainer() {
-  // サーバーでは何もせず、ただクライアントコンポーネントを表示するだけ
-  // 認証チェックやデータ取得は、すべて MyPage.jsx の中で行います
+  // コンテナを表示
   return <MyPage />;
 }

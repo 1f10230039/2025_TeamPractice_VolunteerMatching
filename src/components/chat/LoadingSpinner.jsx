@@ -1,8 +1,11 @@
+// ローディングスピナーコンポーネント
 "use client";
 
 /** @jsxImportSource @emotion/react */
 import { css, keyframes } from "@emotion/react";
 
+// --- Emotion Styles ---
+// スピナーの回転アニメーション
 const spin = keyframes`
   from {
     transform: rotate(0deg);
@@ -12,6 +15,7 @@ const spin = keyframes`
   }
 `;
 
+// スピナー本体のスタイル
 const spinner = css`
   border: 4px solid rgba(0, 0, 0, 0.1);
   width: 36px;
@@ -22,6 +26,7 @@ const spinner = css`
   margin: 20px auto;
 `;
 
+// ローディングスピナーコンポーネント本体
 const LoadingSpinner = () => {
   return <div css={spinner}></div>;
 };

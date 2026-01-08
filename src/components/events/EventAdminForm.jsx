@@ -1,3 +1,4 @@
+// ボランティア募集管理用のイベント編集フォームコンポーネント
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
@@ -11,7 +12,7 @@ import { FiSave, FiX, FiStar, FiCheck } from "react-icons/fi";
 import Breadcrumbs from "../common/Breadcrumbs";
 
 // --- Emotion Styles ---
-
+// ページ全体のラッパー
 const PageWrapper = styled.div`
   min-height: 100vh;
   background-color: #f5fafc;
@@ -19,6 +20,7 @@ const PageWrapper = styled.div`
   font-family: "Helvetica Neue", Arial, sans-serif;
 `;
 
+// スティッキーヘッダー
 const StickyHeader = styled.div`
   position: sticky;
   top: 0;
@@ -27,6 +29,7 @@ const StickyHeader = styled.div`
   padding-bottom: 10px;
 `;
 
+// フォームコンテナ
 const FormContainer = styled.form`
   padding: 40px;
   max-width: 800px;
@@ -42,6 +45,7 @@ const FormContainer = styled.form`
   }
 `;
 
+// ページタイトル
 const PageTitle = styled.h1`
   font-size: 24px;
   font-weight: 800;
@@ -51,6 +55,7 @@ const PageTitle = styled.h1`
   letter-spacing: 0.05em;
 `;
 
+// 特別設定ボックス（おすすめフラグ用）
 const SpecialSettingsBox = styled.div`
   background-color: #fff9e6;
   border: 2px solid #ffeba8;
@@ -62,6 +67,7 @@ const SpecialSettingsBox = styled.div`
   justify-content: space-between;
 `;
 
+// おすすめラベル
 const SpecialLabel = styled.label`
   display: flex;
   align-items: center;
@@ -117,10 +123,12 @@ const ToggleSwitch = styled.div`
   }
 `;
 
+// フォームグループ
 const FormGroup = styled.div`
   margin-bottom: 28px;
 `;
 
+// ラベルスタイル
 const Label = styled.label`
   display: block;
   font-weight: 700;
@@ -135,6 +143,7 @@ const Label = styled.label`
   }
 `;
 
+// 入力フィールドスタイル
 const Input = styled.input`
   width: 100%;
   padding: 14px 16px;
@@ -152,6 +161,7 @@ const Input = styled.input`
   }
 `;
 
+// テキストエリアスタイル
 const Textarea = styled.textarea`
   width: 100%;
   padding: 14px 16px;
@@ -172,6 +182,7 @@ const Textarea = styled.textarea`
   }
 `;
 
+// 共通ボタンスタイル
 const GridWrapper = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -187,13 +198,14 @@ const GridWrapper = styled.div`
 const DateInputWrapper = styled.div`
   width: 100%;
   input {
-    font-family: inherit; /* 日付フォントのズレ防止 */
+    font-family: inherit;
   }
 `;
 
+// ボタン群コンテナ
 const ButtonContainer = styled.div`
   display: flex;
-  justify-content: flex-end; /* 右寄せ */
+  justify-content: flex-end;
   gap: 16px;
   margin-top: 48px;
   padding-top: 24px;
@@ -210,6 +222,7 @@ const ButtonContainer = styled.div`
   }
 `;
 
+// ベースボタンスタイル
 const BaseButton = styled.button`
   display: flex;
   align-items: center;
@@ -222,6 +235,7 @@ const BaseButton = styled.button`
   transition: all 0.2s ease;
 `;
 
+// 送信ボタンスタイル
 const SubmitButton = styled(BaseButton)`
   background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
   color: white;
@@ -241,6 +255,7 @@ const SubmitButton = styled(BaseButton)`
   }
 `;
 
+// キャンセルボタンスタイル
 const CancelButton = styled(BaseButton)`
   background-color: #fff;
   color: #666;
@@ -277,6 +292,7 @@ const DropzoneContainer = styled.div`
   }
 `;
 
+// アップロードアイコン
 const UploadIcon = styled.div`
   font-size: 2.5rem;
   color: #4a90e2;
@@ -284,6 +300,7 @@ const UploadIcon = styled.div`
   opacity: 0.8;
 `;
 
+// アップロードテキスト
 const UploadText = styled.p`
   font-size: 0.95rem;
   font-weight: bold;
@@ -291,6 +308,7 @@ const UploadText = styled.p`
   color: #333;
 `;
 
+// サブテキスト
 const UploadSubText = styled.span`
   font-size: 0.8rem;
   color: #888;
@@ -298,6 +316,7 @@ const UploadSubText = styled.span`
   display: block;
 `;
 
+// アイキャッチ画像プレビュー
 const EyeCatchPreview = styled.div`
   margin-top: 16px;
   width: 100%;
@@ -309,6 +328,7 @@ const EyeCatchPreview = styled.div`
   border: 1px solid #eee;
 `;
 
+// ギャラリーグリッド
 const GalleryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -316,6 +336,7 @@ const GalleryGrid = styled.div`
   margin-top: 20px;
 `;
 
+// ギャラリーアイテム
 const GalleryItem = styled.div`
   position: relative;
   width: 100%;
@@ -332,6 +353,7 @@ const GalleryItem = styled.div`
   }
 `;
 
+// ギャラリー画像
 const RemoveImageButton = styled.button`
   position: absolute;
   top: 6px;
@@ -355,6 +377,7 @@ const RemoveImageButton = styled.button`
   }
 `;
 
+// タグ選択コンテナ
 const TagSelectionContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -365,6 +388,7 @@ const TagSelectionContainer = styled.div`
   border-radius: 12px;
 `;
 
+// タグラベルスタイル
 const TagLabel = styled.label`
   display: flex;
   align-items: center;
@@ -385,37 +409,54 @@ const TagLabel = styled.label`
   }
 `;
 
+// タグ用チェックボックス（非表示）
 const TagCheckbox = styled.input`
   display: none;
 `;
 
+// --- ヘルパー関数 ---
+// ISO文字列をdatetime-local形式に変換
 const formatDatetimeLocal = isoString => {
+  // もし値がなければ空文字を返す
   if (!isoString) return "";
   try {
     const date = new Date(isoString);
+    // もし不正な日付なら空文字を返す
     if (isNaN(date.getTime())) return "";
+    // JSTに変換
     const jstOffset = 9 * 60 * 60 * 1000;
     const jstDate = new Date(date.getTime() + jstOffset);
+    // datetime-local形式にフォーマットして返す
     return jstDate.toISOString().slice(0, 16);
   } catch (e) {
+    // エラーが発生した場合も空文字を返す
     return "";
   }
 };
 
 // --- Component 本体 ---
-
+// イベント管理用フォームコンポーネント
 export default function EventAdminForm({ eventToEdit }) {
+  // --- State管理 ---
+  // Next.jsのルーター
   const router = useRouter();
+  // ローディング状態
   const [isLoading, setIsLoading] = useState(false);
+  // 編集モードかどうか
   const isEditMode = Boolean(eventToEdit);
-
+  // アップロード中のアイキャッチ画像ファイル
   const [uploadFile, setUploadFile] = useState(null);
+  // 利用可能なタグ一覧
   const [availableTags, setAvailableTags] = useState([]);
+  // 選択中のタグID一覧
   const [selectedTagIds, setSelectedTagIds] = useState([]);
+  // ギャラリー画像関連の状態
   const [galleryImages, setGalleryImages] = useState([]);
+  // 新規アップロード予定のギャラリー画像ファイル一覧
   const [newGalleryFiles, setNewGalleryFiles] = useState([]);
+  // 削除予定の既存ギャラリー画像ID一覧
   const [deletedGalleryIds, setDeletedGalleryIds] = useState([]);
-
+  // フォームデータ
   const [formData, setFormData] = useState({
     name: eventToEdit?.name ?? "",
     place: eventToEdit?.place ?? "",
@@ -424,8 +465,6 @@ export default function EventAdminForm({ eventToEdit }) {
     end_datetime: formatDatetimeLocal(eventToEdit?.end_datetime) ?? "",
     image_url: eventToEdit?.image_url ?? "",
     recommended: eventToEdit?.recommended ?? false,
-
-    // 元のデータ構造はそのまま維持
     favorite: eventToEdit?.favorite ?? false,
     short_description: eventToEdit?.short_description ?? "",
     long_description: eventToEdit?.long_description ?? "",
@@ -446,37 +485,53 @@ export default function EventAdminForm({ eventToEdit }) {
     review: eventToEdit?.review ?? "",
   });
 
+  // 初回マウント時に利用可能なタグ一覧を取得
+  // 編集モードなら選択中タグとギャラリー画像もセット
   useEffect(() => {
+    // タグ一覧を取得
     const fetchTags = async () => {
+      // tagsテーブルから全タグを取得
       const { data, error } = await supabase
-        .from("tags")
-        .select("*")
-        .order("id");
+        .from("tags") // tagsテーブルから
+        .select("*") // 全カラム取得
+        .order("id"); // id順にソート
+      // もしエラーがなければセット
       if (!error && data) setAvailableTags(data);
     };
+    // タグ一覧取得を実行
     fetchTags();
 
+    // もし編集モードなら、選択中タグとギャラリー画像をセット
     if (isEditMode) {
+      // もしタグがあればセット
       if (eventToEdit.tags) {
         setSelectedTagIds(eventToEdit.tags.map(t => t.id));
       }
+      // ギャラリー画像を取得してセット
       const fetchGalleryImages = async () => {
+        // event_imagesテーブルから該当イベントの画像を取得
         const { data, error } = await supabase
-          .from("event_images")
-          .select("*")
-          .eq("event_id", eventToEdit.id);
+          .from("event_images") // event_imagesテーブルから
+          .select("*") // 全カラム取得
+          .eq("event_id", eventToEdit.id); // 該当イベントIDで絞り込み
+        // もしエラーがなければセット
         if (!error && data) setGalleryImages(data);
       };
+      // ギャラリー画像取得を実行
       fetchGalleryImages();
     }
   }, [isEditMode, eventToEdit]);
 
+  // --- ハンドラー関数群 ---
+  // タグ選択の処理
   const handleTagToggle = tagId => {
+    // 選択中タグID一覧を更新
     setSelectedTagIds(prev =>
       prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
     );
   };
 
+  // 入力フィールドの変更処理
   const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -488,7 +543,9 @@ export default function EventAdminForm({ eventToEdit }) {
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
+  // アイキャッチ画像のドロップ処理
   const onDropEyeCatch = useCallback(acceptedFiles => {
+    // もしファイルがあれば先頭のファイルをセット
     if (acceptedFiles && acceptedFiles[0]) {
       const file = acceptedFiles[0];
       setUploadFile(file);
@@ -496,13 +553,16 @@ export default function EventAdminForm({ eventToEdit }) {
     }
   }, []);
 
+  // アイキャッチ画像用ドロップゾーン設定
   const eyeCatchDropzone = useDropzone({
     onDrop: onDropEyeCatch,
     accept: { "image/*": [] },
     multiple: false,
   });
 
+  // ギャラリー画像のドロップ処理
   const onDropGallery = useCallback(acceptedFiles => {
+    // もしファイルがあれば新規ギャラリーファイル一覧に追加
     if (acceptedFiles) {
       const newFiles = acceptedFiles.map(file => ({
         file,
@@ -512,57 +572,64 @@ export default function EventAdminForm({ eventToEdit }) {
     }
   }, []);
 
+  // ギャラリー画像用ドロップゾーン設定
   const galleryDropzone = useDropzone({
     onDrop: onDropGallery,
     accept: { "image/*": [] },
     multiple: true,
   });
 
+  // 既存ギャラリー画像の削除処理
   const removeExistingGalleryImage = id => {
     setGalleryImages(prev => prev.filter(img => img.id !== id));
     setDeletedGalleryIds(prev => [...prev, id]);
   };
 
+  // 新規ギャラリー画像の削除処理
   const removeNewGalleryImage = index => {
     setNewGalleryFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // フォーム送信処理
   const handleSubmit = async e => {
     e.preventDefault();
     setIsLoading(true);
 
+    // もし必須項目が未入力なら警告を出して終了
     if (!formData.name || !formData.start_datetime || !formData.end_datetime) {
       alert("イベント名と開始/終了日時は必須です。");
       setIsLoading(false);
       return;
     }
 
+    // アップロード後の最終的な画像URL
     let finalImageUrl = formData.image_url;
 
+    // イベントデータの保存処理
     try {
-      // 1. アイキャッチ画像のアップロード
+      // もし新しいアイキャッチ画像がアップロードされていれば、Supabase Storageにアップロード
       if (uploadFile) {
+        // ファイル名とパスを生成してアップロード
         const fileExt = uploadFile.name.split(".").pop();
         const fileName = `eyecatch_${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
-
         const { error: uploadError } = await supabase.storage
           .from("events-images")
           .upload(filePath, uploadFile);
-
+        // もしアップロードエラーがあれば例外を投げる
         if (uploadError)
           throw new Error(
             `アイキャッチ画像のアップロード失敗: ${uploadError.message}`
           );
-
+        // アップロード成功なら公開URLを取得
         const { data: urlData } = supabase.storage
           .from("events-images")
           .getPublicUrl(filePath);
-
+        // 最終画像URLを更新
         finalImageUrl = urlData.publicUrl;
       }
 
-      // 2. APIに送信するイベントデータ本体を準備
+      // APIに送信するイベントデータ本体を準備
       const submissionData = {
         ...formData,
         image_url: finalImageUrl,
@@ -574,13 +641,15 @@ export default function EventAdminForm({ eventToEdit }) {
         longitude: parseFloat(formData.longitude) || null,
         prefectures: formData.prefecture,
       };
+      // 不要なフィールドを削除
       delete submissionData.prefecture;
 
+      // もし編集モードならIDを追加
       if (isEditMode) {
         submissionData.id = eventToEdit.id;
       }
 
-      // 3. バックエンドAPIを呼び出して、イベントの登録/更新とベクトル化を実行
+      // バックエンドAPIを呼び出して、イベントの登録/更新とベクトル化を実行
       const response = await fetch("/api/events", {
         method: "POST",
         headers: {
@@ -592,53 +661,66 @@ export default function EventAdminForm({ eventToEdit }) {
         }),
       });
 
+      // もしレスポンスがOKでなければエラーを投げる
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "APIリクエストに失敗しました。");
       }
 
+      // レスポンスデータを取得
       const result = await response.json();
+      // 登録または更新されたイベントIDを取得
       const targetEventId = result.eventId;
 
-      // 4. ギャラリー画像の処理
+      // ギャラリー画像の処理
       if (targetEventId) {
+        // もし削除予定のギャラリー画像があれば削除
         if (deletedGalleryIds.length > 0) {
+          // 既存画像を削除
           const { error: deleteImgError } = await supabase
-            .from("event_images")
-            .delete()
-            .in("id", deletedGalleryIds);
+            .from("event_images") // event_imagesテーブルから
+            .delete() // 削除
+            .in("id", deletedGalleryIds); // 削除対象IDを指定
+          // もし削除エラーがあればコンソールに出力
           if (deleteImgError) console.error("画像削除エラー:", deleteImgError);
         }
 
+        // もし新規アップロード予定のギャラリー画像があればアップロード
         if (newGalleryFiles.length > 0) {
+          // 各画像をアップロードしてデータを準備
           const uploadPromises = newGalleryFiles.map(async item => {
             const file = item.file;
             const fileExt = file.name.split(".").pop();
             const fileName = `gallery_${targetEventId}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
             const filePath = `${fileName}`;
             const { error: upError } = await supabase.storage
-              .from("events-images")
-              .upload(filePath, file);
+              .from("events-images") // events-imagesストレージに
+              .upload(filePath, file); // アップロード
+            // もしアップロードエラーがあれば例外を投げる
             if (upError) throw upError;
             const { data: urlData } = supabase.storage
-              .from("events-images")
-              .getPublicUrl(filePath);
+              .from("events-images") // events-imagesストレージから
+              .getPublicUrl(filePath); // 公開URLを取得
+            // イベント画像データを返す
             return { event_id: targetEventId, image_url: urlData.publicUrl };
           });
+          // すべての画像アップロードを実行
           const uploadedImagesData = await Promise.all(uploadPromises);
           const { error: insertImgError } = await supabase
-            .from("event_images")
-            .insert(uploadedImagesData);
+            .from("event_images") // event_imagesテーブルに
+            .insert(uploadedImagesData); // 複数行挿入
+          // もし挿入エラーがあれば例外を投げる
           if (insertImgError) throw insertImgError;
         }
       }
-
+      // イベント保存成功のメッセージを表示してリダイレクト
       alert(result.message);
       router.push(`/events/${targetEventId}?source=admin`);
       router.refresh();
     } catch (error) {
       console.error("イベントの保存に失敗:", error.message);
       alert(`エラーが発生しました: ${error.message}`);
+      // エラー時はローディングを解除して終了
     } finally {
       setIsLoading(false);
     }
@@ -646,11 +728,12 @@ export default function EventAdminForm({ eventToEdit }) {
 
   // パンくずリスト
   const crumbs = [
-    { label: "ボランティア管理", href: "/volunteer-registration/admin/events" },
-    { label: isEditMode ? "編集" : "新規登録", href: "#" },
+    { label: "ボランティア管理", href: "/volunteer-registration/admin/events" }, // ボランティア管理トップ
+    { label: isEditMode ? "編集" : "新規登録", href: "#" }, // 現在のページ
   ];
-  const baseCrumb = { label: "マイページ", href: "/mypage" };
+  const baseCrumb = { label: "マイページ", href: "/mypage" }; // ベースパンくず
 
+  // --- JSXレンダリング ---
   return (
     <PageWrapper>
       <StickyHeader>
@@ -662,6 +745,7 @@ export default function EventAdminForm({ eventToEdit }) {
           {isEditMode ? "ボランティアを編集" : "ボランティアを新規登録"}
         </PageTitle>
 
+        {/* おすすめフラグ設定 */}
         <SpecialSettingsBox>
           <SpecialLabel htmlFor="recommended">
             <FiStar size={20} />
@@ -681,6 +765,7 @@ export default function EventAdminForm({ eventToEdit }) {
           </ToggleSwitch>
         </SpecialSettingsBox>
 
+        {/* イベント名 */}
         <FormGroup>
           <Label className="required" htmlFor="name">
             イベント名
@@ -696,6 +781,7 @@ export default function EventAdminForm({ eventToEdit }) {
           />
         </FormGroup>
 
+        {/* 開始日時と終了日時 */}
         <GridWrapper>
           <FormGroup>
             <Label className="required" htmlFor="start_datetime">
@@ -842,6 +928,7 @@ export default function EventAdminForm({ eventToEdit }) {
           )}
         </FormGroup>
 
+        {/* 短い紹介文 */}
         <FormGroup>
           <Label htmlFor="short_description">短い紹介文 (一覧用)</Label>
           <Textarea
@@ -852,6 +939,8 @@ export default function EventAdminForm({ eventToEdit }) {
             style={{ minHeight: "80px" }}
           />
         </FormGroup>
+
+        {/* 長い紹介文 */}
         <FormGroup>
           <Label htmlFor="long_description">長い紹介文 (詳細用)</Label>
           <Textarea
@@ -861,6 +950,8 @@ export default function EventAdminForm({ eventToEdit }) {
             onChange={handleChange}
           />
         </FormGroup>
+
+        {/* このボランティアの魅力 */}
         <FormGroup>
           <Label htmlFor="appeal">このボランティアの魅力 </Label>
           <Textarea
@@ -870,6 +961,8 @@ export default function EventAdminForm({ eventToEdit }) {
             onChange={handleChange}
           />
         </FormGroup>
+
+        {/* 得られる経験・スキル */}
         <FormGroup>
           <Label htmlFor="experience">得られる経験・スキル </Label>
           <Textarea
@@ -880,6 +973,7 @@ export default function EventAdminForm({ eventToEdit }) {
           />
         </FormGroup>
 
+        {/* 開催場所 */}
         <GridWrapper>
           <FormGroup>
             <Label htmlFor="place">開催場所</Label>
@@ -891,6 +985,8 @@ export default function EventAdminForm({ eventToEdit }) {
               onChange={handleChange}
             />
           </FormGroup>
+
+          {/* 費用 */}
           <FormGroup>
             <Label htmlFor="fee" className="required">
               費用
@@ -906,6 +1002,7 @@ export default function EventAdminForm({ eventToEdit }) {
           </FormGroup>
         </GridWrapper>
 
+        {/* 都道府県と市町村 */}
         <GridWrapper>
           <FormGroup>
             <Label htmlFor="prefecture">都道府県</Label>
@@ -931,6 +1028,7 @@ export default function EventAdminForm({ eventToEdit }) {
           </FormGroup>
         </GridWrapper>
 
+        {/* アクセス */}
         <FormGroup>
           <Label htmlFor="access">アクセス</Label>
           <Textarea
@@ -942,6 +1040,7 @@ export default function EventAdminForm({ eventToEdit }) {
           />
         </FormGroup>
 
+        {/* 緯度と経度 */}
         <GridWrapper>
           <FormGroup>
             <Label htmlFor="latitude">緯度</Label>
@@ -967,6 +1066,7 @@ export default function EventAdminForm({ eventToEdit }) {
           </FormGroup>
         </GridWrapper>
 
+        {/* 公式サイトURL */}
         <FormGroup>
           <Label htmlFor="website_url">公式サイトURL</Label>
           <Input
@@ -978,6 +1078,7 @@ export default function EventAdminForm({ eventToEdit }) {
           />
         </FormGroup>
 
+        {/* 定員と主催者 */}
         <GridWrapper>
           <FormGroup>
             <Label htmlFor="capacity">定員</Label>
@@ -1001,6 +1102,7 @@ export default function EventAdminForm({ eventToEdit }) {
           </FormGroup>
         </GridWrapper>
 
+        {/* 持ち物、服装、選考フロー */}
         <FormGroup>
           <Label htmlFor="belongings">持ち物</Label>
           <Input

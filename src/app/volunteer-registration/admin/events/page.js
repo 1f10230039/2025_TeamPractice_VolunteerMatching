@@ -1,8 +1,8 @@
-// src/app/volunteer-registration/admin/events/page.js
-
+// 管理者用イベント一覧ページコンポーネント
 import EventAdminListContainer from "@/components/pages/EventAdminListContainer";
 
+// ロジックは全てクライアント側のコンポーネントに委譲する
 export default function AdminEventsPage() {
-  // サーバー側での処理は廃止し、クライアント側のContainerに任せる
+  // イベント一覧コンテナを表示
   return <EventAdminListContainer />;
 }

@@ -1,5 +1,4 @@
-//　ボランティア登録管理システム
-
+//　ボランティア登録管理システムコンポーネント
 "use client";
 
 import { useState } from "react";

@@ -1,5 +1,4 @@
 // 活動記録一覧ページのコンポーネント
-
 "use client";
 
 import Link from "next/link";
@@ -10,10 +9,9 @@ import Breadcrumbs from "../common/Breadcrumbs";
 import EmptyState from "../common/EmptyState";
 
 // --- Emotion Styles ---
-
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background-color: #f5fafc; /* マイページと同じ背景色 */
+  background-color: #f5fafc;
   padding-bottom: 150px;
   font-family: "Helvetica Neue", Arial, sans-serif;
 `;
@@ -74,15 +72,12 @@ const LogListContainer = styled.div`
   display: grid;
   gap: 24px;
 
-  /* スマホは1列 */
   grid-template-columns: 1fr;
 
-  /* タブレット以上は2列 */
   @media (min-width: 600px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* PCなら3列でもいいかも */
   @media (min-width: 900px) {
     grid-template-columns: repeat(3, 1fr);
   }

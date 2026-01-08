@@ -7,6 +7,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { FaHistory, FaTimes } from "react-icons/fa";
 
+// --- Emotion ---
 // 履歴リスト全体
 const HistoryListContainer = styled.ul`
   list-style: none;
@@ -121,7 +122,7 @@ export default function SearchHistoryList({ history }) {
     return <NoHistoryText>検索履歴はありません。</NoHistoryText>;
   }
 
-  // 履歴がある場合
+  // 履歴がある場合場合
   return (
     <HistoryListContainer>
       {historyItems.map(item => (

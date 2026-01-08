@@ -1,9 +1,11 @@
+// スケルトンリストコンポーネント
 "use client";
 
 import styled from "@emotion/styled";
 import SkeletonEventCard from "./SkeletonEventCard";
 
-// EventList.jsx と同じグリッドレイアウト
+// --- Emotion Styles ---
+// スケルトンリスト全体のコンテナスタイル
 const ListContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
