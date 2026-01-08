@@ -1,3 +1,4 @@
+// ナビゲーションコンポーネント
 "use client";
 
 import Link from "next/link";
@@ -5,25 +6,25 @@ import styled from "@emotion/styled";
 import { usePathname } from "next/navigation";
 import { FaHome, FaList, FaUser } from "react-icons/fa";
 
-// Emotion
+// --- Emotion Styles ---
 // ナビゲーションバーのコンテナスタイル
 const NavContainer = styled.nav`
   display: flex;
-  gap: 12px; /* ボタン同士の間隔 */
+  gap: 12px;
   padding: 0;
   margin: 0;
   align-items: center;
 `;
 
-// ナビゲーションリンクのスタイル (カプセル型ボタン)
+// ナビゲーションリンクのスタイル
 const StyledLink = styled(Link, {
   shouldForwardProp: prop => prop !== "isActive",
 })`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px; /* ちょっと大きめに */
-  border-radius: 30px; /* 丸っこく */
+  padding: 10px 20px;
+  border-radius: 30px;
   text-decoration: none;
   font-weight: 700;
   font-size: 0.95rem;
@@ -31,19 +32,17 @@ const StyledLink = styled(Link, {
   position: relative;
   overflow: hidden;
 
-  /*  isActive (今いるページ) の時のスタイル */
   ${props =>
+    // アクティブ・非アクティブのスタイル分岐
     props.isActive
       ? `
-    /* アクティブ時: 薄い水色背景 × 濃い青文字 */
+     /* アクティブの時のスタイル */
     background-color: #e6f4ff; 
     color: #007bff;
     box-shadow: none; 
     transform: none;
-    
     /* border: 1px solid #b3d7ff; */
 
-    /* アイコンも青く */
     & > svg {
       color: #007bff;
     }
@@ -73,12 +72,13 @@ const StyledLink = styled(Link, {
     width: 1.1rem;
     height: 1.1rem;
     transition: color 0.3s ease;
-    /* 非アクティブ時はちょっと薄く */
     color: ${props => (props.isActive ? "#007bff" : "#999")};
   }
 `;
 
+// --- Navigation Component ---
 export default function Navigation() {
+  // 現在のパス名を取得
   const pathname = usePathname();
 
   return (

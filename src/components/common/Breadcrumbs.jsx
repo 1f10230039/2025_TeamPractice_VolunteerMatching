@@ -1,3 +1,4 @@
+// パンくずリストコンポーネント
 "use client";
 
 import styled from "@emotion/styled";
@@ -19,21 +20,21 @@ const ChevronLeftIcon = () => (
 );
 
 // --- Emotion Styles ---
-
-// 全体のコンテナ (ナビゲーションバー風)
+// 全体のコンテナ
 const NavContainer = styled.nav`
   background-color: #fff;
   border-bottom: 1px solid #f0f0f0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
   padding: 0 16px;
-  height: 56px; /* 高さを固定して安定させる */
+  height: 56px;
   display: flex;
   align-items: center;
-  position: sticky; /* スクロール時に追従させやすくするための準備 */
+  position: sticky;
   top: 0;
-  z-index: 40; /* ヘッダーよりは下、コンテンツよりは上 */
+  z-index: 40;
 `;
 
+// コンテンツを中央に寄せるラッパー
 const ContentWrapper = styled.div`
   width: 100%;
   max-width: 1000px;
@@ -77,13 +78,13 @@ const BreadcrumbList = styled.ol`
   white-space: nowrap;
 `;
 
+// 各リストアイテム
 const ListItem = styled.li`
   display: flex;
   align-items: center;
   font-size: 0.9rem;
   color: #666;
 
-  /* 区切り文字 */
   &:not(:first-of-type)::before {
     content: "/";
     margin: 0 8px;
@@ -91,12 +92,10 @@ const ListItem = styled.li`
     font-size: 0.8rem;
   }
 
-  /* スマホでは最後の項目（現在地）以外を隠す */
   @media (max-width: 600px) {
     &:not(:last-child) {
       display: none;
     }
-    /* 最後の項目（現在地）の区切り文字も消す */
     &:last-child::before {
       display: none;
     }
@@ -123,53 +122,47 @@ const StyledLink = styled.a`
   }
 `;
 
-// 現在のページ（リンクなし、太字）
+// 現在のページ
 const CurrentPage = styled.span`
   font-weight: 700;
   color: #333;
-
-  /* 長いタイトルは省略 */
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
 
   @media (max-width: 600px) {
-    font-size: 1rem; /* スマホなら少し大きくしてタイトルっぽく */
+    font-size: 1rem;
     max-width: 240px;
   }
 `;
 
+// --- Breadcrumbs Component ---
 export default function Breadcrumbs({ crumbs, baseCrumb }) {
+  // baseCrumbが渡されなければデフォルトでホームに設定
   const base = baseCrumb || { label: "ホーム", href: "/" };
 
   // crumbsがない場合は表示しない
   if (!crumbs || crumbs.length === 0) return null;
 
-  // 「戻る先」を決定するロジック
-  // 1. crumbsが2つ以上あるなら、最後から2番目（一つ前の親）に戻る
-  // 2. crumbsが1つしかないなら、base（大元）に戻る
+  // 戻るリンクは2つ前のクラム、なければベースクラム
   const backLink = crumbs.length > 1 ? crumbs[crumbs.length - 2] : base;
 
+  // レンダリング
   return (
     <NavContainer aria-label="breadcrumb">
       <ContentWrapper>
-        {/* 左端の戻るボタン */}
         <BackButton href={backLink.href} aria-label="前のページへ戻る">
           <ChevronLeftIcon />
         </BackButton>
 
-        {/* パンくずリスト本体 */}
         <BreadcrumbList>
-          {/* 大元 (Homeやマイページ) */}
           <ListItem>
             <StyledLink href={base.href}>
-              {/* ホームの場合だけアイコンを表示してみる */}
               {base.href === "/" && <FaHome />}
               {base.label}
             </StyledLink>
           </ListItem>
 
-          {/* 各階層 */}
           {crumbs.map((crumb, index) => {
             const isLast = index === crumbs.length - 1;
             return (

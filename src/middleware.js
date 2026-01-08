@@ -44,7 +44,6 @@ export async function middleware(request) {
     }
   );
 
-  // 重要なポイント:
   // getUser() を呼ぶことで、セッションをリフレッシュし、
   // 確実に最新のAuth状態をクッキーに反映させます
   await supabase.auth.getUser();

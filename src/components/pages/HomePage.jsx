@@ -1,19 +1,23 @@
+// ホームページコンポーネント
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import styled from "@emotion/styled";
+import { keyframes } from "@emotion/react";
 import EventList from "../events/EventList";
 import SearchOptions from "../search/SearchOptions";
+import SearchOptionMini from "../search/SearchOptionsMini";
 import {
   FaSortAmountDown,
   FaChevronLeft,
   FaChevronRight,
   FaStar,
+  FaFilter,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
 
 // --- Emotion Styles ---
-
-// ページ全体のレイアウト
 const PageContainer = styled.div`
   background-color: #f5fafc;
   min-height: 100vh;
@@ -23,7 +27,6 @@ const PageContainer = styled.div`
   }
 `;
 
-// 検索エリア
 const SearchSection = styled.section`
   margin-bottom: 24px;
   background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
@@ -37,13 +40,33 @@ const SearchSection = styled.section`
   }
 `;
 
+const slideDown = keyframes`
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+`;
+
+const FixedHeader = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
+  border-radius: 0 0 20px 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 12px 24px;
+  animation: ${slideDown} 0.3s ease-out forwards;
+  display: flex;
+  justify-content: center;
+`;
+
 const EventSection = styled.section`
   padding: 0 24px;
   max-width: 1200px;
   margin: 0 auto;
 `;
 
-// 見出しのデザイン
 const SectionTitle = styled.h2`
   font-size: 1.6rem;
   font-weight: 800;
@@ -53,9 +76,22 @@ const SectionTitle = styled.h2`
   gap: 12px;
   color: #333;
   letter-spacing: 0.05em;
+
+  &::before {
+    content: "";
+    display: block;
+    width: 6px;
+    height: 32px;
+    background: linear-gradient(to bottom, #68b5d5, #4a90e2);
+    border-radius: 3px;
+  }
+
+  @media (max-width: 600px) {
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+  }
 `;
 
-// アイコン
 const IconWrapper = styled.span`
   color: #4a90e2;
   display: flex;
@@ -64,7 +100,88 @@ const IconWrapper = styled.span`
   filter: drop-shadow(0 2px 4px rgba(74, 144, 226, 0.3));
 `;
 
-// コントロールバー
+const FilterSection = styled.div`
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+
+  @media (max-width: 600px) {
+    padding: 16px;
+  }
+`;
+
+const FilterHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  @media (max-width: 600px) {
+    cursor: pointer;
+  }
+`;
+
+// スマホ用の開閉アイコン
+const MobileToggleIcon = styled.span`
+  display: none;
+  @media (max-width: 600px) {
+    display: flex;
+    align-items: center;
+    color: #888;
+    margin-left: 8px;
+  }
+`;
+
+// タグリストのラッパー
+const TagListWrapper = styled.div`
+  display: block;
+
+  @media (max-width: 600px) {
+    display: ${props => (props.isOpen ? "block" : "none")};
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed #eee;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const TagList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const FilterTagButton = styled.button`
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: 1px solid ${props => (props.isSelected ? "#007bff" : "#eee")};
+  background-color: ${props => (props.isSelected ? "#eaf4ff" : "#f9f9f9")};
+  color: ${props => (props.isSelected ? "#007bff" : "#555")};
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    background-color: ${props => (props.isSelected ? "#dbeeff" : "#f0f0f0")};
+  }
+`;
+
 const ControlBar = styled.div`
   display: flex;
   justify-content: space-between;
@@ -90,7 +207,6 @@ const ResultCount = styled.p`
   }
 `;
 
-// ソート選択エリア
 const SortWrapper = styled.div`
   display: flex;
   align-items: center;
@@ -134,13 +250,12 @@ const SortSelect = styled.select`
   }
 `;
 
-// ページネーションエリア
 const PaginationContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 20px;
-  margin-top: 60px;
+  margin-top: 30px;
   margin-bottom: 40px;
 `;
 
@@ -198,42 +313,94 @@ const PageInfo = styled.span`
  * ページ全体のレイアウトと状態を管理するコンポーネント
  */
 export default function HomePage({ events }) {
+  // State
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [sortOption, setSortOption] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showMiniSearch, setShowMiniSearch] = useState(false);
+  const searchSectionRef = useRef(null);
 
-  const sortedEvents = useMemo(() => {
-    let sorted = [...(events || [])];
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedTagIds, sortOption]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (searchSectionRef.current) {
+        const searchBottom =
+          searchSectionRef.current.getBoundingClientRect().bottom;
+        if (searchBottom < 0) {
+          setShowMiniSearch(true);
+        } else {
+          setShowMiniSearch(false);
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // --- 利用可能なタグ一覧の抽出 ---
+  const availableTags = useMemo(() => {
+    const tagsMap = new Map();
+    (events || []).forEach(event => {
+      if (event.tags && Array.isArray(event.tags)) {
+        event.tags.forEach(tag => {
+          if (!tagsMap.has(tag.id)) {
+            tagsMap.set(tag.id, tag);
+          }
+        });
+      }
+    });
+    return Array.from(tagsMap.values()).sort((a, b) => a.id - b.id);
+  }, [events]);
+
+  // --- フィルタリング & ソート ---
+  const processedEvents = useMemo(() => {
+    let temp = [...(events || [])];
+
+    if (selectedTagIds.length > 0) {
+      temp = temp.filter(event => {
+        if (!event.tags) return false;
+        const eventTagIds = event.tags.map(t => t.id);
+        return selectedTagIds.every(selId => eventTagIds.includes(selId));
+      });
+    }
+
     switch (sortOption) {
       case "newest":
-        sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        temp.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case "date_asc":
-        sorted.sort(
+        temp.sort(
           (a, b) => new Date(a.start_datetime) - new Date(b.start_datetime)
         );
         break;
       case "date_desc":
-        sorted.sort(
+        temp.sort(
           (a, b) => new Date(b.start_datetime) - new Date(a.start_datetime)
         );
         break;
       case "popular":
-        sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        temp.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       case "nearest":
-        sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        temp.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         break;
       default:
         break;
     }
-    return sorted;
-  }, [events, sortOption]);
+    return temp;
+  }, [events, sortOption, selectedTagIds]);
 
-  const totalItems = sortedEvents.length;
+  // ---ページネーション用計算 ---
+  const totalItems = processedEvents.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  const currentEvents = sortedEvents.slice(
+  const currentEvents = processedEvents.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -242,9 +409,15 @@ export default function HomePage({ events }) {
     totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endCount = Math.min(currentPage * itemsPerPage, totalItems);
 
+  // --- Handlers ---
+  const handleTagClick = tagId => {
+    setSelectedTagIds(prev =>
+      prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
+    );
+  };
+
   const handleSortChange = e => {
     setSortOption(e.target.value);
-    setCurrentPage(1);
   };
 
   const handlePrevPage = () => {
@@ -255,9 +428,21 @@ export default function HomePage({ events }) {
     if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
   };
 
+  // スマホ用フィルター開閉トグル
+  const toggleFilter = () => {
+    setIsFilterOpen(prev => !prev);
+  };
+
   return (
     <PageContainer>
-      <SearchSection>
+      {showMiniSearch && (
+        <FixedHeader>
+          <div style={{ width: "100%", maxWidth: "800px" }}>
+            <SearchOptionMini />
+          </div>
+        </FixedHeader>
+      )}
+      <SearchSection ref={searchSectionRef}>
         <SearchOptions />
       </SearchSection>
 
@@ -268,6 +453,63 @@ export default function HomePage({ events }) {
           </IconWrapper>
           おすすめのボランティア
         </SectionTitle>
+
+        {availableTags.length > 0 && (
+          <FilterSection>
+            <FilterHeader onClick={toggleFilter}>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "8px",
+                }}
+              >
+                <FaFilter color="#888" /> タグで絞り込む
+              </span>
+
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {selectedTagIds.length > 0 && (
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setSelectedTagIds([]);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#888",
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                      marginRight: "10px",
+                    }}
+                  >
+                    全てのタグを解除
+                  </button>
+                )}
+
+                <MobileToggleIcon>
+                  {isFilterOpen ? <FaChevronUp /> : <FaChevronDown />}
+                </MobileToggleIcon>
+              </div>
+            </FilterHeader>
+
+            <TagListWrapper isOpen={isFilterOpen}>
+              <TagList>
+                {availableTags.map(tag => (
+                  <FilterTagButton
+                    key={tag.id}
+                    isSelected={selectedTagIds.includes(tag.id)}
+                    onClick={() => handleTagClick(tag.id)}
+                  >
+                    {tag.name}
+                  </FilterTagButton>
+                ))}
+              </TagList>
+            </TagListWrapper>
+          </FilterSection>
+        )}
 
         <ControlBar>
           <ResultCount>

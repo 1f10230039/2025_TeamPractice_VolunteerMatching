@@ -1,5 +1,4 @@
-// src/app/api/events/route.js
-
+// ベクトル化 (Embedding) を用いたイベントの新規作成・編集API
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";

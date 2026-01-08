@@ -1,3 +1,4 @@
+// ボランティア詳細ページコンポーネント
 "use client";
 
 import { useState, useEffect } from "react";
@@ -66,9 +67,7 @@ const RegHeartIcon = () => (
   </svg>
 );
 
-// ==========================================
-// Emotion Styles (スタイル定義)
-// ==========================================
+// --- Emotion ---
 
 // ページ全体のラッパー
 const PageWrapper = styled.div`
@@ -83,7 +82,7 @@ const StickyHeader = styled.div`
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: #f5fafc; /* 透けないように背景色を指定 */
+  background-color: #f5fafc;
 `;
 
 // メインコンテンツエリア
@@ -140,45 +139,77 @@ const Organizer = styled.div`
   font-weight: 500;
 `;
 
-// 各詳細情報のセクション（ブロック）
+// 各詳細情報のセクション
 const DetailSection = styled.section`
   margin-bottom: 32px;
 `;
 
-// 情報グリッド（ラベルと値のペアを表示するレイアウト）
-const InfoGrid = styled.div`
+// 情報グリッド
+const InfoGrid = styled.dl`
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px;
+  grid-template-columns: minmax(120px, auto) 1fr;
+  gap: 24px;
   border-radius: 8px;
-  padding: 20px;
+  padding: 8px 0;
+  margin: 0;
+
+  @media (max-width: 600px) {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
 `;
 
-// 情報のラベル（左側）
+// 情報のラベル
 const InfoLabel = styled.dt`
   font-weight: bold;
   color: #555;
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  align-self: flex-start;
+  padding-top: 4px;
 
   & > svg {
-    width: 1rem;
-    height: 1rem;
+    width: 1.1rem;
+    height: 1.1rem;
     color: #888;
     flex-shrink: 0;
   }
+
+  @media (max-width: 600px) {
+    font-size: 1rem;
+    color: #333;
+    margin-top: 24px;
+    margin-bottom: 8px;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
 `;
 
-// 情報の値（右側）
+// 情報の値（ddタグ）
 const InfoValue = styled.dd`
   font-size: 1rem;
   color: #333;
-  line-height: 1.6;
+  line-height: 1.8;
   margin: 0;
+  word-break: break-word;
+
+  @media (max-width: 600px) {
+    padding-left: 4px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #eee;
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+  }
 `;
 
-// --- クイックサマリー (グリッド表示) ---
+// --- クイックサマリー ---
 const QuickSummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -237,7 +268,7 @@ const SummaryValue = styled.span`
   }
 `;
 
-// --- 魅力・経験セクション (ビジュアル重視) ---
+// --- 魅力・経験セクション ---
 const HighlightSection = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -312,7 +343,7 @@ const ShareButtonsContainer = styled.div`
   gap: 16px;
 `;
 
-// 共有リンクボタン（丸型アイコンボタン）
+// 共有リンクボタン
 const ShareLinkButton = styled.a`
   display: flex;
   align-items: center;
@@ -342,7 +373,7 @@ const MapContainer = styled.div`
   overflow: hidden;
   margin-top: 8px;
   border: 1px solid #eee;
-  background-color: #f0f0f0; /* ロード中などの背景 */
+  background-color: #f0f0f0;
 `;
 
 // 地図リンク
@@ -397,7 +428,7 @@ const SectionContent = styled.div`
   white-space: pre-wrap;
 `;
 
-// --- アクションメニュー (固定バー) ---
+// --- アクションメニュー ---
 const ActionMenu = styled.div`
   position: fixed;
   bottom: 0;
@@ -463,7 +494,6 @@ const ApplyButton = styled.button`
     font-size: 1rem;
   }
 
-  /* 応募済みかどうかでスタイル変更 */
   ${props =>
     props.isApplied
       ? `
@@ -484,10 +514,6 @@ const ApplyButton = styled.button`
   }
 `;
 
-// ==========================================
-// ユーティリティ関数
-// ==========================================
-
 const formatDateTime = isoString => {
   if (!isoString) return "未定";
   try {
@@ -503,10 +529,6 @@ const formatDateTime = isoString => {
     return "日付形式エラー";
   }
 };
-
-// ==========================================
-// コンポーネント本体
-// ==========================================
 
 export default function EventDetailPage({ event, source, q, codes }) {
   const router = useRouter();
@@ -739,7 +761,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
         setIsApplied(true);
 
         try {
-          // ユーザーのプロフィール情報を取得（名前を使いたいから）
+          // ユーザーのプロフィール情報を取得
           const { data: profile } = await supabase
             .from("profiles")
             .select("name")
@@ -761,8 +783,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
 
           console.log("メール送信リクエスト完了");
         } catch (mailError) {
-          // メールが送れなくても、応募自体は成功してるからアラートは出さないでおく
-          // (または console.error だけしておく)
+          // メールが送れなくても、応募自体は成功してるからアラートは出さない
           console.error("メール送信エラー:", mailError);
         }
 
@@ -779,7 +800,6 @@ export default function EventDetailPage({ event, source, q, codes }) {
 
   /**
    * 応募ボタンが押された時の処理
-   * 状態に応じて適切な確認モーダルを表示する
    */
   const handleApplyButtonPress = e => {
     e.preventDefault();
@@ -845,7 +865,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
         {/* ギャラリー */}
         <EventImageGallery mainImageUrl={image_url} subImages={event_images} />
 
-        {/* クイックサマリー (4つのカード) */}
+        {/* クイックサマリー */}
         <QuickSummaryGrid>
           <SummaryCard>
             <SummaryIcon>

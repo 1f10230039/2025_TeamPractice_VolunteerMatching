@@ -1,3 +1,4 @@
+// エンプティステートコンポーネント
 "use client";
 
 import styled from "@emotion/styled";
@@ -20,8 +21,8 @@ const SadTearIcon = () => (
   </svg>
 );
 
-// --- スタイル定義 ---
-
+// --- Emotion Styles ---
+// 全体のコンテナ
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -35,12 +36,11 @@ const Container = styled.div`
   margin-top: 20px;
 `;
 
+// アイコンラッパー
 const IconWrapper = styled.div`
   font-size: 4rem;
   color: #ccc;
   margin-bottom: 20px;
-
-  /* ふわふわ浮いてるようなアニメーション */
   animation: float 3s ease-in-out infinite;
 
   @keyframes float {
@@ -55,12 +55,12 @@ const IconWrapper = styled.div`
     }
   }
 
-  /* SVGのサイズ調整 */
   & svg {
     display: block;
   }
 `;
 
+// タイトル
 const Title = styled.h3`
   font-size: 1.25rem;
   font-weight: bold;
@@ -68,6 +68,7 @@ const Title = styled.h3`
   margin-bottom: 12px;
 `;
 
+// 説明文
 const Description = styled.p`
   font-size: 0.95rem;
   color: #888;
@@ -76,6 +77,7 @@ const Description = styled.p`
   max-width: 400px;
 `;
 
+// アクションボタン
 const ActionButton = styled.a`
   display: inline-block;
   padding: 12px 32px;
@@ -88,6 +90,7 @@ const ActionButton = styled.a`
   font-weight: bold;
   transition: all 0.2s ease;
   cursor: pointer;
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);
@@ -105,6 +108,7 @@ const ActionButton = styled.a`
  * actionHref?: string  // ボタンのリンク先 (省略可)
  * }} props
  */
+// eslint-disable-next-line react/prop-types
 export default function EmptyState({
   title,
   description,
@@ -112,6 +116,7 @@ export default function EmptyState({
   actionLabel,
   actionHref,
 }) {
+  // レンダリング
   return (
     <Container>
       <IconWrapper>{icon || <SadTearIcon />}</IconWrapper>

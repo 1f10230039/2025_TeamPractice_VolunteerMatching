@@ -1,3 +1,4 @@
+// マイリストページコンポーネント
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,16 +10,15 @@ import EmptyState from "../common/EmptyState";
 import { FaRegHeart, FaRegCheckCircle } from "react-icons/fa";
 
 // --- Emotion Styles ---
-
 const PageContainer = styled.div`
   min-height: 100vh;
-  background-color: #f5fafc; /* マイページと統一した背景色 */
+  background-color: #f5fafc;
   padding-bottom: 150px;
   font-family: "Helvetica Neue", Arial, sans-serif;
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1000px; /* 横幅を少し広めに */
+  max-width: 1000px;
   margin: 0 auto;
   padding: 0 20px;
 `;
@@ -55,32 +55,24 @@ const TabButton = styled.button`
   gap: 12px;
   outline: none;
 
-  /* アイコン */
   & svg {
     font-size: 1.1em;
   }
 
-  /* ★ アクティブ時のスタイル ★ */
-  /*  isActive (今いるページ) の時のスタイル */
   ${props =>
     props.isActive
       ? `
-    /* アクティブ時: 薄い水色背景 × 濃い青文字 */
     background-color: #e6f4ff; 
     color: #007bff;
-    /* 影は消して、フラットにして「押すボタンじゃない感」を出す */
     box-shadow: none; 
     transform: none;
-    
     /* border: 1px solid #b3d7ff; */
 
-    /* アイコンも青く */
     & > svg {
       color: #007bff;
     }
   `
       : `
-    /* 非アクティブの時のスタイル */
     background-color: transparent;
     color: #666;
 
@@ -104,7 +96,6 @@ const TabButton = styled.button`
     width: 1.1rem;
     height: 1.1rem;
     transition: color 0.3s ease;
-    /* 非アクティブ時はちょっと薄く */
     color: ${props => (props.isActive ? "#007bff" : "#999")};
   }
 
@@ -126,8 +117,6 @@ export default function MyListPage({
   initialAppliedEvents,
 }) {
   const searchParams = useSearchParams(); // URLのパラメータを取得するフック
-
-  // ★ここで受け取ったpropsを変数に入れる！★
   const favoriteEvents = initialFavoriteEvents || [];
   const appliedEvents = initialAppliedEvents || [];
 

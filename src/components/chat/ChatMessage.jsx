@@ -1,15 +1,18 @@
 /** @jsxImportSource @emotion/react */
 import { css } from "@emotion/react";
 import React from "react";
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown from "react-markdown";
 import EventCard from "../events/EventsCard";
 
+// --- Emotion Styles ---
+// メッセージ全体のコンテナ
 const messageContainer = css`
   display: flex;
   width: 100%;
   margin-bottom: 1rem;
 `;
 
+// メッセージボックスのスタイル（ユーザー・AIで色分け）
 const messageBox = isUser => css`
   display: flex;
   flex-direction: column;
@@ -21,15 +24,17 @@ const messageBox = isUser => css`
   margin-right: ${isUser ? "0" : "auto"};
 `;
 
+// メッセージテキストのスタイル
 const messageText = css`
   color: var(--foreground);
-  
+
   a {
     color: #3182ce;
     text-decoration: underline;
   }
 
-  ul, ol {
+  ul,
+  ol {
     padding-left: 1.5rem;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
@@ -40,17 +45,19 @@ const messageText = css`
   }
 `;
 
+// イベントカードをグリッド表示するスタイル
 const eventCardWrapper = css`
   margin-top: 0.5rem;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
-  
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
 `;
 
+// オプションボタンのコンテナ
 const optionsContainer = css`
   display: flex;
   flex-direction: column;
@@ -58,6 +65,7 @@ const optionsContainer = css`
   margin-top: 0.75rem;
 `;
 
+// オプションボタンのスタイル
 const optionButton = css`
   padding: 0.75rem 1rem;
   background-color: #ffffff;
@@ -79,12 +87,22 @@ const optionButton = css`
   }
 `;
 
+// --- ChatMessage Component ---
+// チャットメッセージコンポーネント
 const ChatMessage = ({ message, isUser, onOptionClick }) => {
+  // イベントデータやオプションの有無をチェック
   const hasEventData =
     message.eventData && Object.keys(message.eventData).length > 0;
-  const hasEvents = message.events && Array.isArray(message.events) && message.events.length > 0;
-  const hasOptions = message.options && Array.isArray(message.options) && message.options.length > 0;
+  const hasEvents =
+    message.events &&
+    Array.isArray(message.events) &&
+    message.events.length > 0;
+  const hasOptions =
+    message.options &&
+    Array.isArray(message.options) &&
+    message.options.length > 0;
 
+  // コンポーネントの描画
   return (
     <div css={messageContainer}>
       <div css={messageBox(isUser)}>
@@ -124,5 +142,3 @@ const ChatMessage = ({ message, isUser, onOptionClick }) => {
 };
 
 export default ChatMessage;
-
-

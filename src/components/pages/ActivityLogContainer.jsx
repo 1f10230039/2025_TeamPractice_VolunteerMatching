@@ -1,10 +1,13 @@
+// 活動記録コンテナコンポーネント
 "use client";
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import ActivityLogListPage from "./ActivityLogListPage"; // 既存の表示用コンポーネント
+import ActivityLogListPage from "./ActivityLogListPage";
 import { useRouter } from "next/navigation";
 
+// --- コンポーネント本体 ---
+// 活動記録コンテナコンポーネント
 export default function ActivityLogContainer() {
   const router = useRouter();
   const [logs, setLogs] = useState([]);

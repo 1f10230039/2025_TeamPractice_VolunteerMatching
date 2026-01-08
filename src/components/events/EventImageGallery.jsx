@@ -1,10 +1,11 @@
+// ボランティアイベントの画像ギャラリーコンポーネント
 "use client";
 
 import { useState } from "react";
 import styled from "@emotion/styled";
 
-// --- スタイル定義 ---
-
+// --- Emotion Styles ---
+// ギャラリー全体のコンテナ
 const GalleryContainer = styled.div`
   width: 100%;
   margin-bottom: 24px;
@@ -14,14 +15,14 @@ const GalleryContainer = styled.div`
 const MainImageWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: 400px; /* 高さを固定 */
+  height: 400px;
   border-radius: 12px;
   overflow: hidden;
   background-color: #f0f0f0;
   margin-bottom: 12px;
 
   @media (max-width: 600px) {
-    height: 250px; /* スマホならちょっと低く */
+    height: 250px;
   }
 `;
 
@@ -29,7 +30,7 @@ const MainImageWrapper = styled.div`
 const StyledImage = styled.img`
   width: 100%;
   height: 100%;
-  object-fit: cover; /* 枠いっぱいにトリミング */
+  object-fit: cover;
 `;
 
 // 矢印ボタン (左右)
@@ -49,8 +50,6 @@ const ArrowButton = styled.button`
   z-index: 10;
   transition: all 0.2s ease;
   color: #333;
-
-  /* 左か右かで位置を変える */
   left: ${props => (props.direction === "left" ? "10px" : "auto")};
   right: ${props => (props.direction === "right" ? "10px" : "auto")};
 
@@ -59,7 +58,6 @@ const ArrowButton = styled.button`
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
-  /* SVGアイコン用 */
   & svg {
     width: 20px;
     height: 20px;
@@ -71,13 +69,13 @@ const ArrowButton = styled.button`
 const ThumbnailList = styled.div`
   display: flex;
   gap: 10px;
-  overflow-x: auto; /* 横スクロール可能に */
+  overflow-x: auto;
   padding-bottom: 8px;
 
-  /* スクロールバーを少し美しく */
   &::-webkit-scrollbar {
     height: 6px;
   }
+
   &::-webkit-scrollbar-thumb {
     background-color: #ccc;
     border-radius: 3px;
@@ -90,12 +88,12 @@ const ThumbnailButton = styled.button`
   width: 80px;
   height: 60px;
   flex-shrink: 0;
-  border: 2px solid ${props => (props.isActive ? "#007bff" : "transparent")}; /* 選択中は青枠 */
+  border: 2px solid ${props => (props.isActive ? "#007bff" : "transparent")};
   border-radius: 6px;
   overflow: hidden;
   padding: 0;
   cursor: pointer;
-  opacity: ${props => (props.isActive ? 1 : 0.6)}; /* 非選択時は薄く */
+  opacity: ${props => (props.isActive ? 1 : 0.6)};
   transition: all 0.2s ease;
 
   &:hover {
@@ -103,7 +101,7 @@ const ThumbnailButton = styled.button`
   }
 `;
 
-// インラインSVGアイコンコンポーネント (react-icons の代わり)
+// インラインSVGアイコンコンポーネント
 const ChevronLeftIcon = () => (
   <svg viewBox="0 0 24 24">
     <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
@@ -116,6 +114,7 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
+// --- コンポーネント本体 ---
 export default function EventImageGallery({ mainImageUrl, subImages = [] }) {
   // 全画像を1つの配列にまとめる (アイキャッチ + 追加画像)
   // image_url があるものだけフィルタリング
@@ -142,14 +141,17 @@ export default function EventImageGallery({ mainImageUrl, subImages = [] }) {
   }
 
   // --- 操作ハンドラ ---
+  // 前の画像へ
   const handlePrev = () => {
     setCurrentIndex(prev => (prev === 0 ? allImages.length - 1 : prev - 1));
   };
 
+  // 次の画像へ
   const handleNext = () => {
     setCurrentIndex(prev => (prev === allImages.length - 1 ? 0 : prev + 1));
   };
 
+  // サムネイルクリック時
   const handleThumbnailClick = index => {
     setCurrentIndex(index);
   };

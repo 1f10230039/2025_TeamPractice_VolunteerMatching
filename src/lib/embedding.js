@@ -11,7 +11,8 @@ const openai = new OpenAI({
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 /**
@@ -56,7 +57,9 @@ export async function findSimilarEvents(query, limit = 3) {
     if (error) {
       console.error("Error in findSimilarEvents:", error);
       // RPC関数が存在しない、またはeventsテーブルを参照していない場合のエラー
-      console.error("match_events RPC関数がeventsテーブルを参照していることを確認してください");
+      console.error(
+        "match_events RPC関数がeventsテーブルを参照していることを確認してください"
+      );
       return { data: null, error };
     }
 
@@ -66,4 +69,3 @@ export async function findSimilarEvents(query, limit = 3) {
     return { data: null, error };
   }
 }
-

@@ -1,10 +1,10 @@
-// 新規作成、編集ページ (サーバーコンポーネント)
-
+// 新規作成、編集ページ
 import ActivityLogForm from "@/components/activity-log/ActivityLogForm";
 import { Suspense } from "react";
 
-// 新規作成ページ
+/// ロジックは全てクライアント側の Form コンポーネントに委譲する
 export default function Page() {
+  // Suspenseでラップしてコンテナを表示
   return (
     <Suspense fallback={<div>フォームを読み込み中...</div>}>
       <ActivityLogForm />

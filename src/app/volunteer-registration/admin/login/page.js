@@ -1,11 +1,10 @@
-// ボランティア登録管理システム
-// 管理者ログインページのサーバーコンポーネント
-
+// 管理者用ログインページコンポーネント
 import AdminLoginPage from "@/components/pages/VolunteerRegistrationAdminLoginPage";
 import { Suspense } from "react";
 
+// ロジックは全てクライアント側のコンポーネントに委譲する
 export default function Page() {
-  // データを何も持たせずに、AdminLoginPage を呼び出すだけ
+  // コンテナを表示
   return (
     <Suspense fallback={<div>読み込み中...</div>}>
       <AdminLoginPage />

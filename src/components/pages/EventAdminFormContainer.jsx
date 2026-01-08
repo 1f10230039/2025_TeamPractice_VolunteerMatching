@@ -1,9 +1,10 @@
+// ボランティアフォームコンテナコンポーネント
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import EventAdminForm from "@/components/events/EventAdminForm"; // 既存のフォームコンポーネント
+import EventAdminForm from "@/components/events/EventAdminForm";
 
 /**
  * 管理画面(フォーム)のコンテナ

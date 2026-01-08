@@ -1,3 +1,4 @@
+// ボランティア登録リストコンテナコンポーネント
 "use client";
 
 import { useState, useEffect } from "react";
@@ -64,11 +65,11 @@ export default function EventAdminListContainer() {
           .order("created_at", { ascending: false });
 
         if (eventsError) {
-          console.error("イベント取得エラー:", eventsError); // ★エラー詳細をログに出す
+          console.error("イベント取得エラー:", eventsError); // エラー詳細をログに出す
           throw eventsError;
         }
 
-        console.log("取得できた生のデータ:", eventsData); // ★Supabaseから来たデータをログに出す
+        console.log("取得できた生のデータ:", eventsData); // Supabaseから来たデータをログに出す
 
         // データの整形
         const formattedEvents = (eventsData || []).map(event => {
@@ -84,7 +85,7 @@ export default function EventAdminListContainer() {
           };
         });
 
-        console.log("整形後のデータ:", formattedEvents); // ★整形後のデータをログに出す
+        console.log("整形後のデータ:", formattedEvents); // 整形後のデータをログに出す
         setEvents(formattedEvents);
       } catch (error) {
         console.error("管理画面読み込みエラー:", error);

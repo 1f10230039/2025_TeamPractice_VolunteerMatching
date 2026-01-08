@@ -1,9 +1,8 @@
-// src/app/mylist/page.js
-
+// マイリストページのコンテナ
 import MyListContainer from "@/components/pages/MyListContainer.jsx";
 
+// ロジックは全てクライアント側のコンポーネントに委譲する
 export default function Page() {
-  // サーバー側での処理は一切なし。
-  // すべて MyListContainer (クライアント) に任せる。
+  // コンテナを表示
   return <MyListContainer />;
 }

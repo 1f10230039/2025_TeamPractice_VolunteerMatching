@@ -3,9 +3,8 @@
 
 import styled from "@emotion/styled";
 
-// --- スタイル定義 ---
-
-// モーダルの背景 (画面全体を覆う)
+// --- Emotion Styles ---
+// モーダルの背景
 const ModalBackdrop = styled.div`
   position: fixed;
   top: 0;
@@ -16,7 +15,7 @@ const ModalBackdrop = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; // 詳細ページのActionMenu(50)より手前に
+  z-index: 1000;
 `;
 
 // モーダルの本体
@@ -27,7 +26,6 @@ const ModalContent = styled.div`
   width: 90%;
   max-width: 400px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  // アニメーション（任意）
   animation: fadeIn 0.2s ease-out;
 
   @keyframes fadeIn {
@@ -42,22 +40,25 @@ const ModalContent = styled.div`
   }
 `;
 
+// モーダルタイトル
 const ModalTitle = styled.h3`
   font-size: 1.3rem;
   font-weight: bold;
   margin: 0 0 16px 0;
 `;
 
+// モーダル本文
 const ModalBody = styled.p`
   margin-bottom: 24px;
   line-height: 1.6;
-  // イベント名を強調
+
   & > strong {
     color: #0056b3;
     font-weight: bold;
   }
 `;
 
+// ボタンコンテナ
 const ModalButtonContainer = styled.div`
   display: flex;
   gap: 12px;
@@ -107,8 +108,8 @@ const ConfirmButton = styled(ModalButton)`
  * onClose: () => void,
  * onConfirm: () => void,
  * isLoading: boolean,
- * title: string,       // ★ propsとして title を受け取る
- * body: React.ReactNode, // ★ propsとして body を受け取る
+ * title: string,
+ * body: React.ReactNode,
  * confirmText: string,
  * isDestructive?: boolean
  * }} props
@@ -118,21 +119,25 @@ export default function ConfirmApplyModal({
   onClose,
   onConfirm,
   isLoading,
-  title, // ★ 受け取る
-  body, // ★ 受け取る
+  title,
+  body,
   confirmText,
   isDestructive = false,
 }) {
+  // もしモーダルが開いていなければ何もレンダリングしない
   if (!isOpen) {
     return null;
   }
 
+  // 背景クリック時の処理
   const handleBackdropClick = () => {
+    // もしロード中でなければ閉じる
     if (!isLoading) {
       onClose();
     }
   };
 
+  // レンダリング
   return (
     <ModalBackdrop onClick={handleBackdropClick}>
       <ModalContent onClick={e => e.stopPropagation()}>

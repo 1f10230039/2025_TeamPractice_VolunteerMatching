@@ -1,3 +1,4 @@
+// 活動記録編集コンテナコンポーネント
 "use client";
 
 import { useState, useEffect } from "react";

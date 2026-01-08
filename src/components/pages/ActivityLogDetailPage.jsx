@@ -1,3 +1,4 @@
+// 活動記録詳細コンポーネント
 "use client";
 
 import styled from "@emotion/styled";

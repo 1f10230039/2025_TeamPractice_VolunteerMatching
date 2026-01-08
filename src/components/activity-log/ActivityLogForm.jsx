@@ -1,3 +1,4 @@
+// 活動記録フォームコンポーネント
 "use client";
 
 import { useState } from "react";
@@ -8,10 +9,10 @@ import Breadcrumbs from "@/components/common/Breadcrumbs";
 import { FiSave, FiX, FiTrash2, FiSend } from "react-icons/fi";
 
 // --- Emotion Styles ---
-
+// ページ全体のラッパー
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background-color: #f5fafc; /* マイページと同じ背景色 */
+  background-color: #f5fafc;
   padding-bottom: 40px;
   font-family: "Helvetica Neue", Arial, sans-serif;
 `;
@@ -21,19 +22,22 @@ const StickyHeader = styled.div`
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: #f5fafc; /* 透けないように背景色を指定 */
+  background-color: #f5fafc;
 `;
 
+// コンテンツコンテナ
 const ContentContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
   padding: 0 20px;
+
   @media (max-width: 600px) {
     margin-bottom: 100px;
     padding: 0 10px;
   }
 `;
 
+// ページタイトル
 const PageTitle = styled.h1`
   font-size: 24px;
   font-weight: 800;
@@ -42,6 +46,7 @@ const PageTitle = styled.h1`
   text-align: center;
 `;
 
+// フォーム全体
 const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -56,18 +61,19 @@ const Form = styled.form`
   }
 `;
 
+// 各フォームグループ（ラベル＋入力欄）
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
 `;
 
+// ラベルスタイル
 const Label = styled.label`
   font-weight: 600;
   color: #555;
   font-size: 0.95rem;
 
-  /* 必須マーク */
   &.required::after {
     content: " *";
     color: #e74c3c;
@@ -75,6 +81,7 @@ const Label = styled.label`
   }
 `;
 
+// 入力欄スタイル
 const Input = styled.input`
   padding: 12px;
   border: 2px solid #e0e0e0;
@@ -88,6 +95,7 @@ const Input = styled.input`
   }
 `;
 
+// テキストエリアスタイル
 const Textarea = styled.textarea`
   padding: 12px;
   border: 2px solid #e0e0e0;
@@ -130,7 +138,7 @@ const ButtonContainer = styled.div`
   }
 `;
 
-// 右側の「キャンセル」「保存」をまとめるグループ
+// アクショングループ（キャンセル＋送信ボタン）
 const ActionGroup = styled.div`
   display: flex;
   gap: 16px;
@@ -157,7 +165,6 @@ const BaseButton = styled.button`
   transition: all 0.2s ease;
   white-space: nowrap;
 
-  /* アイコンサイズ調整 */
   svg {
     font-size: 1.2em;
   }
@@ -217,12 +224,13 @@ const DeleteButton = styled(BaseButton)`
 `;
 
 // --- Component 本体 ---
-
+// ActivityLogForm コンポーネント
 export default function ActivityLogForm({ logToEdit }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // 編集モードかどうか
   const isEditMode = Boolean(logToEdit);
 
   // フォームの各入力値の状態管理
@@ -230,14 +238,15 @@ export default function ActivityLogForm({ logToEdit }) {
     name: logToEdit?.name || "",
     datetime: logToEdit?.datetime ? logToEdit.datetime.split("T")[0] : "",
     reason: logToEdit?.reason || "",
-    // activity_scale は削除！
     numbers: logToEdit?.numbers || "",
     content: logToEdit?.content || "",
     learning: logToEdit?.learning || "",
     reflection: logToEdit?.reflection || "",
   });
 
+  // 入力変更ハンドラー
   const handleChange = e => {
+    // 入力値を状態に反映
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -245,25 +254,30 @@ export default function ActivityLogForm({ logToEdit }) {
     }));
   };
 
+  // フォーム送信ハンドラー
   const handleSubmit = async e => {
     e.preventDefault();
     setIsLoading(true);
 
+    // もし必須項目が未入力ならアラートを出して終了
     if (!formData.name || !formData.datetime) {
       alert("活動名と活動日は必須です。");
       setIsLoading(false);
       return;
     }
 
+    // ユーザー情報取得
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    // もしログインしていなければアラートを出して終了
     if (!user) {
       alert("ログインしてください");
       setIsLoading(false);
       return;
     }
 
+    // 提出データの整形
     const submissionData = {
       ...formData,
       user_id: user.id,
@@ -275,62 +289,81 @@ export default function ActivityLogForm({ logToEdit }) {
       // activity_scale は送らない
     };
 
+    // 保存処理（新規作成 or 更新）
     try {
+      // もし編集モードなら更新、そうでなければ新規作成
       if (isEditMode) {
         // --- 更新 ---
+        // IDを指定して更新
         const { error } = await supabase
-          .from("activity_log")
-          .update(submissionData)
-          .eq("id", logToEdit.id);
+          .from("activity_log") // 活動ログテーブル
+          .update(submissionData) // 更新データ
+          .eq("id", logToEdit.id); // 対象のログIDを指定
 
+        //　もしエラーが発生したらキャッチに飛ばす
         if (error) throw error;
         alert("活動記録を更新しました！");
         router.push(`/activity-log/${logToEdit.id}`);
         router.refresh();
+        // それ以外は新規作成
       } else {
         // --- 新規作成 ---
+        // データを挿入して、挿入後のデータを取得
         const { data, error } = await supabase
-          .from("activity_log")
-          .insert([submissionData])
-          .select()
-          .single();
+          .from("activity_log") // 活動ログテーブル
+          .insert([submissionData]) // 挿入データ（配列で渡す）
+          .select() // 挿入後のデータを取得
+          .single(); // single()で1件だけ取得
 
+        //　もしエラーが発生したらキャッチに飛ばす
         if (error) throw error;
         alert("活動記録を作成しました！");
+        // もし挿入後のデータが存在すればそのIDへ遷移、なければ一覧へ遷移
         if (data && data.id) {
           router.push(`/activity-log/${data.id}`);
+          // 詳細ページへ遷移した後に一覧を更新
         } else {
           router.push("/activity-log");
         }
       }
       router.refresh();
+      // 正常終了
+      //  もしエラーが発生したらキャッチに飛ばす
     } catch (error) {
       console.error("保存エラー:", error.message);
       alert("エラーが発生しました。");
+      // 最後にローディング解除
     } finally {
       setIsLoading(false);
     }
   };
 
+  // 削除ハンドラー
   const handleDelete = async () => {
+    // もし編集モードでなければ何もしない
     if (!isEditMode) return;
+    // 本当に削除するか確認
     if (!confirm("本当に削除しますか？\nこの操作は元に戻せません。")) return;
 
+    // 削除処理
     setIsDeleting(true);
     try {
       const { error } = await supabase
-        .from("activity_log")
-        .delete()
-        .eq("id", logToEdit.id);
+        .from("activity_log") // 活動ログテーブル
+        .delete() // 削除操作
+        .eq("id", logToEdit.id); // 対象のログIDを指定
 
+      // もしエラーが発生したらキャッチに飛ばす
       if (error) throw error;
-
+      // 正常終了
       alert("活動記録を削除しました。");
       router.push("/activity-log");
       router.refresh();
+      //  もしエラーが発生したらキャッチに飛ばす
     } catch (error) {
       console.error("削除エラー:", error.message);
       alert("エラーが発生しました。");
+      // 最後にローディング解除
     } finally {
       setIsDeleting(false);
     }
@@ -338,14 +371,14 @@ export default function ActivityLogForm({ logToEdit }) {
 
   // パンくずリスト
   const crumbs = [
-    { label: "活動の記録", href: "/activity-log" },
-    { label: isEditMode ? "活動記録を編集" : "活動記録を新規作成", href: "#" },
+    { label: "活動の記録", href: "/activity-log" }, // 活動ログ一覧ページへ
+    { label: isEditMode ? "活動記録を編集" : "活動記録を新規作成", href: "#" }, // 今回のページ
   ];
-  const baseCrumb = { label: "マイページ", href: "/mypage" };
+  const baseCrumb = { label: "マイページ", href: "/mypage" }; // マイページへ
 
+  // --- コンポーネント描画 ---
   return (
     <PageWrapper>
-      {/* 1. パンくずリストを固定ヘッダー内に配置 */}
       <StickyHeader>
         <Breadcrumbs crumbs={crumbs} baseCrumb={baseCrumb} />
       </StickyHeader>
@@ -372,7 +405,7 @@ export default function ActivityLogForm({ logToEdit }) {
             />
           </FormGroup>
 
-          {/* 日付と参加人数を横並び（スマホは縦並び） */}
+          {/* 活動日・参加人数 */}
           <GridWrapper>
             <FormGroup>
               <Label className="required" htmlFor="datetime">

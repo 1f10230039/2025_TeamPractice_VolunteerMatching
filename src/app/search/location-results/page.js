@@ -1,37 +1,45 @@
+//　場所検索の結果ページコンポーネント
 import { supabase } from "@/lib/supabaseClient";
 import CommonSearchResultsPage from "@/components/pages/CommonSearchResultsPage";
 import { Suspense } from "react";
 
-// --- 検索ロジック ---
+// 指定された都道府県コード・市町村コードに基づいてイベントを取得する関数
 async function fetchEventsByLocation(prefCodes, cityCodes) {
-  // 1. 何も指定がなければ空を返す
+  // もし何も指定がなければ空を返す
   if (prefCodes.length === 0 && cityCodes.length === 0) {
+    // 早期リターン
     return [];
   }
 
-  // 検索条件となる「名前リスト」を作る
+  // コードから名前への変換準備
+  // 都道府県名リスト
   let targetPrefNames = [];
+  // 市町村名リスト
   let targetCityNames = [];
 
-  // 2. 都道府県コードを「名前」に変換 (例: 13 -> "東京都")
+  // もしコードが指定されていれば名前を取得する
   if (prefCodes.length > 0) {
+    // Supabaseから都道府県名を取得
     const { data: prefs, error } = await supabase
-      .from("prefectures")
-      .select("name")
-      .in("prefecture-code", prefCodes);
+      .from("prefectures") // 都道府県テーブル
+      .select("name") // 名前カラムだけ取得
+      .in("prefecture-code", prefCodes); // 指定されたコードに一致するもの
 
+    //もしエラーがなければ名前リストを作成
     if (!error && prefs) {
       targetPrefNames = prefs.map(p => p.name);
     }
   }
 
-  // 3. 市町村コードを「名前」に変換 (例: 13101 -> "千代田区")
+  // もしコードが指定されていれば名前を取得する
   if (cityCodes.length > 0) {
+    // Supabaseから市町村名を取得
     const { data: cities, error } = await supabase
-      .from("cities")
-      .select("name")
-      .in("city-code", cityCodes);
+      .from("cities") // 市町村テーブル
+      .select("name") // 名前カラムだけ取得
+      .in("city-code", cityCodes); // 指定されたコードに一致するもの
 
+    //もしエラーがなければ名前リストを作成
     if (!error && cities) {
       targetCityNames = cities.map(c => c.name);
     }
@@ -39,42 +47,51 @@ async function fetchEventsByLocation(prefCodes, cityCodes) {
 
   // 名前が一つも取れなかったら終了
   if (targetPrefNames.length === 0 && targetCityNames.length === 0) {
+    // 早期リターン
     return [];
   }
 
-  // 4. イベント検索 (eventsテーブル)
+  // イベント検索クエリの組み立て
+  // 基本クエリ
   let query = supabase.from("events").select(`
       *,
       event_tags ( tags ( * ) )
     `);
 
-  // OR条件の組み立て: 「都道府県名が一致」または「市町村名が一致」
+  // 条件の組み立て
   const conditions = [];
 
+  //　もし都道府県名があれば条件に追加
   if (targetPrefNames.length > 0) {
+    // prefecturesカラム IN ("東京都", "千葉県")
     const prefString = targetPrefNames.map(n => `"${n}"`).join(",");
     conditions.push(`prefectures.in.(${prefString})`);
   }
 
+  // もし市町村名があれば条件に追加
   if (targetCityNames.length > 0) {
     // cityカラム IN ("千代田区", "柏市")
     const cityString = targetCityNames.map(n => `"${n}"`).join(",");
     conditions.push(`city.in.(${cityString})`);
   }
 
+  // もし条件が一つでもあればクエリに追加
   if (conditions.length > 0) {
     // or(条件1,条件2) の形にする
     query = query.or(conditions.join(","));
   }
 
+  // クエリ実行
   const { data: eventsData, error: eventsError } = await query;
 
+  // もしエラーが発生したらログに出して空配列を返す
   if (eventsError) {
     console.error("イベント検索エラー:", eventsError.message);
+    // エラー時は空配列を返す
     return [];
   }
 
-  // 整形
+  // タグ情報を整形して返す
   return (eventsData || []).map(event => ({
     ...event,
     tags: event.event_tags
@@ -83,8 +100,10 @@ async function fetchEventsByLocation(prefCodes, cityCodes) {
   }));
 }
 
-// --- Page Component ---
+// ページ本体
+// クライアントコンポーネントにデータを渡す
 export default async function Page({ searchParams }) {
+  // URLの検索パラメータを取得
   const awaitedParams = await searchParams;
 
   // URLパラメータの解析 (?prefs=13,14&cities=13101)
@@ -96,14 +115,15 @@ export default async function Page({ searchParams }) {
           .filter(n => !isNaN(n))
       : [];
 
+  // 都道府県コードの配列を取得
   const prefCodes = parseCodes(awaitedParams.prefs);
+  // 市町村コードの配列を取得
   const cityCodes = parseCodes(awaitedParams.cities);
-
   // データ取得
   const events = await fetchEventsByLocation(prefCodes, cityCodes);
-
-  // タイトル作成
+  // イベント数を取得
   const count = events.length;
+  // タイトル文字列を作成
   const titleText =
     count > 0
       ? `場所の検索結果 (${count}件)`
@@ -115,6 +135,7 @@ export default async function Page({ searchParams }) {
     { label: "検索結果", href: "#" },
   ];
 
+  // クライアントコンポーネントにデータを渡す
   return (
     <Suspense
       fallback={

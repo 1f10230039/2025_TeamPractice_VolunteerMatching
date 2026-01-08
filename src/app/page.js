@@ -1,3 +1,4 @@
+// ホームページコンポーネント
 import { supabase } from "@/lib/supabaseClient";
 import HomePage from "@/components/pages/HomePage";
 import { Suspense } from "react";
@@ -5,11 +6,11 @@ import { Suspense } from "react";
 // 開発中はキャッシュを無効にして、常に最新データを取得するようにする
 export const revalidate = 0;
 
+// タグ付きのイベントデータを取得する関数
 async function fetchEventsWithTags() {
-  // Supabaseからデータを取得
-  // eventsテーブルの全カラム (*) と、 紐付いている event_tags テーブル経由で tags テーブルの全カラム (*) を取得
+  // Supabaseからイベントデータを取得
   const { data, error } = await supabase
-    .from("events")
+    .from("events") // イベントテーブル
     .select(
       `
       *,
@@ -19,25 +20,28 @@ async function fetchEventsWithTags() {
         )
       )
     `
-    )
-    .eq("recommended", true) // recommendedカラムが true のものだけに絞り込む
-    .order("created_at", { ascending: false }); // 新着順
+    ) // 全てのカラムを取得、関連するタグもネストで取得
+    .eq("recommended", true) // おすすめイベントのみ
+    .order("created_at", { ascending: false }); // 作成日の降順で並び替え
 
+  //　もしエラーが発生したら空配列を返す
   if (error) {
     console.error("イベントデータの取得に失敗:", error.message);
+    // 空配列を返す
     return [];
   }
 
+  // データが存在しない場合も空配列を返す
   if (!data) return [];
 
-  // データを整形する
-  // Supabaseからの返却値は { ...event, event_tags: [{ tags: { name: '...' } }] }  のような深いネスト構造になっているので、EventCardで使いやすいフラットな配列に変換する
+  // 取得したデータをタグ形式に整形
   const formattedEvents = data.map(event => {
-    // event_tags があれば、そこから tags オブジェクトだけを抜き出して配列にする
+    // event_tags から tags 配列を抽出
     const tags = event.event_tags
       ? event.event_tags.map(item => item.tags).filter(tag => tag !== null)
       : [];
 
+    // tags 配列をフラット化（多重配列を一次元に）
     return {
       ...event,
       tags: tags, // 整形したタグ配列を tags プロパティとして持たせる
@@ -45,13 +49,16 @@ async function fetchEventsWithTags() {
     };
   });
 
+  // 整形したイベントデータを返す
   return formattedEvents;
 }
 
+// ホームページコンポーネント本体
 export default async function Page() {
   // タグ付きのイベントデータを取得
   const events = await fetchEventsWithTags();
 
+  // ホームページコンポーネントを表示
   return (
     <Suspense fallback={<div>読み込み中...</div>}>
       <HomePage events={events} />

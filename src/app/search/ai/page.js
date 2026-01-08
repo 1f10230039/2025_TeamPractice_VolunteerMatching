@@ -1,15 +1,19 @@
+// AIチャットページのコンテナ
 "use server";
 
-import { createClient } from '@supabase/supabase-js';
-import { getChatCompletion, createInitialMessages as getInitialMessagesOpenAI } from '@/lib/openai';
-import { findSimilarEvents } from '@/lib/embedding';
+import { createClient } from "@supabase/supabase-js";
+import {
+  getChatCompletion,
+  createInitialMessages as getInitialMessagesOpenAI,
+} from "@/lib/openai";
+import { findSimilarEvents } from "@/lib/embedding";
 import AIChatPage from "@/components/pages/AIChatPage";
 
 // Supabaseクライアントの初期化
 // Server Actionはサーバー環境でのみ実行されるため、サービスロールキーを安全に使用できる
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 /**
@@ -17,10 +21,11 @@ const supabase = createClient(
  * @returns {Promise<Array>} 初期メッセージの配列
  */
 export async function getInitialMessages() {
+  // OpenAIから初期メッセージを取得
   try {
     return await getInitialMessagesOpenAI();
   } catch (error) {
-    console.error('Error in getInitialMessages Server Action:', error);
+    console.error("Error in getInitialMessages Server Action:", error);
     // エラーが発生した場合、クライアント側で処理できるようにnullを返すか、エラーをスローする
     // ここではUIの崩れを防ぐため、空の配列を返す
     return [];
@@ -33,11 +38,13 @@ export async function getInitialMessages() {
  * @returns {Object} - AIの応答メッセージオブジェクト
  */
 export async function processChatMessage(messages) {
+  // RAG: Retrieval-Augmented Generationの実装
   try {
     // ユーザーの最新メッセージを取得
-    const userMessage = messages.filter(msg => msg.role === 'user').pop();
+    const userMessage = messages.filter(msg => msg.role === "user").pop();
+    // ユーザーメッセージが見つからない場合エラーをスロー
     if (!userMessage) {
-      throw new Error('User message not found');
+      throw new Error("User message not found");
     }
 
     // RAG: Retrieval - セマンティック検索でイベントを検索
@@ -46,46 +53,51 @@ export async function processChatMessage(messages) {
       2
     );
 
+    // 検索エラーが発生してもAI応答は続行
     if (searchError) {
-      console.error('Error in findSimilarEvents:', searchError);
+      console.error("Error in findSimilarEvents:", searchError);
     }
 
     // 検索結果のIDを使って完全なイベント情報を取得
     let fullEvents = [];
+    // Supabaseからイベント情報を取得
     if (events && events.length > 0) {
       const eventIds = events.map(e => e.id);
       const { data: fullEventsData, error: fetchError } = await supabase
-        .from('events')
-        .select('*')
-        .in('id', eventIds);
+        .from("events")
+        .select("*")
+        .in("id", eventIds);
 
+      // フルデータが取得できた場合、検索結果とマッチングさせる
       if (!fetchError && fullEventsData) {
-        fullEvents = events.map(searchResult => 
-          fullEventsData.find(e => e.id === searchResult.id) || searchResult
+        fullEvents = events.map(
+          searchResult =>
+            fullEventsData.find(e => e.id === searchResult.id) || searchResult
         );
+        // 取得に失敗した場合は検索結果のみを使用
       } else {
         fullEvents = events;
       }
     }
 
     // コンテキストの整形
-    const context = 
+    const context =
       fullEvents && fullEvents.length > 0
         ? fullEvents
             .map(
               event => `
 イベント名: ${event.name}
-場所: ${event.place || '場所未定'}
-日時: ${event.start_datetime ? new Date(event.start_datetime).toLocaleDateString('ja-JP') : '日時未定'}
-説明: ${event.short_description || ''}
+場所: ${event.place || "場所未定"}
+日時: ${event.start_datetime ? new Date(event.start_datetime).toLocaleDateString("ja-JP") : "日時未定"}
+説明: ${event.short_description || ""}
 `
             )
-            .join('\n\n')
-        : '関連するイベントは見つかりませんでした。';
+            .join("\n\n")
+        : "関連するイベントは見つかりませんでした。";
 
     // システムメッセージの作成
     const systemMessage = {
-      role: 'system',
+      role: "system",
       content: `あなたは大学生のためのボランティアイベントアドバイザーです。
 提供されたイベント情報を基に、ユーザーの質問に最も適したイベントを2つ提案してください。
 イベントを提案する際は、なぜそのイベントが適しているのか、具体的な情報（日時、場所など）を交えて説明してください。
@@ -95,46 +107,59 @@ export async function processChatMessage(messages) {
 {"options": ["選択肢1", "選択肢2", "選択肢3", "選択肢4"]}
 イベントが見つかったら無理に選択肢を出さなくて大丈夫です。`,
     };
-    
+
+    // コンテキストメッセージの作成
     const contextMessage = {
-      role: 'system',
-      content: `【検索結果】\n${context}`
-    }
+      role: "system",
+      content: `【検索結果】\n${context}`,
+    };
 
     // メッセージ履歴と新しいシステムメッセージを結合
-    const messagesWithoutSystem = messages.filter(msg => msg.role !== 'system');
-    const messagesWithContext = [systemMessage, contextMessage, ...messagesWithoutSystem];
+    const messagesWithoutSystem = messages.filter(msg => msg.role !== "system");
+    // 新しいシステムメッセージとコンテキストメッセージを先頭に追加
+    const messagesWithContext = [
+      systemMessage,
+      contextMessage,
+      ...messagesWithoutSystem,
+    ];
 
     // RAG: Augmented Generation - AIからの応答を取得
     const aiResponseText = await getChatCompletion(messagesWithContext);
 
     // 応答から選択肢を抽出
     let options = null;
+    // JSON形式の選択肢を正規表現で抽出
     let content = aiResponseText;
+    // JSON形式の選択肢を正規表現で抽出
     const jsonMatch = aiResponseText.match(/\{"options":\s*\[.*?\]\}/s);
+    // 抽出に成功したらパースしてcontentから削除
     if (jsonMatch) {
+      // JSON形式の選択肢をパース
       try {
         options = JSON.parse(jsonMatch[0]).options;
-        content = aiResponseText.replace(jsonMatch[0], '').trim();
+        content = aiResponseText.replace(jsonMatch[0], "").trim();
+        // contentから選択肢部分を削除してクリーンアップ
       } catch (e) {
-        console.error('Failed to parse options JSON:', e);
+        console.error("Failed to parse options JSON:", e);
       }
     }
 
     // 応答メッセージオブジェクトを作成（最大2つのイベントに制限）
     return {
-      role: 'assistant',
+      role: "assistant",
       content: content,
       events: fullEvents.length > 0 ? fullEvents.slice(0, 2) : null,
       options: options,
     };
 
+    // エラーハンドリング
   } catch (error) {
-    console.error('Error in processChatMessage Server Action:', error);
+    console.error("Error in processChatMessage Server Action:", error);
     // クライアントにエラー情報を返す
     return {
-      role: 'assistant',
-      content: '申し訳ありません、エラーが発生しました。もう一度お試しください。',
+      role: "assistant",
+      content:
+        "申し訳ありません、エラーが発生しました。もう一度お試しください。",
       error: true,
     };
   }

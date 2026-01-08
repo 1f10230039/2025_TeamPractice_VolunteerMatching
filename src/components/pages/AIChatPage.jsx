@@ -1,3 +1,4 @@
+// AIチャットコンポーネント
 "use client";
 
 /** @jsxImportSource @emotion/react */
@@ -44,7 +45,7 @@ const inputField = css`
   }
 `;
 
-const button = (isLoading) => css`
+const button = isLoading => css`
   padding: 0.5rem 1rem;
   background-color: #3182ce;
   color: white;
@@ -102,31 +103,31 @@ const AIChatPage = () => {
 
     try {
       const responseMessage = await processChatMessage(newMessages);
-      setMessages((prev) => [...prev, responseMessage]);
+      setMessages(prev => [...prev, responseMessage]);
     } catch (error) {
       console.error("Error sending message:", error);
       const errorMessage = {
         role: "assistant",
         content: "エラーが発生しました。メッセージの送信に失敗しました。",
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOptionClick = (option) => {
+  const handleOptionClick = option => {
     handleSendMessage(option);
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = e => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  const displayMessages = messages.filter((msg) => msg.role !== "system");
+  const displayMessages = messages.filter(msg => msg.role !== "system");
 
   return (
     <div css={container}>
@@ -145,7 +146,7 @@ const AIChatPage = () => {
         <input
           css={inputField}
           value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
+          onChange={e => setInputMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="メッセージを入力..."
           disabled={isLoading}

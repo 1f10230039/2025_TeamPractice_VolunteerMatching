@@ -1,3 +1,4 @@
+// 場所から検索ページコンポーネント
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -5,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import styled from "@emotion/styled";
 import Breadcrumbs from "../common/Breadcrumbs";
-import { FiCheck, FiMapPin, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import {
+  FiCheck,
+  FiMapPin,
+  FiChevronDown,
+  FiChevronUp,
+  FiX,
+} from "react-icons/fi";
 
 // --- 地域区分の定義 ---
 const REGIONS = [
@@ -18,8 +25,6 @@ const REGIONS = [
 ];
 
 // --- Emotion Styles ---
-
-// ページ全体のコンテナ
 const PageContainer = styled.div`
   padding: 24px;
   padding-bottom: 100px;
@@ -27,7 +32,6 @@ const PageContainer = styled.div`
   margin: 0 auto;
 `;
 
-// セクションタイトル
 const SectionTitle = styled.h2`
   font-size: 1.1rem;
   font-weight: bold;
@@ -48,12 +52,10 @@ const SectionTitle = styled.h2`
   }
 `;
 
-// 地域セクション
 const RegionSection = styled.div`
   margin-bottom: 32px;
 `;
 
-// 地域ラベル
 const RegionLabel = styled.h3`
   font-size: 0.9rem;
   color: #888;
@@ -62,14 +64,12 @@ const RegionLabel = styled.h3`
   padding-left: 4px;
 `;
 
-// 都道府県ボタンのグリッド
 const PrefGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 10px;
 `;
 
-// 都道府県ボタン
 const PrefButton = styled.button`
   position: relative;
   padding: 12px 8px;
@@ -92,7 +92,6 @@ const PrefButton = styled.button`
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   }
 
-  /* 選択中マーク */
   ${props =>
     props.isSelected &&
     `
@@ -105,7 +104,6 @@ const PrefButton = styled.button`
   `}
 `;
 
-// 市町村選択エリア
 const CitySelectionArea = styled.div`
   background-color: #f8fbff;
   border: 2px solid #e1efff;
@@ -113,6 +111,11 @@ const CitySelectionArea = styled.div`
   padding: 20px;
   margin-top: 16px;
   animation: fadeIn 0.3s ease;
+  position: relative;
+
+  @media (max-width: 600px) {
+    padding: 16px;
+  }
 
   @keyframes fadeIn {
     from {
@@ -126,15 +129,52 @@ const CitySelectionArea = styled.div`
   }
 `;
 
-// 市町村のグリッド
+const CityAreaHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #cce4ff;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const HeaderTitle = styled.h4`
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const CloseLabel = styled.span`
+  font-size: 0.85rem;
+  color: #4a90e2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+`;
+
 const CityGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 12px;
   margin-top: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
 `;
 
-// チェックボックスラベル
 const CheckboxLabel = styled.label`
   display: flex;
   align-items: center;
@@ -153,7 +193,24 @@ const CheckboxLabel = styled.label`
   }
 `;
 
-// 固定フッターボタン
+const BottomCloseButton = styled.button`
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #cce4ff;
+  color: #4a90e2;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f0f8ff;
+  }
+`;
+
 const FloatingFooter = styled.div`
   position: fixed;
   bottom: 20px;
@@ -164,7 +221,6 @@ const FloatingFooter = styled.div`
   z-index: 100;
 `;
 
-// 検索ボタン
 const SearchButton = styled.button`
   width: 100%;
   background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
@@ -195,43 +251,25 @@ const SearchButton = styled.button`
 `;
 
 // --- Component ---
-
 export default function LocationSearchPage({ initialPrefectures }) {
   const router = useRouter();
   const prefectures = initialPrefectures || [];
 
-  // --- State ---
-  // 1. アクティブな都道府県（市町村リストを表示している県）
   const [activePrefCode, setActivePrefCode] = useState(null);
-
-  // 2. 「都道府県ごと」選択リスト (例: [13, 14])
   const [selectedPrefCodes, setSelectedPrefCodes] = useState([]);
-
-  // 3. 「市町村」選択リスト (例: [13101, 13102])
   const [selectedCityCodes, setSelectedCityCodes] = useState([]);
-
-  // 4. 表示用の市町村データキャッシュ
   const [citiesCache, setCitiesCache] = useState({});
   const [isLoadingCities, setIsLoadingCities] = useState(false);
-
-  // 5. 検索ヒット件数
   const [hitCount, setHitCount] = useState(0);
   const [isCounting, setIsCounting] = useState(false);
 
-  // --- Actions ---
-
-  // 都道府県ボタンを押した時
   const handlePrefClick = async prefCode => {
-    // すでにアクティブなら閉じる
     if (activePrefCode === prefCode) {
       setActivePrefCode(null);
       return;
     }
-
-    // アクティブにする
     setActivePrefCode(prefCode);
 
-    // キャッシュになければ取得
     if (!citiesCache[prefCode]) {
       setIsLoadingCities(true);
       const { data } = await supabase
@@ -245,19 +283,17 @@ export default function LocationSearchPage({ initialPrefectures }) {
     }
   };
 
-  // 「この都道府県全体を選択」のトグル
   const togglePrefSelection = prefCode => {
     const code = parseInt(prefCode, 10);
     setSelectedPrefCodes(prev => {
       if (prev.includes(code)) {
-        return prev.filter(c => c !== code); // 解除
+        return prev.filter(c => c !== code);
       } else {
-        return [...prev, code]; // 追加
+        return [...prev, code];
       }
     });
   };
 
-  // 市町村のトグル
   const toggleCitySelection = cityCode => {
     const code = parseInt(cityCode, 10);
     setSelectedCityCodes(prev => {
@@ -269,7 +305,6 @@ export default function LocationSearchPage({ initialPrefectures }) {
     });
   };
 
-  // --- リアルタイム件数取得 (useEffect) ---
   useEffect(() => {
     const fetchCount = async () => {
       setIsCounting(true);
@@ -285,14 +320,12 @@ export default function LocationSearchPage({ initialPrefectures }) {
           .from("events")
           .select("*", { count: "exact", head: true });
 
-        // 1. 選択された都道府県の名前を取得
         const selectedPrefNames = prefectures
           .filter(p =>
             selectedPrefCodes.includes(parseInt(p["prefecture-code"], 10))
           )
           .map(p => p.name);
 
-        // 2. 選択された市町村の名前を取得 (キャッシュから探す)
         const selectedCityNames = [];
         Object.values(citiesCache)
           .flat()
@@ -302,7 +335,6 @@ export default function LocationSearchPage({ initialPrefectures }) {
             }
           });
 
-        // 3. OR条件の組み立て
         let orConditions = [];
         if (selectedPrefNames.length > 0) {
           const prefString = selectedPrefNames.map(n => `"${n}"`).join(",");
@@ -319,7 +351,7 @@ export default function LocationSearchPage({ initialPrefectures }) {
           if (!error) {
             setHitCount(count || 0);
           } else {
-            console.error("Count Error:", error); // エラー確認用
+            console.error("Count Error:", error);
           }
         } else {
           setHitCount(0);
@@ -335,9 +367,7 @@ export default function LocationSearchPage({ initialPrefectures }) {
     return () => clearTimeout(timer);
   }, [selectedPrefCodes, selectedCityCodes, citiesCache, prefectures]);
 
-  // 検索実行
   const handleSearch = () => {
-    // クエリパラメータの作成
     const params = new URLSearchParams();
     if (selectedPrefCodes.length > 0)
       params.set("prefs", selectedPrefCodes.join(","));
@@ -347,7 +377,6 @@ export default function LocationSearchPage({ initialPrefectures }) {
     router.push(`/search/location-results?${params.toString()}`);
   };
 
-  // パンくず
   const crumbs = [{ label: "場所から探す", href: "/search/location" }];
 
   return (
@@ -396,7 +425,6 @@ export default function LocationSearchPage({ initialPrefectures }) {
                 })}
               </PrefGrid>
 
-              {/* アクティブな県があれば、その下に市町村リストを展開 */}
               {regionPrefs.map(pref => {
                 if (activePrefCode !== pref["prefecture-code"]) return null;
                 const pCode = parseInt(pref["prefecture-code"], 10);
@@ -404,14 +432,17 @@ export default function LocationSearchPage({ initialPrefectures }) {
 
                 return (
                   <CitySelectionArea key={`area-${pCode}`}>
-                    {/* 1. 県全体を選択するオプション */}
-                    <div
-                      style={{
-                        marginBottom: "16px",
-                        paddingBottom: "12px",
-                        borderBottom: "1px dashed #ccc",
-                      }}
-                    >
+                    <CityAreaHeader onClick={() => setActivePrefCode(null)}>
+                      <HeaderTitle>
+                        <FiMapPin color="#4a90e2" /> {pref.name}
+                      </HeaderTitle>
+                      <CloseLabel>
+                        閉じる <FiChevronUp />
+                      </CloseLabel>
+                    </CityAreaHeader>
+
+                    {/* 県全体を選択するオプション */}
+                    <div style={{ marginBottom: "12px" }}>
                       <CheckboxLabel isChecked={isPrefChecked}>
                         <input
                           type="checkbox"
@@ -429,7 +460,7 @@ export default function LocationSearchPage({ initialPrefectures }) {
                       </CheckboxLabel>
                     </div>
 
-                    {/* 2. 市町村リスト */}
+                    {/* 市町村リスト */}
                     {isLoadingCities ? (
                       <p style={{ color: "#666", fontSize: "0.9rem" }}>
                         読み込み中...
@@ -472,6 +503,12 @@ export default function LocationSearchPage({ initialPrefectures }) {
                             );
                           })}
                         </CityGrid>
+
+                        <BottomCloseButton
+                          onClick={() => setActivePrefCode(null)}
+                        >
+                          閉じる
+                        </BottomCloseButton>
                       </>
                     )}
                   </CitySelectionArea>

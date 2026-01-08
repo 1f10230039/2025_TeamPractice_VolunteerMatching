@@ -1,13 +1,8 @@
-// src/app/mypage/edit/page.js
-
+// プロフィール編集ページのコンテナ
 import ProfileEditContainer from "@/components/pages/ProfileEditContainer";
 
-/**
- * プロフィール編集ページのルートコンポーネント (Server Component)
- *
- * ここではロジックを持たず、クライアント側のコンテナ (ProfileEditContainer) を呼び出すだけです。
- * 認証チェックやデータ取得は、すべてクライアント側で行います。
- */
+// ロジックは全てクライアント側のコンポーネントに委譲する
 export default function Page() {
+  // コンテナを表示
   return <ProfileEditContainer />;
 }

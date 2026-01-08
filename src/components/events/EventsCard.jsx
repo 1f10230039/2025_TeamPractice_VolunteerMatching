@@ -1,3 +1,4 @@
+// イベントカードコンポーネント
 "use client";
 
 import styled from "@emotion/styled";
@@ -14,6 +15,7 @@ import {
 } from "react-icons/fa";
 
 // --- Emotion Styles ---
+// カード全体のスタイル
 const CardContainer = styled(Link)`
   border: 1px solid #eee;
   border-radius: 12px;
@@ -24,22 +26,28 @@ const CardContainer = styled(Link)`
   display: block;
   text-decoration: none;
   color: inherit;
+
   &:hover {
     transform: translateY(-5px);
   }
 `;
+
+// 画像ラッパーと画像スタイル
 const ImageWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: 180px;
+  height: 280px;
 `;
+
+// 画像スタイル
 const EventImage = styled.img`
   width: 100%;
-  height: 180px;
+  height: 100%;
   border-radius: 6px;
   object-fit: cover;
-  margin-right: 16px;
 `;
+
+// お気に入りボタンスタイル
 const FavoriteButton = styled.button`
   position: absolute;
   top: 12px;
@@ -54,6 +62,7 @@ const FavoriteButton = styled.button`
   align-items: center;
   justify-content: center;
   padding: 0;
+
   &:disabled {
     cursor: not-allowed;
     opacity: 0.7;
@@ -65,20 +74,28 @@ const FavoriteButton = styled.button`
     transition: color 0.1s ease;
   }
 `;
+
+// カード内容部分のスタイル
 const CardContent = styled.div`
   padding: 16px;
 `;
+
+// イベント名スタイル
 const EventName = styled.h3`
   font-size: 1.1rem;
   font-weight: bold;
   margin: 0 0 8px 0;
 `;
+
+// タグコンテナ
 const TagContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 12px;
 `;
+
+// タグスタイル
 const Tag = styled.span`
   display: inline-block;
   background-color: #f0f0f0;
@@ -88,6 +105,8 @@ const Tag = styled.span`
   font-size: 0.8rem;
   font-weight: 500;
 `;
+
+// 情報行スタイル
 const InfoRow = styled.div`
   display: flex;
   align-items: center;
@@ -102,6 +121,7 @@ const InfoRow = styled.div`
   }
 `;
 
+// 日付範囲をフォーマットするヘルパー関数
 const formatDateRange = (startStr, endStr) => {
   try {
     const startDate = new Date(startStr);
@@ -115,9 +135,7 @@ const formatDateRange = (startStr, endStr) => {
   }
 };
 
-/**
- * イベントカードを表示するコンポーネント
- */
+// --- EventCard Component ---
 export default function EventCard({
   event,
   source,
@@ -125,6 +143,7 @@ export default function EventCard({
   codes,
   isFavorite: initialIsFavorite,
 }) {
+  // イベント情報の分割代入
   const {
     id,
     name,
@@ -137,8 +156,9 @@ export default function EventCard({
     image_url,
   } = event;
 
+  // タグ情報の整形
   const displayTags = tags || (tag ? [{ name: tag }] : []);
-
+  // ルーターとローカルステートの初期化
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -148,26 +168,28 @@ export default function EventCard({
 
   // マウント時に「自分がお気に入りしているか」を確認しにいく
   useEffect(() => {
-    // すでに親から true が渡されている場合(マイリストなど)は確認不要だけど、トップページの場合はここで確認が必要！
+    // 非同期関数を定義して即時実行
     const checkFavoriteStatus = async () => {
       // ユーザー確認
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      // もし未ログインなら終了
       if (!user) return;
-
       // favoritesテーブルを確認
       const { data } = await supabase
-        .from("favorites")
-        .select("id")
-        .match({ user_id: user.id, event_id: id })
-        .maybeSingle();
+        .from("favorites") // お気に入りテーブル
+        .select("id") // IDだけ取得
+        .match({ user_id: user.id, event_id: id }) // 自分とこのイベントの組み合わせを検索
+        .maybeSingle(); // もしあれば1件取得、なければnull
 
+      // もしデータがあればお気に入り済みとして状態を更新
       if (data) {
         setLocalIsFavorite(true);
       }
     };
 
+    // チェック関数を実行
     checkFavoriteStatus();
   }, [id]);
 
@@ -175,16 +197,17 @@ export default function EventCard({
   const handleToggleFavorite = async e => {
     e.preventDefault();
     e.stopPropagation();
-
+    // もし処理中なら何もしない
     if (isLoading) return;
+    // ローディング開始
     setIsLoading(true);
-
+    // 非同期でお気に入り状態を更新
     try {
       // ユーザー確認
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
+      // もし未ログインならログイン促進
       if (!user) {
         if (
           confirm(
@@ -197,35 +220,37 @@ export default function EventCard({
         return;
       }
 
-      // 画面の見た目を先に変えちゃう（楽観的UI更新）
+      // 画像のお気に入り状態を反転(楽観的UI更新)
       const nextStatus = !localIsFavorite;
       setLocalIsFavorite(nextStatus);
 
       // favorites テーブルへの操作
       if (localIsFavorite) {
-        // (反転前の状態で判定)
         // 削除 (DELETE)
         const { error } = await supabase
-          .from("favorites")
-          .delete()
-          .match({ user_id: user.id, event_id: id });
+          .from("favorites") // お気に入りテーブル
+          .delete() // 削除操作
+          .match({ user_id: user.id, event_id: id }); // 自分とこのイベントの組み合わせを検索
+        // もしエラーがあれば見た目を元に戻す
         if (error) {
           // エラーなら見た目を元に戻す
           setLocalIsFavorite(!nextStatus);
           throw error;
         }
+        // 成功ならそのまま
       } else {
         // 追加 (INSERT)
         const { error } = await supabase
-          .from("favorites")
-          .insert({ user_id: user.id, event_id: id });
+          .from("favorites") // お気に入りテーブル
+          .insert({ user_id: user.id, event_id: id }); // レコード追加
+        // もしエラーがあれば見た目を元に戻す
         if (error) {
           setLocalIsFavorite(!nextStatus);
           throw error;
         }
       }
 
-      //  画面更新 (マイリストとかで一覧から消す必要がある場合に有効)
+      // 成功したらページをリフレッシュして最新状態に
       router.refresh();
     } catch (error) {
       console.error("お気に入り更新エラー:", error.message);
@@ -238,6 +263,7 @@ export default function EventCard({
     }
   };
 
+  // 詳細ページのURLを構築
   const detailUrl = (() => {
     const base = `/events/${id}`;
     const params = new URLSearchParams();
@@ -248,6 +274,7 @@ export default function EventCard({
     return queryString ? `${base}?${queryString}` : base;
   })();
 
+  // レンダリング
   return (
     <CardContainer href={detailUrl}>
       <ImageWrapper>

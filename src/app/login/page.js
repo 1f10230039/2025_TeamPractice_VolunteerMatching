@@ -1,13 +1,8 @@
-// src/app/login/page.js
-
+// ログインページのコンテナ
 import LoginPage from "@/components/pages/LoginPage.jsx";
 
-/**
- * ログインページのコンテナ（サーバーコンポーネント）
- *
- * サーバー側でのデータ取得は不要なため、
- * クライアントコンポーネント(LoginPage)を呼び出すだけ。
- */
+// ロジックは全てクライアント側のコンポーネントに委譲する
 export default function LoginPageContainer() {
+  // コンテナを表示
   return <LoginPage />;
 }
