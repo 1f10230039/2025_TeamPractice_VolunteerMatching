@@ -15,6 +15,7 @@ import {
   FaFilter,
   FaChevronDown,
   FaChevronUp,
+  FaArrowUp,
 } from "react-icons/fa";
 
 // --- Emotion Styles ---
@@ -23,7 +24,7 @@ const PageContainer = styled.div`
   min-height: 100vh;
   padding-bottom: 60px;
   @media (max-width: 600px) {
-    margin-bottom: 20px;
+    margin-bottom: 60px;
   }
 `;
 
@@ -309,6 +310,68 @@ const PageInfo = styled.span`
   }
 `;
 
+// トップへ戻るボタンのスタイル
+const ScrollTopButton = styled.button`
+  position: fixed;
+  bottom: 30px;
+  width: 50px;
+  height: 50px;
+  background: white;
+  color: #888;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+  cursor: pointer;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  opacity: ${props => (props.show ? 1 : 0)};
+  transform: translateY(${props => (props.show ? 0 : "20px")});
+  pointer-events: ${props => (props.show ? "auto" : "none")};
+  right: 30px;
+
+  @media (min-width: 1160px) {
+    right: auto;
+    left: calc(50% + 500px + 30px);
+  }
+
+  &:hover {
+    color: #4a90e2;
+    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5);
+    transform: translateY(-5px);
+  }
+
+  &:hover svg {
+    animation: bounce 1s infinite;
+  }
+
+  @keyframes bounce {
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-5px);
+    }
+    60% {
+      transform: translateY(-3px);
+    }
+  }
+
+  @media (max-width: 600px) {
+    width: 44px;
+    height: 44px;
+    bottom: 105px;
+    right: 20px;
+  }
+`;
+
 /**
  * ページ全体のレイアウトと状態を管理するコンポーネント
  */
@@ -321,6 +384,7 @@ export default function HomePage({ events }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showMiniSearch, setShowMiniSearch] = useState(false);
   const searchSectionRef = useRef(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -342,6 +406,14 @@ export default function HomePage({ events }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // --- ページ切り替え時にトップへスクロールする処理 ---
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, [currentPage]);
 
   // --- 利用可能なタグ一覧の抽出 ---
   const availableTags = useMemo(() => {
@@ -431,6 +503,27 @@ export default function HomePage({ events }) {
   // スマホ用フィルター開閉トグル
   const toggleFilter = () => {
     setIsFilterOpen(prev => !prev);
+  };
+
+  useEffect(() => {
+    const handleScrollTopVisibility = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScrollTopVisibility);
+    return () =>
+      window.removeEventListener("scroll", handleScrollTopVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   return (
@@ -556,6 +649,14 @@ export default function HomePage({ events }) {
           </PaginationContainer>
         )}
       </EventSection>
+
+      <ScrollTopButton
+        show={showScrollTop}
+        onClick={scrollToTop}
+        aria-label="トップへ戻る"
+      >
+        <FaArrowUp />
+      </ScrollTopButton>
     </PageContainer>
   );
 }
