@@ -16,7 +16,7 @@ const SearchBoxContainer = styled.div`
 // オプション群のラッパー
 const OptionsContainer = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 24px;
   justify-content: center;
 
   @media (max-width: 600px) {
@@ -38,7 +38,8 @@ const SearchLink = styled(Link, {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 24px;
+  padding: 18px 24px;
+  margin: 8px 0;
   border-radius: 50px;
   text-decoration: none;
   font-weight: 700;
@@ -74,8 +75,9 @@ const SearchLink = styled(Link, {
   }
 
   @media (max-width: 600px) {
-    padding: 8px 16px;
-    font-size: 0.8rem;
+    padding: 12px 16px;
+    margin: 5px 0;
+    font-size: 0.7rem;
     flex-shrink: 0;
 
     & > svg {

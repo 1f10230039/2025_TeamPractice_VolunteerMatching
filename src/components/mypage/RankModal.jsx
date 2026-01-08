@@ -237,7 +237,7 @@ export default function RankModal({ isOpen, onClose, currentCount }) {
           <FaTimes />
         </CloseButton>
 
-        <Title>ランクとは？</Title>
+        <Title>サポーターランクについて</Title>
         <SubTitle>
           ボランティアへの応募数に応じて
           <br />
