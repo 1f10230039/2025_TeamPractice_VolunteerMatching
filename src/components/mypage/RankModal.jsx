@@ -92,6 +92,10 @@ const ModalContainer = styled.div`
       opacity: 1;
     }
   }
+
+  @media (max-width: 600px) {
+    padding: 40px 24px 12px 24px;
+  }
 `;
 
 // 閉じるボタン
@@ -115,6 +119,11 @@ const CloseButton = styled.button`
     background: #e0e0e0;
     transform: rotate(90deg);
   }
+
+  @media (max-width: 600px) {
+    top: 10px;
+    right: 10px;
+  }
 `;
 
 // タイトルスタイル
@@ -126,6 +135,9 @@ const Title = styled.h2`
   background: linear-gradient(to right, #68b5d5, #4a90e2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  @media (max-width: 600px) {
+    font-size: 1.4rem;
+  }
 `;
 
 // サブタイトルスタイル
