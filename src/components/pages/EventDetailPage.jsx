@@ -32,6 +32,7 @@ import {
   FaCaretDown,
   FaMap,
   FaPenFancy,
+  FaTimes,
 } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
 import ConfirmApplyModal from "../events/ConfirmApplyModal";
@@ -491,6 +492,7 @@ const ApplyButton = styled.button`
   gap: 12px;
   transition: all 0.2s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
   @media (max-width: 600px) {
     font-size: 1rem;
   }
@@ -500,16 +502,22 @@ const ApplyButton = styled.button`
       ? `
     background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%);
     color: white;
+
+    &:hover {
+      background: linear-gradient(135deg, #ff9a9e 0%, #ff6a88 100%);
+      box-shadow: 0 8px 20px rgba(255, 106, 136, 0.4);
+    }
   `
       : `
     background: linear-gradient(135deg, #68B5D5 0%, #4A90E2 100%);
     color: white;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(74, 144, 226, 0.3);
+    }
   `}
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(74, 144, 226, 0.3);
-  }
   &:active {
     transform: translateY(0);
   }
@@ -642,6 +650,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
   });
 
   const [modalStep, setModalStep] = useState("confirm");
+  const [isHoveringButton, setIsHoveringButton] = useState(false);
 
   /**
    * 初期ロード時に実行される処理
@@ -839,6 +848,31 @@ export default function EventDetailPage({ event, source, q, codes }) {
         if (error) throw error;
 
         setIsApplied(false);
+
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", user.id)
+            .single();
+          const userName = profile?.name || "ゲスト";
+
+          await fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              eventName: name,
+              applicantEmail: user.email,
+              applicantName: userName,
+              type: "cancel",
+            }),
+          });
+
+          console.log("キャンセルメール送信リクエスト完了");
+        } catch (mailError) {
+          console.error("メール送信エラー:", mailError);
+        }
+
         alert("応募をキャンセルしました。");
         setIsModalOpen(false); // キャンセルの時は普通に閉じる
       } else {
@@ -1243,11 +1277,22 @@ export default function EventDetailPage({ event, source, q, codes }) {
           >
             {isFavorite ? <HeartIcon /> : <RegHeartIcon />}
           </FavoriteButton>
-          <ApplyButton isApplied={isApplied} onClick={handleApplyButtonPress}>
+          <ApplyButton
+            isApplied={isApplied}
+            onClick={handleApplyButtonPress}
+            onMouseEnter={() => setIsHoveringButton(true)}
+            onMouseLeave={() => setIsHoveringButton(false)}
+          >
             {isApplied ? (
-              <>
-                <FaCheckCircle /> 応募済み
-              </>
+              isHoveringButton ? (
+                <>
+                  <FaTimes /> 応募を取り消す
+                </>
+              ) : (
+                <>
+                  <FaCheckCircle /> 応募済み
+                </>
+              )
             ) : (
               <>
                 <FaRegCheckCircle /> このボランティアに応募する
