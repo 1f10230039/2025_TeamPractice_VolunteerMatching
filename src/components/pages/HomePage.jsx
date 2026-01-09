@@ -78,15 +78,6 @@ const SectionTitle = styled.h2`
   color: #333;
   letter-spacing: 0.05em;
 
-  &::before {
-    content: "";
-    display: block;
-    width: 6px;
-    height: 32px;
-    background: linear-gradient(to bottom, #68b5d5, #4a90e2);
-    border-radius: 3px;
-  }
-
   @media (max-width: 600px) {
     font-size: 1.2rem;
     margin-bottom: 16px;
