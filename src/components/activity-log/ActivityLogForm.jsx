@@ -1,8 +1,8 @@
 // 活動記録フォームコンポーネント
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import styled from "@emotion/styled";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
@@ -227,16 +227,25 @@ const DeleteButton = styled(BaseButton)`
 // ActivityLogForm コンポーネント
 export default function ActivityLogForm({ logToEdit }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // 編集モードかどうか
   const isEditMode = Boolean(logToEdit);
 
+  // URLパラメータから自動入力用の値を取得 (prefill_title, prefill_date)
+  // 例: /activity-log/create?prefill_title=ゴミ拾い&prefill_date=2024-01-01
+  const prefillTitle = searchParams.get("prefill_title") || "";
+  const prefillDate = searchParams.get("prefill_date") || "";
+
   // フォームの各入力値の状態管理
   const [formData, setFormData] = useState({
-    name: logToEdit?.name || "",
-    datetime: logToEdit?.datetime ? logToEdit.datetime.split("T")[0] : "",
+    // 編集モードならその値、新規ならURLパラメータの値、それもなければ空文字
+    name: logToEdit?.name || prefillTitle || "",
+    datetime: logToEdit?.datetime
+      ? logToEdit.datetime.split("T")[0]
+      : prefillDate || "",
     reason: logToEdit?.reason || "",
     numbers: logToEdit?.numbers || "",
     content: logToEdit?.content || "",
@@ -401,7 +410,7 @@ export default function ActivityLogForm({ logToEdit }) {
               value={formData.name}
               onChange={handleChange}
               required
-              placeholder="例：令和〇年能登半島地震　災害ボランティア"
+              placeholder="例：令和〇年能登半島地震 災害ボランティア"
             />
           </FormGroup>
 

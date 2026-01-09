@@ -1,3 +1,4 @@
+// プロフィール編集ページコンポーネント
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -8,11 +9,10 @@ import Breadcrumbs from "@/components/common/Breadcrumbs";
 import { FaCamera } from "react-icons/fa";
 import { VscAccount } from "react-icons/vsc";
 
-// --- Emotion Style Definitions ---
-
+// --- Emotion ---
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background-color: #f5fafc; /* マイページと同じ背景色 */
+  background-color: #f5fafc;
   padding-bottom: 40px;
   font-family: "Helvetica Neue", Arial, sans-serif;
   @media (max-width: 600px) {
@@ -25,7 +25,6 @@ const StickyHeader = styled.div`
   position: sticky;
   top: 0;
   z-index: 100;
-  /* 背景色がないと透けちゃうので指定 */
   background-color: #f5fafc;
 `;
 
@@ -50,7 +49,7 @@ const Form = styled.form`
   background-color: #fff;
   padding: 32px;
   border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15); /* ふんわり青い影 */
+  box-shadow: 0 4px 20px rgba(122, 211, 232, 0.15);
 
   @media (max-width: 600px) {
     padding: 20px;
@@ -102,7 +101,7 @@ const ButtonGroup = styled.div`
   margin-top: 24px;
 `;
 
-// メインボタン（青グラデーション）
+// メインボタン
 const SubmitButton = styled.button`
   flex: 1;
   background: linear-gradient(135deg, #68b5d5 0%, #4a90e2 100%);
@@ -134,7 +133,7 @@ const SubmitButton = styled.button`
   }
 `;
 
-// キャンセルボタン（白背景・シンプル）
+// キャンセルボタン
 const CancelButton = styled.button`
   flex: 1;
   background-color: #fff;
@@ -181,7 +180,6 @@ const AvatarWrapper = styled.div`
     border-color: #e0eafc;
   }
 
-  /* ドラッグ中のスタイル */
   ${props =>
     props.isDragActive &&
     `
@@ -190,7 +188,6 @@ const AvatarWrapper = styled.div`
   `}
 `;
 
-// next/image の代わりに通常の img タグを使用
 const AvatarImage = styled.img`
   width: 100%;
   height: 100%;

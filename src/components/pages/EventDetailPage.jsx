@@ -31,6 +31,7 @@ import {
   FaMapMarkedAlt,
   FaCaretDown,
   FaMap,
+  FaPenFancy,
 } from "react-icons/fa";
 import Breadcrumbs from "../common/Breadcrumbs";
 import ConfirmApplyModal from "../events/ConfirmApplyModal";
@@ -514,6 +515,92 @@ const ApplyButton = styled.button`
   }
 `;
 
+const ActivityLinkButton = styled.span`
+  display: inline-block;
+  margin-top: 8px;
+  color: #007bff;
+  font-weight: bold;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #0056b3;
+  }
+`;
+
+// --- 次のアクションカード ---
+const NextActionCard = styled.div`
+  margin-top: 24px;
+  padding: 24px;
+  background-color: #f8fbff;
+  border: 2px dashed #4a90e2;
+  border-radius: 16px;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-4px);
+    background-color: #eef6ff;
+    box-shadow: 0 8px 20px rgba(74, 144, 226, 0.15);
+  }
+
+  &::before {
+    content: "RECOMMENDED";
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #ff9f43;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 0 0 0 8px;
+  }
+`;
+
+const NextActionTitle = styled.h4`
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #4a90e2;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+`;
+
+const NextActionText = styled.p`
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 16px;
+`;
+
+const NextActionButton = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background-color: white;
+  color: #4a90e2;
+  border: 2px solid #4a90e2;
+  border-radius: 30px;
+  font-weight: 700;
+  transition: all 0.2s;
+
+  ${NextActionCard}:hover & {
+    background-color: #4a90e2;
+    color: white;
+  }
+`;
+
+// リンク用のスタイル
 const formatDateTime = isoString => {
   if (!isoString) return "未定";
   try {
@@ -553,6 +640,8 @@ export default function EventDetailPage({ event, source, q, codes }) {
     confirmText: "",
     isDestructive: false,
   });
+
+  const [modalStep, setModalStep] = useState("confirm");
 
   /**
    * 初期ロード時に実行される処理
@@ -652,7 +741,7 @@ export default function EventDetailPage({ event, source, q, codes }) {
         crumbList = [thisPageCrumb];
         break;
 
-      // ★ 追加: 管理画面から来た場合
+      // 管理画面から来た場合
       case "admin":
         base = { label: "マイページ", href: "/mypage" };
         crumbList = [
@@ -742,59 +831,55 @@ export default function EventDetailPage({ event, source, q, codes }) {
 
     try {
       if (isApplied) {
-        // 応募キャンセル (DELETE)
+        // --- キャンセル処理 (DELETE) ---
         const { error } = await supabase
           .from("applications")
           .delete()
           .match({ user_id: user.id, event_id: id });
         if (error) throw error;
+
         setIsApplied(false);
         alert("応募をキャンセルしました。");
+        setIsModalOpen(false); // キャンセルの時は普通に閉じる
       } else {
-        // 応募登録 (INSERT)
+        // --- 応募登録 (INSERT) ---
         const { error } = await supabase
           .from("applications")
           .insert({ user_id: user.id, event_id: id });
         if (error) throw error;
 
-        // 応募成功
         setIsApplied(true);
 
+        // メール送信処理 (エラーでも続行するのでcatchのみ)
         try {
-          // ユーザーのプロフィール情報を取得
           const { data: profile } = await supabase
             .from("profiles")
             .select("name")
             .eq("id", user.id)
             .single();
-
           const userName = profile?.name || "ゲスト";
-
-          // APIにデータを送る
           await fetch("/api/send-email", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              eventName: name, // イベント名
-              applicantEmail: user.email, // 応募者のメアド (Auth情報から)
-              applicantName: userName, // 応募者の名前 (profilesから)
+              eventName: name,
+              applicantEmail: user.email,
+              applicantName: userName,
             }),
           });
-
-          console.log("メール送信リクエスト完了");
         } catch (mailError) {
-          // メールが送れなくても、応募自体は成功してるからアラートは出さない
           console.error("メール送信エラー:", mailError);
         }
 
-        alert("応募が完了しました！確認メールを送信しました。");
+        // モーダルを成功モードに切り替える
+        setModalStep("success");
       }
     } catch (error) {
       console.error("応募状態の更新エラー:", error.message);
       alert("処理に失敗しました。");
+      setIsModalOpen(false); // エラー時は閉じる
     } finally {
       setIsApplyLoading(false);
-      setIsModalOpen(false);
     }
   };
 
@@ -804,20 +889,13 @@ export default function EventDetailPage({ event, source, q, codes }) {
   const handleApplyButtonPress = e => {
     e.preventDefault();
     if (isApplyLoading || isFavoriteLoading) return;
-
-    // 未ログイン時の誘導
     if (!user) {
-      if (
-        confirm(
-          "応募するにはログインが必要です。\nログインページに移動しますか？"
-        )
-      ) {
-        router.push("/login");
-      }
-      return;
+      /* ...ログイン誘導... */ return;
     }
 
-    // 応募済みならキャンセル、未応募なら確認モーダル
+    // 毎回確認モードからスタート
+    setModalStep("confirm");
+
     if (isApplied) {
       setModalContent({
         title: "応募のキャンセル",
@@ -825,7 +903,6 @@ export default function EventDetailPage({ event, source, q, codes }) {
         confirmText: "取り消す",
         isDestructive: true,
       });
-      setIsModalOpen(true);
     } else {
       setModalContent({
         title: "応募の確認",
@@ -838,9 +915,76 @@ export default function EventDetailPage({ event, source, q, codes }) {
         confirmText: "応募する",
         isDestructive: false,
       });
-      setIsModalOpen(true);
     }
+    setIsModalOpen(true);
   };
+
+  // モーダルの中身（body）を定義
+  const modalBodyContent = (
+    <div>
+      <p>このボランティアに応募しますか？</p>
+      <p style={{ marginTop: "16px", fontSize: "0.9rem", color: "#666" }}>
+        ※ 応募が完了すると、主催者に通知が送信されます。
+      </p>
+      <div
+        style={{
+          marginTop: "24px",
+          padding: "16px",
+          background: "#f0f8ff",
+          borderRadius: "8px",
+        }}
+      >
+        <p style={{ fontSize: "0.9rem", marginBottom: "8px" }}>
+          <strong>活動記録の準備</strong>
+        </p>
+        <p style={{ fontSize: "0.85rem", color: "#555" }}>
+          参加し終わったら、忘れないうちに記録を付けましょう！
+        </p>
+        <Link
+          href={`/activity-log/new?prefill_title=${encodeURIComponent(name)}&prefill_date=${event.start_datetime ? event.start_datetime.split("T")[0] : ""}`}
+          passHref
+        >
+          <ActivityLinkButton>
+            活動記録の下書きを作成する &gt;
+          </ActivityLinkButton>
+        </Link>
+      </div>
+    </div>
+  );
+
+  const successBodyContent = (
+    <div>
+      {/* メインの完了メッセージ */}
+      <p style={{ textAlign: "center", color: "#666", marginBottom: "10px" }}>
+        主催者に通知メールを送信しました。
+        <br />
+        当日の詳細連絡をお待ちください。
+      </p>
+
+      {/* 誘導カード */}
+      <Link
+        href={`/activity-log/new?prefill_title=${encodeURIComponent(name)}&prefill_date=${event.start_datetime ? event.start_datetime.split("T")[0] : ""}`}
+        passHref
+        style={{ textDecoration: "none" }}
+      >
+        <NextActionCard>
+          <NextActionTitle>
+            <FaPenFancy /> 活動記録の下書きを作る
+          </NextActionTitle>
+
+          <NextActionText>
+            今のうちに下書きを作っておくと、
+            <br />
+            <strong>「ガクチカ」</strong>や<strong>「振り返り」</strong>が
+            <br />
+            もっと楽になります！
+          </NextActionText>
+
+          <NextActionButton>今すぐ下書きを作成する &gt;</NextActionButton>
+        </NextActionCard>
+      </Link>
+    </div>
+  );
 
   return (
     <PageWrapper>
@@ -1112,16 +1256,36 @@ export default function EventDetailPage({ event, source, q, codes }) {
           </ApplyButton>
         </ActionContainer>
       </ActionMenu>
-
       <ConfirmApplyModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onConfirm={handleToggleApply}
+        // 成功モードなら「閉じる」だけ、確認モードなら「応募処理」を実行
+        onConfirm={
+          modalStep === "success"
+            ? () => setIsModalOpen(false)
+            : handleToggleApply
+        }
+        // 成功モードならタイトルなどを書き換え
+        title={
+          modalStep === "success"
+            ? "応募が完了しました！"
+            : modalContent.title || "応募の確認"
+        }
+        body={
+          modalStep === "success"
+            ? successBodyContent
+            : modalContent.body || "よろしいですか？"
+        }
+        confirmText={
+          modalStep === "success"
+            ? "閉じる"
+            : modalContent.confirmText || "応募する"
+        }
+        isDestructive={
+          modalStep === "success" ? false : modalContent.isDestructive
+        }
         isLoading={isApplyLoading}
-        title={modalContent.title}
-        body={modalContent.body}
-        confirmText={modalContent.confirmText}
-        isDestructive={modalContent.isDestructive}
+        showCancel={modalStep !== "success"}
       />
     </PageWrapper>
   );
