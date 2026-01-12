@@ -6,13 +6,8 @@ const globalStyles = css`
   :root {
     --background: #ffffff;
     --foreground: #171717;
-  }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --background: #0a0a0a;
-      --foreground: #ededed;
-    }
+    color-scheme: light;
   }
 
   html,
@@ -38,12 +33,6 @@ const globalStyles = css`
   a {
     color: inherit;
     text-decoration: none;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    html {
-      color-scheme: dark;
-    }
   }
 `;
 
