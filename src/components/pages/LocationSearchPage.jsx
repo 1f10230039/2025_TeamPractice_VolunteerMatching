@@ -528,7 +528,7 @@ export default function LocationSearchPage({ initialPrefectures }) {
             ) : (
               <>
                 <FiCheck size={20} />
-                {hitCount}件のイベントを表示する
+                {hitCount}件のボランティアを表示する
               </>
             )}
           </SearchButton>
