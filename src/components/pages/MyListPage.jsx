@@ -253,7 +253,7 @@ export default function MyListPage({
                 title="お気に入りはまだありません"
                 description="気になるボランティアを見つけて、ハートマークを押してみましょう！あとで見返しやすくなります。"
                 icon={<FaRegHeart />}
-                actionLabel="イベントを探しに行く"
+                actionLabel="ボランティアを探しに行く"
                 actionHref="/"
               />
             ))}
@@ -266,7 +266,7 @@ export default function MyListPage({
                 title="応募済みのボランティアはありません"
                 description="まだ応募したイベントがないようです。興味のある活動に応募してみませんか？"
                 icon={<FaRegCheckCircle />}
-                actionLabel="イベントを探しに行く"
+                actionLabel="ボランティアを探しに行く"
                 actionHref="/"
               />
             ))}
